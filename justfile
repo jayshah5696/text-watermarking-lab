@@ -31,7 +31,7 @@ test:
 
 # Run tests with terminal and XML coverage.
 test-cov:
-    uv run pytest --cov=watermark_lab.stats --cov=watermark_lab.records --cov-report=term-missing --cov-report=xml
+    uv run pytest --cov=watermark_lab --cov-report=term-missing --cov-report=xml
 
 # Run format-check, lint, typecheck, and test.
 check: format-check lint typecheck test
@@ -43,3 +43,11 @@ lab-01:
 # Validate the selected artifact schema and recompute its summary.
 verify-lab-01:
     uv run python scripts/verify_lab_01.py
+
+# Generate the deterministic Stage 2 toy-vocabulary trace.
+lab-02:
+    uv run python labs/02_toy_greenlist.py
+
+# Recompute and validate the selected Stage 2 trace.
+verify-lab-02:
+    uv run python scripts/verify_lab_02.py

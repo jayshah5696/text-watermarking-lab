@@ -32,6 +32,13 @@ The first learning question is:
 
 The handoff is deliberately complete enough that an engineer should not need to make product, architecture, statistics, tooling, or publishing decisions.
 
+## Stage 2 contract
+
+After the user approved the next local teaching block, its exact contract was vendored into
+[`docs/stages/02-toy-vocabulary.md`](stages/02-toy-vocabulary.md). That document governs the
+toy selector, trace, tests, evidence, and stop boundary. The external roadmap remains context,
+not permission for Stage 3 or any model work.
+
 ## Suggested next prompt for Codex
 
 Use this only after the user approves implementation:
