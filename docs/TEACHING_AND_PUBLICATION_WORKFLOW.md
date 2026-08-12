@@ -44,6 +44,9 @@ reasoning step to a tooltip, closed disclosure, source code, or future section.
   declared experiment with its own method and evidence.
 - Keep surprising, inconvenient, or null outcomes when they are valid. They often provide the
   strongest limitation or failure panel.
+- If a familiar hand-authored illustration is needed to establish purpose, label it inside the
+  visual as an illustration and keep it visibly separate from recorded evidence. Never retrofit
+  human-readable labels after seeing sampled IDs or present an authored sentence as model output.
 
 Synthetic fixtures should isolate one mechanism. Model-backed fixtures should represent the
 approved prompt set and sampling contract rather than imitate a handcrafted toy result.

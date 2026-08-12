@@ -3,15 +3,28 @@
 ## Article handoff
 
 This note supports the final article section “The secret green-list coin.” The publication brief
-in `docs/stages/02-publication-brief.md` defines the three required figures, their captions and alt
-text, the position 4 teaching spine, the position 2 failure panel, and the claims this trace can
-support.
+in `docs/stages/02-publication-brief.md` defines the sentence illustration plus three evidence
+figures, their captions and alt text, the position 4 teaching spine, the position 2 failure panel,
+and the claims this trace can support.
 
 ## Question
 
 How can a key change the chance of picking a token without forcing one fixed output?
 
 ## Intuition before code
+
+Start with a familiar sentence frame:
+
+> Jack went up the ___.
+
+Words such as `hill`, `road`, `stairs`, and `path` could all fit. In a real generator, a language
+model would score those possibilities. The watermark step would temporarily raise the scores of a
+key-selected subset, then the sampler would still choose from the complete list.
+
+This sentence is a hand-authored concept illustration. It is not model output and it is not Stage 2
+run data. Stage 2 starts with synthetic scores so the watermark operation can be inspected by
+itself. The recorded experiment below uses IDs as its primary labels because the optional word tags
+do not affect any score or choice.
 
 The sampler starts with 20 possible token IDs. Each ID already has a score called a logit. A
 higher logit gives that token a larger chance after the scores are normalized.
@@ -39,7 +52,7 @@ able to rebuild each set from the generated history.
 
 ## Observed result
 
-The trace generated token IDs `[0, 1, 1, 2]`. At each of those four generated contexts, reusing
+The trace recorded chosen IDs `[0, 1, 1, 2]`. At each of those four recorded contexts, reusing
 the same draw without the boost would have selected `[0, 0, 0, 1]`. These are four one-step
 comparisons. They are not a separately generated no-boost sequence.
 
@@ -54,9 +67,9 @@ At position 4, the recent context was `[15, 0, 1, 1]`. The toy rule selected IDs
 `[2, 5, 6, 10, 11]` as green. Token 2 started with logit 1.5. The bias raised it to 3.5, and its
 probability rose from about 0.124 to 0.319 after normalization.
 
-The recorded draw was about 0.3073. The unadjusted distribution mapped that draw to token 1. The
-adjusted distribution mapped the same draw to token 2. The detector rebuilt the green set from
-the context and counted token 2 as a hit.
+The recorded draw was about 0.3073. The unadjusted probability list mapped that draw to ID 1. The
+adjusted list mapped the same draw to ID 2. The checker rebuilt the green set from the context and
+counted ID 2 as a hit.
 
 ## What surprised us
 
