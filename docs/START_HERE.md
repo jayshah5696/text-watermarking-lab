@@ -19,9 +19,9 @@ Read these local Obsidian files in order. They are the source of truth until the
 
 Supporting research, source notes, experiment design, blog outline, and visual assets live beside those files.
 
-## Locked first slice
+## Completed first slice
 
-After explicit approval, implement only:
+The first approved implementation contained only:
 
 - Stage 0: reproducible Python/`uv`/`just` repository foundation.
 - Stage 1: a CPU-only biased-coin detector with no LLM, model, tokenizer, dataset, cloud service, or GPU.
@@ -39,10 +39,12 @@ After the user approved the next local teaching block, its exact contract was ve
 toy selector, trace, tests, evidence, and stop boundary. The external roadmap remains context,
 not permission for Stage 3 or any model work.
 
-## Suggested next prompt for Codex
+## Current next approval
 
-Use this only after the user approves implementation:
+Stages 0–2 are complete locally. Stage 3 would introduce a real model and tokenizer, so it needs
+a separate explicit approval. Model or tokenizer access, downloads, datasets, Modal, GPUs,
+GitHub remotes, and publishing remain separate gates.
 
-> Implement Stages 0–1 exactly from the canonical handoff referenced in `docs/START_HERE.md`. First inspect all source instructions and restate the authorization boundary. Do not touch models, tokenizers, datasets, Modal, GPUs, GitHub remotes, or publishing. Work in small conventional commits, verify every required Stage 0–1 gate, and stop at the builder response defined by the handoff.
-
-Until that approval arrives, Codex should summarize its understanding and wait.
+The next implementation agent must read the matching roadmap and algorithm notes, then prepare or
+review a Stage 3 implementation contract before any model work begins. A planning document does
+not grant that approval.

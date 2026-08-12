@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Stage 2: color a toy vocabulary</title>
+  <style>
+    :root {
+      --paper: #f5f0e4;
+      --paper-2: #fffaf0;
+      --paper-3: #ebe2d1;
+      --ink: #18201d;
+      --muted: #59615d;
+      --line: rgba(24, 32, 29, .18);
+      --green: #157a5b;
+      --green-soft: #d9eee4;
+      --blue: #405b96;
+      --blue-soft: #e1e7f3;
+      --orange: #b85128;
+      --orange-soft: #f3dfd4;
+      --gold: #a27b12;
+      --shadow: 0 18px 50px rgba(50, 42, 27, .11);
+      --radius: 20px;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: "Avenir Next", Avenir, "Gill Sans", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #151a18;
+        --paper-2: #1d2421;
+        --paper-3: #29312d;
+        --ink: #f4efe2;
+        --muted: #b6bdb7;
+        --line: rgba(244, 239, 226, .17);
+        --green: #66c79f;
+        --green-soft: #173d30;
+        --blue: #9eb5ed;
+        --blue-soft: #252f49;
+        --orange: #f09b72;
+        --orange-soft: #472a21;
+        --gold: #e4c35e;
+        --shadow: 0 18px 60px rgba(0, 0, 0, .28);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px),
+        var(--paper);
+      background-size: 32px 32px;
+      font-family: var(--sans);
+      font-size: 18px;
+      line-height: 1.62;
+    }
+    button, summary { font: inherit; }
+    button { color: inherit; }
+    code, .mono { font-family: var(--mono); }
+    code {
+      padding: .12em .38em;
+      border-radius: .35em;
+      background: color-mix(in srgb, var(--blue) 13%, transparent);
+      font-size: .9em;
+    }
+    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    header { padding: 54px 0 30px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(34px, 6vw, 74px);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: var(--paper-2);
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      right: -150px;
+      top: -180px;
+      border: 70px solid var(--green-soft);
+      border-radius: 50%;
+      opacity: .8;
+    }
+    .eyebrow {
+      color: var(--green);
+      font: 700 .75rem/1.2 var(--mono);
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.08; }
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 850px;
+      margin-top: 18px;
+      font-family: var(--serif);
+      font-size: clamp(3rem, 8vw, 6.6rem);
+      font-weight: 650;
+      letter-spacing: -.045em;
+    }
+    h1 em { color: var(--green); font-weight: inherit; }
+    h2 {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 5vw, 4.2rem);
+      letter-spacing: -.035em;
+    }
+    h3 { font-size: 1.25rem; }
+    .lede { position: relative; z-index: 1; max-width: 720px; margin: 24px 0 0; font-size: 1.22rem; }
+    .promise {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 34px;
+    }
+    .promise div { padding: 18px; border-radius: 14px; background: var(--paper-3); }
+    .promise strong, .promise span { display: block; }
+    .promise span { margin-top: 5px; color: var(--muted); font-size: .9rem; }
+    section { padding: 72px 0; }
+    section:nth-child(even) { background: color-mix(in srgb, var(--paper-2) 78%, transparent); }
+    .section-head { max-width: 790px; margin-bottom: 28px; }
+    .section-head h2 { margin-top: 10px; }
+    .section-head p { color: var(--muted); font-size: 1.08rem; }
+    .card {
+      padding: clamp(22px, 4vw, 36px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-2);
+      box-shadow: 0 8px 30px rgba(30, 30, 20, .05);
+    }
+    .callout {
+      padding: 18px 20px;
+      border-left: 5px solid var(--green);
+      border-radius: 0 14px 14px 0;
+      background: var(--green-soft);
+    }
+    .callout.orange { border-color: var(--orange); background: var(--orange-soft); }
+    .muted { color: var(--muted); }
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .token {
+      position: relative;
+      min-width: 0;
+      padding: 14px;
+      border: 2px solid transparent;
+      border-radius: 13px;
+      background: var(--paper-3);
+      transition: border-color .2s, background .2s, transform .2s;
+    }
+    .token .id { color: var(--muted); font: 700 .72rem var(--mono); }
+    .token .label { display: block; overflow: hidden; margin-top: 4px; font-weight: 700; text-overflow: ellipsis; }
+    .token .membership { display: block; min-height: 1.2em; margin-top: 4px; color: var(--muted); font-size: .72rem; }
+    .token.boosted {
+      border-color: var(--green);
+      background: var(--green-soft);
+      background-image: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--green) 10%, transparent) 8px 16px);
+    }
+    .token.chosen { outline: 4px solid color-mix(in srgb, var(--orange) 35%, transparent); transform: translateY(-2px); }
+    .definition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+    .definition { padding: 20px; border-radius: 16px; background: var(--paper-3); }
+    .definition strong { display: block; margin-bottom: 7px; }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .fixed-box { padding: 24px; border-radius: 18px; background: var(--blue-soft); }
+    .context { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+    .context span { padding: 8px 11px; border-radius: 9px; background: var(--paper-2); font: 700 .9rem var(--mono); }
+    .instruction { margin: 0 0 16px; padding: 14px 16px; border-radius: 12px; background: var(--orange-soft); }
+    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    button {
+      min-height: 46px;
+      padding: 10px 17px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper-2);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .15s, background .15s, border-color .15s;
+    }
+    button:hover { transform: translateY(-1px); border-color: var(--green); }
+    button:focus-visible, summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+    button.primary, button.active { color: #fff; border-color: var(--green); background: #157a5b; }
+    button.choice.selected { border-color: var(--orange); background: var(--orange-soft); }
+    .feedback { min-height: 74px; margin-top: 18px; padding: 16px; border-radius: 12px; background: var(--paper-3); }
+    .prob-panel { padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper-2); }
+    .prob-panel + .prob-panel { margin-top: 16px; }
+    .prob-panel.locked { opacity: .42; filter: grayscale(.8); }
+    .prob-title { display: flex; justify-content: space-between; gap: 15px; align-items: start; }
+    .result-chip { padding: 8px 11px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font: 700 .82rem var(--mono); }
+    .strip-wrap { position: relative; margin: 36px 0 18px; padding-top: 24px; }
+    .prob-strip { display: flex; width: 100%; height: 62px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-3); }
+    .segment { position: relative; min-width: 1px; border-right: 1px solid color-mix(in srgb, var(--paper-2) 65%, transparent); background: var(--blue); opacity: .72; }
+    .segment.boosted { background: var(--green); opacity: .95; }
+    .segment.selected { outline: 4px solid var(--orange); outline-offset: -4px; z-index: 2; }
+    .segment span { position: absolute; inset: 18px 2px auto; overflow: hidden; color: #fff; font: 700 .67rem var(--mono); text-align: center; }
+    .draw-marker { position: absolute; top: 0; bottom: -9px; width: 3px; background: var(--orange); z-index: 5; }
+    .draw-marker::before { content: "draw 0.3073"; position: absolute; top: -4px; left: 7px; width: max-content; color: var(--orange); font: 700 .7rem var(--mono); }
+    .axis { display: flex; justify-content: space-between; color: var(--muted); font: .72rem var(--mono); }
+    .focus-values { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+    .focus-value { padding: 15px; border-radius: 12px; background: var(--paper-3); }
+    .focus-value strong { display: block; font-size: 1.35rem; }
+    .prob-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .failure { display: grid; grid-template-columns: .75fr 1.25fr; gap: 18px; align-items: center; }
+    .big-number { font-family: var(--serif); font-size: clamp(3.5rem, 8vw, 6rem); line-height: .95; color: var(--green); }
+    .replay-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 18px; }
+    .replay-summary { position: sticky; top: 18px; }
+    .hit-count { margin: 12px 0; font: 700 3rem/1 var(--serif); }
+    .timeline { display: grid; gap: 12px; }
+    .trace-step { display: none; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper-2); }
+    .trace-step.visible { display: block; animation: rise .25s ease-out both; }
+    .trace-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .member-badge { padding: 6px 9px; border-radius: 8px; font: 700 .75rem var(--mono); }
+    .member-badge.yes { background: var(--green-soft); color: var(--green); }
+    .member-badge.no { background: var(--paper-3); color: var(--muted); }
+    .mapping { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; }
+    .map-card { padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper-2); }
+    .map-word { display: grid; place-items: center; color: var(--green); font: 700 1rem var(--mono); }
+    .limits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .limit { padding: 22px; border-radius: 16px; background: var(--paper-3); }
+    details { margin-top: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-2); }
+    summary { min-height: 48px; padding: 14px 18px; cursor: pointer; font-weight: 750; }
+    .details-body { padding: 0 18px 20px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
+    th { color: var(--muted); font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; }
+    pre { overflow-x: auto; padding: 18px; border-radius: 12px; color: var(--paper-2); background: var(--ink); font: .78rem/1.6 var(--mono); }
+    footer { padding: 42px 0 80px; color: var(--muted); }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @media (max-width: 820px) {
+      .promise, .definition-grid, .workspace, .prob-comparison, .failure, .replay-layout, .mapping { grid-template-columns: 1fr; }
+      .map-word { min-height: 40px; }
+      .replay-summary { position: static; }
+      .token-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+      body { font-size: 16px; }
+      .shell { width: min(100% - 20px, 1120px); }
+      header { padding-top: 16px; }
+      .hero { padding: 28px 20px; border-radius: 22px; }
+      section { padding: 52px 0; }
+      .token-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .focus-values, .limits { grid-template-columns: 1fr; }
+      .prob-panel { padding: 18px 14px; }
+      .prob-title { display: block; }
+      .result-chip { display: inline-block; margin-top: 8px; }
+      .draw-marker::before { left: -45px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div class="hero">
+      <div class="eyebrow">Text watermarking lab / Stage 2</div>
+      <h1>Raise some chances. <em>Keep every choice.</em></h1>
+      <p class="lede">How can a key raise some token chances without forcing one fixed output? We will follow one draw through 20 toy choices, then check the chosen token from its observed history.</p>
+      <div class="promise">
+        <div><strong>20 toy options</strong><span>No tokenizer or language model is involved.</span></div>
+        <div><strong>One fixed draw</strong><span>Only the +2 score boost changes.</span></div>
+        <div><strong>One narrow claim</strong><span>The trace teaches mechanics, not detection accuracy.</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="choices">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">01 / Meet the choices</div>
+          <h2>The program chooses one of 20 numbered options.</h2>
+          <p>A token in this page is one toy option. The word label helps us read the trace. It did not come from a real tokenizer.</p>
+        </div>
+        <div class="card">
+          <div class="token-grid" id="introTokens" aria-label="Twenty toy token options"></div>
+          <div class="definition-grid">
+            <div class="definition"><strong>Token ID</strong><span>The option number, from 0 to 19.</span></div>
+            <div class="definition"><strong>Score</strong><span>A larger score leads to a larger probability after all scores are converted together.</span></div>
+            <div class="definition"><strong>Probability</strong><span>The width of that option's part of the range from 0 to 1.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ordinary-draw">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">02 / Start with no boost</div>
+          <h2>One number selects one probability interval.</h2>
+          <p>The 20 probabilities sit end to end from 0 to 1. The fixed draw selects whichever interval contains it.</p>
+        </div>
+        <div class="prob-panel">
+          <div class="prob-title">
+            <div><h3>Same-context no-boost comparison</h3><p class="muted">Context, key, scores, and draw are fixed.</p></div>
+            <span class="result-chip">selects 1: birch</span>
+          </div>
+          <div class="strip-wrap">
+            <div class="prob-strip" id="plainStrip" aria-label="Original probability intervals"></div>
+            <div class="draw-marker" style="left:30.7310772959%" aria-label="Fixed draw 0.3073"></div>
+          </div>
+          <div class="axis"><span>0</span><span>probabilities total 1</span><span>1</span></div>
+          <div class="callout" style="margin-top:18px">Token 1's interval runs from about 0.185 to 0.336. Draw 0.3073 sits inside it, so the no-boost comparison selects <strong>1: birch</strong>.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="selector">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">03 / Select five options</div>
+          <h2>The key and recent IDs choose who gets a boost.</h2>
+          <p>The public teaching key and the four option IDs immediately before this choice always produce the same five selected IDs.</p>
+        </div>
+        <div class="workspace">
+          <div class="fixed-box">
+            <h3>Inputs that stay fixed</h3>
+            <p class="muted">The key is public. It provides reproducibility, not secrecy.</p>
+            <div class="eyebrow" style="margin-top:18px">Previous four IDs</div>
+            <div class="context"><span>15</span><span>0</span><span>1</span><span>1</span></div>
+            <div class="eyebrow">Teaching key</div>
+            <code>stage-02-public-demo-key-v1</code>
+            <div class="button-row">
+              <button class="primary" id="revealSet">Reveal five selected IDs</button>
+              <button id="repeatSet" disabled>Run the same selector again</button>
+            </div>
+            <div class="feedback" id="selectorFeedback">Instruction: reveal the set. Watch exactly five of the 20 options gain a "selected for boost" label.</div>
+          </div>
+          <div class="card">
+            <div class="token-grid" id="selectorTokens" aria-label="Toy options before selector reveal"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="prediction">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">04 / Predict first</div>
+          <h2>What will the +2 boost do?</h2>
+          <p>The key, context, five selected IDs, original scores, and draw will stay fixed. Only the boost amount changes from 0 to 2.</p>
+        </div>
+        <div class="card">
+          <p class="instruction"><strong>Choose before revealing the result.</strong> Will the boost force a selected token, or raise its chance while unselected tokens remain possible?</p>
+          <div class="button-row" id="predictionChoices">
+            <button class="choice" data-prediction="force">Force a selected token</button>
+            <button class="choice" data-prediction="raise">Raise the chance</button>
+          </div>
+          <div class="feedback" id="predictionFeedback">What to watch next: whether every unselected probability becomes zero.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bias">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">05 / Change one value</div>
+          <h2>The same draw now selects a different token.</h2>
+          <p>Adding 2 changes only the five selected scores. The page recalculates all 20 probabilities so they total 1 again.</p>
+        </div>
+        <p class="instruction"><strong>Try this:</strong> reveal the +2 state. Watch token 2's interval and the selected token. Everything except the boost stays fixed.</p>
+        <div class="button-row" style="margin-bottom:18px">
+          <button class="active" id="showPlain">No boost</button>
+          <button id="showBoosted">Reveal +2 boost</button>
+        </div>
+        <div class="prob-comparison">
+          <div class="prob-panel">
+            <div class="prob-title"><h3>No boost</h3><span class="result-chip">1: birch</span></div>
+            <div class="strip-wrap">
+              <div class="prob-strip" id="comparePlainStrip"></div>
+              <div class="draw-marker" style="left:30.7310772959%"></div>
+            </div>
+            <div class="axis"><span>0</span><span>same draw</span><span>1</span></div>
+            <div class="focus-values">
+              <div class="focus-value"><span class="muted">1: birch</span><strong>15.1%</strong><small>not selected for boost</small></div>
+              <div class="focus-value"><span class="muted">2: cobalt</span><strong>12.4%</strong><small>selected for boost</small></div>
+            </div>
+          </div>
+          <div class="prob-panel locked" id="boostedPanel" aria-live="polite">
+            <div class="prob-title"><h3>After +2 boost</h3><span class="result-chip">result hidden</span></div>
+            <div class="strip-wrap">
+              <div class="prob-strip" id="compareBoostedStrip"></div>
+              <div class="draw-marker" style="left:30.7310772959%"></div>
+            </div>
+            <div class="axis"><span>0</span><span>same draw</span><span>1</span></div>
+            <div class="focus-values">
+              <div class="focus-value"><span class="muted">1: birch</span><strong id="birchBoosted">hidden</strong><small>score stays 1.7</small></div>
+              <div class="focus-value"><span class="muted">2: cobalt</span><strong id="cobaltBoosted">hidden</strong><small>score rises from 1.5 to 3.5</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="feedback" id="biasFeedback">The no-boost result is visible. Reveal +2 to compare the same draw.</div>
+      </div>
+    </section>
+
+    <section id="failure-case">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">06 / Check the common mistake</div>
+          <h2>A preference does not guarantee the result.</h2>
+          <p>Position 2 uses the same +2 rule. The context, selected IDs, and draw differ because this is another recorded step.</p>
+        </div>
+        <div class="failure card">
+          <div>
+            <div class="big-number">72.6%</div>
+            <p>of the probability belongs to the five selected options at position 2.</p>
+          </div>
+          <div>
+            <p class="instruction"><strong>Prediction:</strong> Can an unselected token still win?</p>
+            <button id="revealFailure">Show the recorded choice</button>
+            <div class="feedback" id="failureFeedback">The draw and result are hidden. The unselected options still hold 27.4% total probability.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="replay">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">07 / Check the observed history</div>
+          <h2>The checker rebuilds membership. It does not resample.</h2>
+          <p>The checker sees the initial four IDs and the choices already made. At each step it uses the same public key and previous four IDs to rebuild the selected set.</p>
+        </div>
+        <div class="replay-layout">
+          <div class="card replay-summary">
+            <h3>Running checker count</h3>
+            <div class="hit-count" id="hitCount">0 of 0</div>
+            <p><code>G</code> counts chosen tokens that belonged to their step's selected set. <code>T</code> counts scored steps.</p>
+            <button class="primary" id="nextStep">Show position 1</button>
+            <div class="feedback" id="replayFeedback">Instruction: advance one position at a time. Watch the four-ID context change and the hit count update.</div>
+          </div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mapping">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">08 / Map the toy to later work</div>
+          <h2>The operation has a clear place in generation.</h2>
+          <p>Stage 2 supplies synthetic scores. A later approved stage would receive scores from a real language model and use actual tokenizer IDs.</p>
+        </div>
+        <div class="mapping">
+          <div class="map-card">
+            <h3>Implemented here</h3>
+            <p>Twenty fixed scores, a toy selection rule, a public key, one draw, and checker replay.</p>
+          </div>
+          <div class="map-word">later</div>
+          <div class="map-card">
+            <h3>Stage 3 preview only</h3>
+            <p>Model scores, real token IDs, explicit sampling order, copied text, and a pinned reference behavior.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="limits">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">09 / Read the result narrowly</div>
+          <h2>Two hits in four steps explain the mechanism.</h2>
+          <p>They do not establish a detection rate. Stage 2 defines no decision threshold and produces no positive or negative detector verdict.</p>
+        </div>
+        <div class="limits">
+          <div class="limit"><h3>No language model</h3><p>The scores and labels are fixed teaching inputs.</p></div>
+          <div class="limit"><h3>No accuracy result</h3><p>Four positions cannot measure false alarms or detection power.</p></div>
+          <div class="limit"><h3>No production security</h3><p>The published key and toy hash rule provide no secrecy or attribution.</p></div>
+          <div class="limit"><h3>No generic AI detector</h3><p>This checker recognizes only the configured toy rule and key.</p></div>
+        </div>
+
+        <details>
+          <summary>Show exact position 4 calculations</summary>
+          <div class="details-body table-wrap"><table id="exactTable"></table></div>
+        </details>
+        <details>
+          <summary>Show formal names and the toy selector</summary>
+          <div class="details-body">
+            <p>The selected share is called <code>gamma</code>. Here it is 0.25, or five of 20 options. The score boost is called <code>delta</code>. Here it is 2.0.</p>
+            <p>For one boosted token compared with one unchanged token, adding 2 multiplies their probability ratio by <code>exp(2)</code>, about 7.389. It does not multiply the boosted token's final probability by 7.389 because all 20 probabilities are recalculated together.</p>
+            <pre>lab-02|v1|&lt;public-key&gt;|&lt;four-context-ids&gt;|&lt;candidate-id&gt;
+
+SHA-256 ranks all 20 candidates.
+The five lowest fingerprints are selected for the boost.</pre>
+            <p>This ranking rule is a teaching device. It is not compatible with an upstream KGW implementation.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Show reproduction details</summary>
+          <div class="details-body">
+            <p>Source commit: <code>f7a1690d28cfb48fc825017891b5d3e82eebdd07</code></p>
+            <p>Config fingerprint: <code>a342b4d1d347587098763e8f2ff6aa75dd86cbb538dc78200963a631b2a0defa</code></p>
+            <pre>just lab-02
+just verify-lab-02
+just check</pre>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    Stage 2 selected evidence. Derived from <code>artifacts/lab-02/trace.json</code> and checked with <code>just verify-lab-02</code>.
+  </footer>
+
+  <script>
+    const vocabulary = ["amber", "birch", "cobalt", "drift", "ember", "fern", "glow", "harbor", "iris", "juniper", "kite", "linen", "moss", "north", "opal", "pine", "quartz", "river", "stone", "tide"];
+    const rawLogits = [1.9, 1.7, 1.5, 1.3, 1.1, 0.9, 0.7, 0.5, 0.3, 0.1, -0.1, -0.3, -0.5, -0.7, -0.9, -1.1, -1.3, -1.5, -1.7, -1.9];
+    const originalProbabilities = [0.18465125258471216, 0.15117965908547404, 0.12377543613312271, 0.10133875603782722, 0.08296915604683616, 0.06792939961247077, 0.055615888500853354, 0.04553443827540474, 0.03728044494020501, 0.03052264676097628, 0.024989829568547332, 0.02045994198194718, 0.016751183706811428, 0.013714709251225343, 0.011228654233501289, 0.009193244536646777, 0.007526792022718858, 0.006162416101021958, 0.005045359575169589, 0.004130791044527804];
+    const position4 = {
+      context: [15, 0, 1, 1],
+      green: [2, 5, 6, 10, 11],
+      adjusted: [1.9, 1.7, 3.5, 1.3, 1.1, 2.9, 2.7, 0.5, 0.3, 0.1, 1.9, 1.7, -0.5, -0.7, -0.9, -1.1, -1.3, -1.5, -1.7, -1.9],
+      probabilities: [0.06432660091767409, 0.05266616641227411, 0.31861174009636434, 0.03530318709399622, 0.02890380495552042, 0.17485783036105043, 0.14316148313308485, 0.01586274448698179, 0.012987316739710205, 0.010633115614765216, 0.06432660091767409, 0.05266616641227411, 0.005835577577316238, 0.004777766824521108, 0.003911704630271164, 0.0032026328777605413, 0.0026220940278411913, 0.002146789018055697, 0.0017576421894522818, 0.0014390357134118992]
+    };
+    const steps = [
+      {position: 1, context: [3, 7, 11, 15], green: [0, 10, 11, 12, 14], sampled: 0, hit: true, hits: 1, z: 1.7320508075688774},
+      {position: 2, context: [7, 11, 15, 0], green: [2, 4, 9, 11, 17], sampled: 1, hit: false, hits: 1, z: 0.8164965809277261},
+      {position: 3, context: [11, 15, 0, 1], green: [8, 12, 15, 16, 19], sampled: 1, hit: false, hits: 1, z: 0.3333333333333333},
+      {position: 4, context: [15, 0, 1, 1], green: [2, 5, 6, 10, 11], sampled: 2, hit: true, hits: 2, z: 1.1547005383792517}
+    ];
+
+    function renderTokens(container, green = [], chosen = null, revealed = false) {
+      container.innerHTML = vocabulary.map((label, id) => {
+        const boosted = revealed && green.includes(id);
+        const membership = revealed ? (boosted ? "selected for boost" : "not selected") : "membership hidden";
+        return `<div class="token ${boosted ? "boosted" : ""} ${chosen === id ? "chosen" : ""}"><span class="id">ID ${id}</span><span class="label">${label}</span><span class="membership">${membership}</span></div>`;
+      }).join("");
+    }
+
+    function renderStrip(container, probabilities, green, selected) {
+      container.innerHTML = probabilities.map((probability, id) => {
+        const width = probability * 100;
+        const showLabel = width >= 5.4;
+        return `<div class="segment ${green.includes(id) ? "boosted" : ""} ${selected === id ? "selected" : ""}" style="width:${width}%" title="ID ${id} ${vocabulary[id]}: ${(probability * 100).toFixed(2)}%">${showLabel ? `<span>${id}</span>` : ""}</div>`;
+      }).join("");
+    }
+
+    renderTokens(document.querySelector("#introTokens"), [], null, false);
+    renderTokens(document.querySelector("#selectorTokens"), position4.green, null, false);
+    renderStrip(document.querySelector("#plainStrip"), originalProbabilities, [], 1);
+    renderStrip(document.querySelector("#comparePlainStrip"), originalProbabilities, position4.green, 1);
+    renderStrip(document.querySelector("#compareBoostedStrip"), position4.probabilities, position4.green, 2);
+
+    const revealSet = document.querySelector("#revealSet");
+    const repeatSet = document.querySelector("#repeatSet");
+    const selectorFeedback = document.querySelector("#selectorFeedback");
+    revealSet.addEventListener("click", () => {
+      renderTokens(document.querySelector("#selectorTokens"), position4.green, null, true);
+      selectorFeedback.textContent = "IDs 2, 5, 6, 10, and 11 are selected for the boost. Green is temporary membership for this context, not a permanent token property.";
+      repeatSet.disabled = false;
+      revealSet.textContent = "Five IDs revealed";
+    });
+    repeatSet.addEventListener("click", () => {
+      renderTokens(document.querySelector("#selectorTokens"), position4.green, null, true);
+      selectorFeedback.textContent = "Same public key and same four IDs produce the same five selected IDs again.";
+    });
+
+    document.querySelectorAll("[data-prediction]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-prediction]").forEach(item => item.classList.remove("selected"));
+        button.classList.add("selected");
+        const correct = button.dataset.prediction === "raise";
+        document.querySelector("#predictionFeedback").textContent = correct
+          ? "Correct. The boost changes probability intervals. Unselected tokens keep nonzero probability."
+          : "The boost does not force a selected result. Unselected tokens keep nonzero probability and can still win.";
+      });
+    });
+
+    const boostedPanel = document.querySelector("#boostedPanel");
+    const showPlain = document.querySelector("#showPlain");
+    const showBoosted = document.querySelector("#showBoosted");
+    showPlain.addEventListener("click", () => {
+      showPlain.classList.add("active");
+      showBoosted.classList.remove("active");
+      document.querySelector("#biasFeedback").textContent = "No boost: draw 0.3073 lands in token 1's interval, so the comparison choice is birch.";
+    });
+    showBoosted.addEventListener("click", () => {
+      boostedPanel.classList.remove("locked");
+      boostedPanel.querySelector(".result-chip").textContent = "selects 2: cobalt";
+      document.querySelector("#birchBoosted").textContent = "5.3%";
+      document.querySelector("#cobaltBoosted").textContent = "31.9%";
+      showBoosted.classList.add("active");
+      showPlain.classList.remove("active");
+      document.querySelector("#biasFeedback").textContent = "Only the boost changed. Cobalt rose from 12.4% to 31.9%. The fixed draw now lands in cobalt's interval instead of birch's.";
+    });
+
+    document.querySelector("#revealFailure").addEventListener("click", event => {
+      document.querySelector("#failureFeedback").innerHTML = "The +2 boost was active, but draw <code>0.1123</code> selected unboosted <strong>1: birch</strong>. The rule changes chances. It does not require a selected result.";
+      event.currentTarget.textContent = "Recorded choice revealed";
+    });
+
+    const timeline = document.querySelector("#timeline");
+    timeline.innerHTML = steps.map(step => `<article class="trace-step" data-position="${step.position}"><div class="trace-head"><h3>Position ${step.position}: chose ${step.sampled}:${vocabulary[step.sampled]}</h3><span class="member-badge ${step.hit ? "yes" : "no"}">${step.hit ? "selected set: yes" : "selected set: no"}</span></div><p><strong>Previous four IDs:</strong> <code>[${step.context.join(", ")}]</code></p><p><strong>Rebuilt selected IDs:</strong> <code>[${step.green.join(", ")}]</code></p><p class="muted">Checker count after this step: ${step.hits} selected-set hit${step.hits === 1 ? "" : "s"} among ${step.position} scored step${step.position === 1 ? "" : "s"}.</p></article>`).join("");
+    let replayIndex = 0;
+    document.querySelector("#nextStep").addEventListener("click", event => {
+      if (replayIndex >= steps.length) {
+        replayIndex = 0;
+        document.querySelectorAll(".trace-step").forEach(step => step.classList.remove("visible"));
+      }
+      document.querySelector(`.trace-step[data-position="${replayIndex + 1}"]`).classList.add("visible");
+      const step = steps[replayIndex];
+      replayIndex += 1;
+      document.querySelector("#hitCount").textContent = `${step.hits} of ${step.position}`;
+      document.querySelector("#replayFeedback").textContent = replayIndex === steps.length
+        ? "The checker rebuilt each selected set from preceding observed IDs. The trace contains two selected-set hits in four positions."
+        : `Position ${step.position} checked. Next, the context shifts and includes the choice just made.`;
+      event.currentTarget.textContent = replayIndex === steps.length ? "Replay all four again" : `Show position ${replayIndex + 1}`;
+    });
+
+    const exactTable = document.querySelector("#exactTable");
+    exactTable.innerHTML = `<thead><tr><th>ID</th><th>Label</th><th>Selected</th><th>Raw score</th><th>Boosted score</th><th>No boost</th><th>After +2</th></tr></thead><tbody>${vocabulary.map((label, id) => `<tr><td>${id}</td><td>${label}</td><td>${position4.green.includes(id) ? "yes" : "no"}</td><td>${rawLogits[id].toFixed(1)}</td><td>${position4.adjusted[id].toFixed(1)}</td><td>${(originalProbabilities[id] * 100).toFixed(3)}%</td><td>${(position4.probabilities[id] * 100).toFixed(3)}%</td></tr>`).join("")}</tbody>`;
+  </script>
+</body>
+</html>

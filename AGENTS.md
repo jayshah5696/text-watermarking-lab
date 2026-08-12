@@ -29,7 +29,8 @@ Do not treat a planning document as permission to execute it. If the user's curr
 
 ## Authorization gates
 
-The repository is currently authorized only for bootstrap metadata and an idle Codex session. Do not implement Stage 0 or Stage 1 until the user explicitly approves implementation.
+Stages 0–2 are implemented locally. The user approved Stage 2 toy vocabulary only. Do not
+implement Stage 3 or later work without a new explicit approval.
 
 Separate approval is always required before any of the following:
 
