@@ -89,7 +89,9 @@ def test_trace_json_round_trip_is_byte_stable() -> None:
 def test_markdown_contains_every_step_and_claim_boundary() -> None:
     markdown = trace_to_markdown_bytes(_trace()).decode()
     assert markdown.count("## Position") == 4
-    assert "exp(delta) = 7.389056" in markdown
+    assert "exp(2.0) = 7.389056" in markdown
+    assert "same-context no-boost comparison" in markdown
+    assert "Original probability (no boost)" in markdown
     assert "not an upstream KGW" in markdown
     assert "## Claim boundary" in markdown
 

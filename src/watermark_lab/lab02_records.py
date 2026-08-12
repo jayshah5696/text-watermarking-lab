@@ -278,8 +278,9 @@ def trace_to_markdown_bytes(trace: Lab02Trace) -> bytes:
         f"- Config SHA-256: `{trace.config_sha256}`",
         f"- Public development key: `{config.development_key}`",
         f"- Green fraction: `{config.gamma}` ({green_count} of {len(config.vocabulary)} IDs)",
-        f"- Logit bias: `{config.delta}` "
-        f"(`exp(delta) = {math.exp(config.delta):.6f}` before normalization)",
+        f"- Relative boost: for one selected token compared with one unchanged token, "
+        f"`exp({config.delta}) = {math.exp(config.delta):.6f}`; final probabilities are "
+        "recalculated across all 20 options",
         f"- Initial context IDs: `{list(config.initial_context)}`",
         "",
     ]
@@ -291,14 +292,16 @@ def trace_to_markdown_bytes(trace: Lab02Trace) -> bytes:
                 f"## Position {step.position}",
                 "",
                 f"Context: `{list(step.context)}`. Green IDs: `{list(step.green_token_ids)}`.",
-                f"The visible draw is `{step.sample_draw:.12f}`. Without bias it selects "
-                f"`{step.baseline_token_id}:{baseline_label}`. With bias it selects "
+                f"The fixed draw is `{step.sample_draw:.12f}`. In the same-context no-boost "
+                f"comparison it selects `{step.baseline_token_id}:{baseline_label}`. After "
+                f"the +{config.delta:g} boost it selects "
                 f"`{step.sampled_token_id}:{sampled_label}`.",
-                f"Detector replay: `G={step.green_hits}`, `T={step.eligible_tokens}`, "
-                f"`z={step.z_score:.12f}`.",
+                f"Checker count so far: `G={step.green_hits}` selected-set hits among "
+                f"`T={step.eligible_tokens}` scored steps; running z-score "
+                f"`{step.z_score:.12f}` relative to the 25% toy expectation.",
                 "",
                 "| ID | Label | Green | Raw logit | Adjusted logit | "
-                "Baseline probability | Watermarked probability |",
+                "Original probability (no boost) | Probability after +2 boost |",
                 "|---:|---|:---:|---:|---:|---:|---:|",
             ]
         )
@@ -314,9 +317,10 @@ def trace_to_markdown_bytes(trace: Lab02Trace) -> bytes:
         [
             "## Claim boundary",
             "",
-            "This trace shows how this configured toy selector and public key change token odds",
-            "and how the detector replays the same choices. It does not measure language quality,",
-            "an LLM watermark, a false-positive rate, or Anthropic's private implementation.",
+            "This four-step trace shows how this public teaching key and toy selection rule",
+            "change the probabilities of 20 synthetic options. It also shows how a checker using",
+            "the same rule recounts selected-set hits. It does not measure language quality, an",
+            "LLM watermark, a false-positive rate, or Anthropic's private implementation.",
             "",
         ]
     )
