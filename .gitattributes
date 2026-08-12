@@ -1,0 +1,2 @@
+# Matplotlib emits path-data lines with significant-looking trailing spaces in generated SVGs.
+artifacts/**/*.svg whitespace=-trailing-space

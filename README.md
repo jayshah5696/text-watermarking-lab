@@ -11,8 +11,8 @@ AI-written text.
 
 ## Current status
 
-Stages 0–1 provide the reproducible Python 3.12 foundation and the CPU-only biased-coin detector.
-The Stage 1 evidence run remains pending until its code is committed and the worktree is clean.
+Stages 0–1 provide the reproducible Python 3.12 foundation, CPU-only biased-coin detector, and
+verified selected evidence generated from clean source commit `e99e9e5`.
 
 ```console
 just --list
