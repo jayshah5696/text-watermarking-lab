@@ -1,0 +1,42 @@
+# Project status
+
+## Current stage
+
+Stage 0 repository foundation.
+
+## Implemented
+
+- Local Git repository on `jay/lego-watermark-lab`.
+- Python 3.12 project metadata and locked `uv` environment.
+- Root `justfile` command surface and CPU-only CI contract.
+- Ruff, Pyright, Pytest, and coverage configuration.
+- Project README, MIT license, Codex instructions, claims ledger, and architecture decision.
+- Start-here map to the canonical Obsidian research and implementation handoff.
+
+## Verified
+
+- `uv sync --locked --all-groups` succeeds locally.
+- `just check` passes locally without a model, dataset, cloud service, or GPU.
+- No target GitHub remote exists.
+
+## Not implemented
+
+- Statistical detector code, tests, configurations, figures, or blog evidence.
+- Model/tokenizer integration.
+- Dataset access or manifests.
+- Modal or other hosted compute setup.
+- Hosted detector or public playground.
+
+No detector experiment has run.
+
+## Approval required next
+
+Stage 1 biased-coin detector implementation under the approved Stage 0–1 slice. Model,
+tokenizer, dataset, cloud, GPU, GitHub remote, publishing, and public deployment remain
+separate gates.
+
+## Known limitations
+
+- Stage 0 checks the repository contract but produces no scientific result.
+- The canonical research material currently lives outside this repository in the user's Obsidian vault.
+- The future detector will detect only this project's deliberately embedded watermark profile, not arbitrary AI-generated text.
