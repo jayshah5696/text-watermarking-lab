@@ -4,631 +4,295 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Stage 2: color a toy vocabulary</title>
+  <title>Stage 2: follow one watermarked token choice</title>
   <style>
     :root {
-      --paper: #f5f0e4;
-      --paper-2: #fffaf0;
-      --paper-3: #ebe2d1;
-      --ink: #18201d;
-      --muted: #59615d;
-      --line: rgba(24, 32, 29, .18);
-      --green: #157a5b;
-      --green-soft: #d9eee4;
-      --blue: #405b96;
-      --blue-soft: #e1e7f3;
-      --orange: #b85128;
-      --orange-soft: #f3dfd4;
-      --gold: #a27b12;
-      --shadow: 0 18px 50px rgba(50, 42, 27, .11);
-      --radius: 20px;
-      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-      --sans: "Avenir Next", Avenir, "Gill Sans", sans-serif;
-      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --page:#f2efe8; --surface:#fffdf8; --surface-2:#e9e5dc; --ink:#14201f;
+      --muted:#5c6865; --line:#c9cec8; --blue:#315b89; --blue-soft:#dce8f3;
+      --green:#08765a; --green-soft:#d8eee4; --orange:#c55321; --orange-soft:#f8dfd2;
+      --rust:#9b4936; --rust-soft:#f0ddd7; --yellow:#f1c75b; --shadow:0 20px 55px #1c29251a;
+      --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+      --sans:"Avenir Next",Avenir,"Gill Sans",system-ui,sans-serif;
+      --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
     }
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme:dark) {
       :root {
-        --paper: #151a18;
-        --paper-2: #1d2421;
-        --paper-3: #29312d;
-        --ink: #f4efe2;
-        --muted: #b6bdb7;
-        --line: rgba(244, 239, 226, .17);
-        --green: #66c79f;
-        --green-soft: #173d30;
-        --blue: #9eb5ed;
-        --blue-soft: #252f49;
-        --orange: #f09b72;
-        --orange-soft: #472a21;
-        --gold: #e4c35e;
-        --shadow: 0 18px 60px rgba(0, 0, 0, .28);
+        --page:#111817; --surface:#192321; --surface-2:#25302d; --ink:#f4f0e6;
+        --muted:#b8c1bd; --line:#42504b; --blue:#8db9e7; --blue-soft:#22394c;
+        --green:#70d4ae; --green-soft:#183c30; --orange:#ff9a66; --orange-soft:#4b2a20;
+        --rust:#efa18d; --rust-soft:#442923; --yellow:#f0ca70; --shadow:0 20px 60px #0006;
       }
     }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      color: var(--ink);
-      background:
-        linear-gradient(var(--line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--line) 1px, transparent 1px),
-        var(--paper);
-      background-size: 32px 32px;
-      font-family: var(--sans);
-      font-size: 18px;
-      line-height: 1.62;
-    }
-    button, summary { font: inherit; }
-    button { color: inherit; }
-    code, .mono { font-family: var(--mono); }
-    code {
-      padding: .12em .38em;
-      border-radius: .35em;
-      background: color-mix(in srgb, var(--blue) 13%, transparent);
-      font-size: .9em;
-    }
-    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
-    header { padding: 54px 0 30px; }
-    .hero {
-      position: relative;
-      overflow: hidden;
-      padding: clamp(34px, 6vw, 74px);
-      border: 1px solid var(--line);
-      border-radius: 32px;
-      background: var(--paper-2);
-      box-shadow: var(--shadow);
-    }
-    .hero::after {
-      content: "";
-      position: absolute;
-      width: 360px;
-      height: 360px;
-      right: -150px;
-      top: -180px;
-      border: 70px solid var(--green-soft);
-      border-radius: 50%;
-      opacity: .8;
-    }
-    .eyebrow {
-      color: var(--green);
-      font: 700 .75rem/1.2 var(--mono);
-      letter-spacing: .11em;
-      text-transform: uppercase;
-    }
-    h1, h2, h3 { margin: 0; line-height: 1.08; }
-    h1 {
-      position: relative;
-      z-index: 1;
-      max-width: 850px;
-      margin-top: 18px;
-      font-family: var(--serif);
-      font-size: clamp(3rem, 8vw, 6.6rem);
-      font-weight: 650;
-      letter-spacing: -.045em;
-    }
-    h1 em { color: var(--green); font-weight: inherit; }
-    h2 {
-      font-family: var(--serif);
-      font-size: clamp(2.2rem, 5vw, 4.2rem);
-      letter-spacing: -.035em;
-    }
-    h3 { font-size: 1.25rem; }
-    .lede { position: relative; z-index: 1; max-width: 720px; margin: 24px 0 0; font-size: 1.22rem; }
-    .promise {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 34px;
-    }
-    .promise div { padding: 18px; border-radius: 14px; background: var(--paper-3); }
-    .promise strong, .promise span { display: block; }
-    .promise span { margin-top: 5px; color: var(--muted); font-size: .9rem; }
-    section { padding: 72px 0; }
-    section:nth-child(even) { background: color-mix(in srgb, var(--paper-2) 78%, transparent); }
-    .section-head { max-width: 790px; margin-bottom: 28px; }
-    .section-head h2 { margin-top: 10px; }
-    .section-head p { color: var(--muted); font-size: 1.08rem; }
-    .card {
-      padding: clamp(22px, 4vw, 36px);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--paper-2);
-      box-shadow: 0 8px 30px rgba(30, 30, 20, .05);
-    }
-    .callout {
-      padding: 18px 20px;
-      border-left: 5px solid var(--green);
-      border-radius: 0 14px 14px 0;
-      background: var(--green-soft);
-    }
-    .callout.orange { border-color: var(--orange); background: var(--orange-soft); }
-    .muted { color: var(--muted); }
-    .token-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 22px;
-    }
-    .token {
-      position: relative;
-      min-width: 0;
-      padding: 14px;
-      border: 2px solid transparent;
-      border-radius: 13px;
-      background: var(--paper-3);
-      transition: border-color .2s, background .2s, transform .2s;
-    }
-    .token .id { color: var(--muted); font: 700 .72rem var(--mono); }
-    .token .label { display: block; overflow: hidden; margin-top: 4px; font-weight: 700; text-overflow: ellipsis; }
-    .token .membership { display: block; min-height: 1.2em; margin-top: 4px; color: var(--muted); font-size: .72rem; }
-    .token.boosted {
-      border-color: var(--green);
-      background: var(--green-soft);
-      background-image: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--green) 10%, transparent) 8px 16px);
-    }
-    .token.chosen { outline: 4px solid color-mix(in srgb, var(--orange) 35%, transparent); transform: translateY(-2px); }
-    .definition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
-    .definition { padding: 20px; border-radius: 16px; background: var(--paper-3); }
-    .definition strong { display: block; margin-bottom: 7px; }
-    .workspace {
-      display: grid;
-      grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
-      gap: 18px;
-      align-items: start;
-    }
-    .fixed-box { padding: 24px; border-radius: 18px; background: var(--blue-soft); }
-    .context { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-    .context span { padding: 8px 11px; border-radius: 9px; background: var(--paper-2); font: 700 .9rem var(--mono); }
-    .instruction { margin: 0 0 16px; padding: 14px 16px; border-radius: 12px; background: var(--orange-soft); }
-    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-    button {
-      min-height: 46px;
-      padding: 10px 17px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--paper-2);
-      cursor: pointer;
-      font-weight: 700;
-      transition: transform .15s, background .15s, border-color .15s;
-    }
-    button:hover { transform: translateY(-1px); border-color: var(--green); }
-    button:focus-visible, summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
-    button.primary, button.active { color: #fff; border-color: var(--green); background: #157a5b; }
-    button.choice.selected { border-color: var(--orange); background: var(--orange-soft); }
-    .feedback { min-height: 74px; margin-top: 18px; padding: 16px; border-radius: 12px; background: var(--paper-3); }
-    .prob-panel { padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper-2); }
-    .prob-panel + .prob-panel { margin-top: 16px; }
-    .prob-panel.locked { opacity: .42; filter: grayscale(.8); }
-    .prob-title { display: flex; justify-content: space-between; gap: 15px; align-items: start; }
-    .result-chip { padding: 8px 11px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font: 700 .82rem var(--mono); }
-    .strip-wrap { position: relative; margin: 36px 0 18px; padding-top: 24px; }
-    .prob-strip { display: flex; width: 100%; height: 62px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-3); }
-    .segment { position: relative; min-width: 1px; border-right: 1px solid color-mix(in srgb, var(--paper-2) 65%, transparent); background: var(--blue); opacity: .72; }
-    .segment.boosted { background: var(--green); opacity: .95; }
-    .segment.selected { outline: 4px solid var(--orange); outline-offset: -4px; z-index: 2; }
-    .segment span { position: absolute; inset: 18px 2px auto; overflow: hidden; color: #fff; font: 700 .67rem var(--mono); text-align: center; }
-    .draw-marker { position: absolute; top: 0; bottom: -9px; width: 3px; background: var(--orange); z-index: 5; }
-    .draw-marker::before { content: "draw 0.3073"; position: absolute; top: -4px; left: 7px; width: max-content; color: var(--orange); font: 700 .7rem var(--mono); }
-    .axis { display: flex; justify-content: space-between; color: var(--muted); font: .72rem var(--mono); }
-    .focus-values { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-    .focus-value { padding: 15px; border-radius: 12px; background: var(--paper-3); }
-    .focus-value strong { display: block; font-size: 1.35rem; }
-    .prob-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .failure { display: grid; grid-template-columns: .75fr 1.25fr; gap: 18px; align-items: center; }
-    .big-number { font-family: var(--serif); font-size: clamp(3.5rem, 8vw, 6rem); line-height: .95; color: var(--green); }
-    .replay-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 18px; }
-    .replay-summary { position: sticky; top: 18px; }
-    .hit-count { margin: 12px 0; font: 700 3rem/1 var(--serif); }
-    .timeline { display: grid; gap: 12px; }
-    .trace-step { display: none; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper-2); }
-    .trace-step.visible { display: block; animation: rise .25s ease-out both; }
-    .trace-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
-    .member-badge { padding: 6px 9px; border-radius: 8px; font: 700 .75rem var(--mono); }
-    .member-badge.yes { background: var(--green-soft); color: var(--green); }
-    .member-badge.no { background: var(--paper-3); color: var(--muted); }
-    .mapping { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; }
-    .map-card { padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper-2); }
-    .map-word { display: grid; place-items: center; color: var(--green); font: 700 1rem var(--mono); }
-    .limits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .limit { padding: 22px; border-radius: 16px; background: var(--paper-3); }
-    details { margin-top: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-2); }
-    summary { min-height: 48px; padding: 14px 18px; cursor: pointer; font-weight: 750; }
-    .details-body { padding: 0 18px 20px; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
-    th:nth-child(2), td:nth-child(2) { text-align: left; }
-    th { color: var(--muted); font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; }
-    pre { overflow-x: auto; padding: 18px; border-radius: 12px; color: var(--paper-2); background: var(--ink); font: .78rem/1.6 var(--mono); }
-    footer { padding: 42px 0 80px; color: var(--muted); }
-    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-    @media (max-width: 820px) {
-      .promise, .definition-grid, .workspace, .prob-comparison, .failure, .replay-layout, .mapping { grid-template-columns: 1fr; }
-      .map-word { min-height: 40px; }
-      .replay-summary { position: static; }
-      .token-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    }
-    @media (max-width: 520px) {
-      body { font-size: 16px; }
-      .shell { width: min(100% - 20px, 1120px); }
-      header { padding-top: 16px; }
-      .hero { padding: 28px 20px; border-radius: 22px; }
-      section { padding: 52px 0; }
-      .token-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .focus-values, .limits { grid-template-columns: 1fr; }
-      .prob-panel { padding: 18px 14px; }
-      .prob-title { display: block; }
-      .result-chip { display: inline-block; margin-top: 8px; }
-      .draw-marker::before { left: -45px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { animation: none !important; transition: none !important; }
-    }
+    *{box-sizing:border-box} html{scroll-behavior:auto;scroll-padding-top:94px} body{margin:0;background:var(--page);color:var(--ink);font:17px/1.62 var(--sans)}
+    button,summary{font:inherit;color:inherit} button{min-height:46px;scroll-margin-top:110px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 16px;font-weight:750;cursor:pointer}
+    button:hover{border-color:var(--green);background:color-mix(in srgb,var(--surface) 82%,var(--green-soft))} button:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+    button.active,button.primary{background:var(--green);border-color:var(--green);color:#fff} button.secondary{background:var(--blue-soft);border-color:var(--blue)}
+    code,.mono{font-family:var(--mono)} code{padding:.12em .36em;border-radius:5px;background:var(--surface-2);font-size:.9em;overflow-wrap:anywhere}
+    .shell{width:min(1180px,calc(100% - 40px));margin:auto}.narrow{width:min(860px,100%)}
+    .topbar{border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 92%,transparent)}
+    .topbar .shell{display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:48px;font:700 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase}
+    .status{display:flex;align-items:center;gap:8px}.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+    header{padding:64px 0 44px}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:42px;align-items:end}
+    .kicker{font:800 .72rem/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+    h1,h2,h3,p{margin-top:0} h1,h2{font-family:var(--serif);font-weight:650;letter-spacing:-.035em;line-height:1.04}
+    h1{margin:15px 0 24px;font-size:clamp(3.2rem,7.4vw,7rem)} h2{margin:10px 0 20px;font-size:clamp(2.35rem,5vw,4.7rem)} h3{line-height:1.2}
+    .lede{max-width:760px;font-size:1.22rem}.answer{padding:24px;border-left:6px solid var(--green);background:var(--green-soft);border-radius:0 14px 14px 0}
+    .hero-note{padding:25px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow);border-radius:18px}
+    .hero-note strong{display:block;font:650 1.65rem/1.2 var(--serif);margin-bottom:9px}.hero-note p:last-child{margin-bottom:0;color:var(--muted)}
+    .process-shell{position:sticky;top:0;z-index:20;border-block:1px solid var(--line);background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px)}
+    .process{display:grid;grid-template-columns:repeat(7,1fr);min-height:74px}.process a{position:relative;display:grid;place-items:center;padding:12px 8px;color:var(--muted);font:750 .67rem/1.25 var(--mono);text-align:center;text-decoration:none;text-transform:uppercase}
+    .process a:not(:last-child)::after{content:"›";position:absolute;right:-4px;color:var(--line);font-size:1.5rem}.process a:hover{color:var(--green)}
+    .process b{display:block;color:var(--ink);font-size:.9rem;margin-bottom:3px}
+    section{padding:86px 0;border-bottom:1px solid var(--line)}.section-head{max-width:900px;margin-bottom:34px}.section-head p{max-width:790px;color:var(--muted);font-size:1.08rem}
+    .figure{border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}.figure-head{display:flex;justify-content:space-between;gap:22px;align-items:start;padding:22px 26px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+    .figure-head h3{margin:0}.figure-head p{margin:5px 0 0;color:var(--muted);font-size:.9rem}.figure-label{font:800 .68rem var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--green)}
+    .figure-body{padding:clamp(20px,4vw,38px)}.instruction{margin:0 0 22px;padding:15px 18px;border:1px solid color-mix(in srgb,var(--orange) 35%,var(--line));border-radius:12px;background:var(--orange-soft)}
+    .legend{display:flex;flex-wrap:wrap;gap:12px 20px;color:var(--muted);font-size:.82rem}.legend span{display:flex;align-items:center;gap:7px}.swatch{width:18px;height:12px;border-radius:3px;background:var(--blue)}
+    .swatch.green{border:2px solid var(--green);background:repeating-linear-gradient(135deg,var(--green-soft) 0 4px,transparent 4px 8px)}.swatch.orange{width:3px;background:var(--orange)}.swatch.rust{background:var(--rust)}
+    .history-track{display:grid;grid-template-columns:auto repeat(7,1fr);gap:8px;align-items:center}.history-label{font:750 .72rem var(--mono);color:var(--muted);text-transform:uppercase}
+    .history-token{position:relative;min-width:0;padding:13px 7px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);text-align:center}.history-token .id{display:block;font:800 1rem var(--mono)}.history-token small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+    .history-token.initial::after{content:"initial";position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 5px;border-radius:4px;background:var(--surface);color:var(--muted);font:650 .55rem var(--mono)}
+    .history-token.generated{border-color:var(--green);background:var(--green-soft)}.history-token.focus{outline:3px solid var(--orange);outline-offset:2px}
+    .window-brace{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0 calc(4.7rem + 8px);padding-top:10px;border-top:3px solid var(--blue);text-align:center;color:var(--blue);font:750 .7rem var(--mono)}
+    .context-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}.context-step{padding:16px;border:1px solid var(--line);border-radius:14px}.context-step.active{border-color:var(--orange);box-shadow:inset 0 0 0 2px var(--orange-soft)}.context-step code{display:block;margin:8px 0}.context-step .transition{color:var(--muted);font-size:.82rem}
+    .flow-note{margin:24px 0 0;padding:18px;border-left:4px solid var(--blue);background:var(--blue-soft)}
+    .candidate-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.candidate{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+    .candidate .cid{display:grid;place-items:center;width:30px;height:30px;border-radius:7px;background:var(--surface);font:800 .72rem var(--mono)}.candidate strong{display:block;font-size:.86rem}.candidate small{display:block;color:var(--muted);font:.7rem var(--mono)}
+    .definition-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}.definition{padding:17px;border-top:3px solid var(--blue);background:var(--blue-soft)}.definition strong{display:block;margin-bottom:5px}.definition span{font-size:.88rem;color:var(--muted)}
+    .selector-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:24px}.selector-inputs{padding:22px;border-radius:16px;background:var(--blue-soft)}
+    .context-ribbon{display:flex;gap:7px;margin:10px 0 20px}.context-ribbon span{padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:800 .85rem var(--mono)}
+    .equation{padding:17px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-family:var(--mono);overflow-wrap:anywhere}.equation .result{color:var(--green);font-weight:800}
+    .selector-method{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.method-step{position:relative;padding:12px 9px;border-radius:10px;background:var(--surface);text-align:center;font-size:.78rem}.method-step:not(:last-child)::after{content:"→";position:absolute;right:-10px;color:var(--green);font-weight:900;z-index:2}
+    .rank-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.rank-item{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font:.74rem var(--mono);transition:.2s}
+    .rank-item .rank{color:var(--muted)}.rank-item .hash{color:var(--muted)}.rank-item.selected{border-color:var(--green);background:var(--green-soft)}.rank-item.selected .hash{color:var(--green)}.rank-item.cutoff{margin-bottom:8px;box-shadow:0 5px 0 -2px var(--yellow)}
+    .rank-item.pulse{animation:pulse .55s ease-out}.selector-result{margin-top:18px;padding:16px;border-left:5px solid var(--green);background:var(--green-soft)}
+    .fixed-changed{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}.fixed-changed div{padding:14px 16px;border-radius:12px;background:var(--surface-2);font-size:.88rem}.fixed-changed strong{display:block;color:var(--green);font:800 .68rem var(--mono);text-transform:uppercase;letter-spacing:.08em}
+    .prediction{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;margin-bottom:24px;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}.button-row{display:flex;flex-wrap:wrap;gap:9px}.feedback{margin:12px 0 0;color:var(--muted);min-height:1.7em}
+    .score-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}.score-ledger{display:grid;gap:8px}.score-row{display:grid;grid-template-columns:1.25fr .55fr .4fr .55fr;gap:8px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+    .score-row.head{border:0;background:transparent;color:var(--muted);font:700 .66rem var(--mono);text-transform:uppercase}.score-row.green{border-color:var(--green);background:var(--green-soft)}.score-row .plus{color:var(--green);font-weight:850}.score-row .total{font-weight:850}.score-row .token-name{font-weight:750}.score-row .token-name small{display:block;color:var(--muted);font:600 .68rem var(--mono)}
+    .math-panel{padding:22px;border-radius:16px;background:var(--blue-soft)}.math-panel h3{margin-bottom:10px}.math-step{padding:13px 0;border-bottom:1px solid var(--line)}.math-step:last-child{border:0}.math-step strong{display:block}.math-step code{display:block;margin-top:6px;background:var(--surface)}
+    .prob-shift{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-top:18px}.prob-number{padding:14px;border-radius:11px;background:var(--surface);text-align:center}.prob-number strong{display:block;font:800 1.45rem var(--mono)}.prob-arrow{font-size:1.6rem;color:var(--green)}
+    .mass-bars{margin-top:22px}.mass-title{display:flex;justify-content:space-between;gap:12px;margin:10px 0 5px;font-size:.82rem}.mass-bar{display:flex;height:32px;overflow:hidden;border:1px solid var(--line);border-radius:8px}.mass-green{display:grid;place-items:center;background:repeating-linear-gradient(135deg,var(--green) 0 7px,color-mix(in srgb,var(--green) 75%,var(--surface)) 7px 14px);color:#fff;font:800 .7rem var(--mono)}.mass-red{display:grid;place-items:center;background:var(--surface-2);font:800 .7rem var(--mono)}
+    .ruler-stack{position:relative;display:grid;gap:42px;margin:48px 0 22px}.ruler-block{position:relative}.ruler-title{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.ruler-title strong{font-size:.9rem}.ruler-title span{color:var(--muted);font:.75rem var(--mono)}
+    .prob-ruler{display:flex;height:86px;overflow:hidden;border:2px solid var(--ink);border-radius:10px;background:var(--surface-2)}.segment{position:relative;min-width:1px;border-right:1px solid color-mix(in srgb,var(--surface) 75%,transparent);background:var(--blue);color:#fff}.segment.green{background:repeating-linear-gradient(135deg,var(--green) 0 6px,color-mix(in srgb,var(--green) 78%,#fff) 6px 12px)}.segment.winner{outline:5px solid var(--yellow);outline-offset:-5px}.segment .seg-id{position:absolute;inset:28px 2px auto;text-align:center;font:800 .72rem var(--mono)}
+    .draw-line{position:absolute;z-index:6;top:-12px;bottom:-13px;width:4px;background:var(--orange);box-shadow:0 0 0 1px color-mix(in srgb,var(--surface) 70%,transparent)}.draw-line::before{content:"draw 0.307311";position:absolute;top:-26px;left:8px;width:max-content;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff;font:800 .67rem var(--mono)}
+    .boundary-row{position:relative;height:28px;color:var(--muted);font:.68rem var(--mono)}.boundary{position:absolute;transform:translateX(-50%);top:4px}.boundary::before{content:"";position:absolute;left:50%;bottom:100%;height:7px;border-left:1px solid var(--muted)}
+    .sampling-result{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;padding:20px;border-radius:14px;background:var(--green-soft)}.sampling-result .choice{font:700 1.2rem var(--serif)}.sampling-result .arrow{color:var(--green);font-size:2rem}.sampling-result small{display:block;color:var(--muted);font-family:var(--sans)}
+    .failure-layout{display:grid;grid-template-columns:.75fr 1.25fr;gap:26px}.mass-donut{display:grid;place-items:center;aspect-ratio:1;max-width:300px;margin:auto;border-radius:50%;background:conic-gradient(var(--green) 0 72.6%,var(--rust) 72.6% 100%);position:relative}.mass-donut::after{content:"";position:absolute;inset:24%;border-radius:50%;background:var(--surface)}.mass-donut .inside{position:relative;z-index:1;text-align:center}.mass-donut strong{display:block;font:800 2.4rem var(--mono)}
+    .mini-ruler{position:relative;margin:45px 0 16px}.mini-ruler .prob-ruler{height:72px}.mini-ruler .draw-line::before{content:"draw 0.112284"}.failure-answer{padding:16px;border-left:5px solid var(--rust);background:var(--rust-soft)}
+    .generation-flow{display:grid;gap:12px}.generation-row{display:grid;grid-template-columns:1.25fr auto .6fr auto 1.25fr;gap:12px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.generation-row code{display:block;text-align:center}.drop{color:var(--rust);text-decoration:line-through}.append{color:var(--green);font-weight:800}.flow-arrow{color:var(--muted);font-size:1.3rem}
+    .checker-intro{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}.checker-intro>div{padding:18px;border-radius:14px;background:var(--surface-2)}.checker-intro .uses{border-top:4px solid var(--green)}.checker-intro .omits{border-top:4px solid var(--muted)}
+    .checker-layout{display:grid;grid-template-columns:.7fr 1.3fr;gap:24px}.checker-summary{padding:22px;border-radius:16px;background:var(--blue-soft);align-self:start;position:sticky;top:95px}.count{font:650 3.8rem/1 var(--serif);margin:10px 0}.count-def{display:grid;grid-template-columns:1fr 1fr;gap:8px}.count-def div{padding:10px;background:var(--surface);border-radius:8px;font-size:.78rem}.count-def strong{display:block;font:800 1.2rem var(--mono)}
+    .checker-steps{display:grid;gap:10px}.check-step{display:grid;grid-template-columns:54px 1fr auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer}.check-step.active{border-color:var(--orange);box-shadow:inset 5px 0 var(--orange)}.position-badge{display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:var(--surface-2);font:800 .8rem var(--mono)}.check-step h3{margin:0 0 5px;font-size:1rem}.check-step p{margin:0;color:var(--muted);font-size:.82rem}.hit-badge{padding:7px 9px;border-radius:8px;background:var(--green-soft);color:var(--green);font:800 .7rem var(--mono)}.hit-badge.miss{background:var(--rust-soft);color:var(--rust)}
+    .checker-detail{margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}.checker-chain{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center}.checker-chain div{padding:12px;border-radius:10px;background:var(--surface);text-align:center;font-size:.8rem}.checker-chain strong{display:block}.score-derivation{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:24px}.derive-step{padding:16px;border-top:4px solid var(--blue);background:var(--blue-soft)}.derive-step strong{display:block;font:800 1.25rem var(--mono)}.no-verdict{margin-top:14px;padding:16px;border-left:5px solid var(--orange);background:var(--orange-soft)}
+    .boundary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.boundary-card{padding:21px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}.boundary-card.measured{border-top:5px solid var(--blue)}.boundary-card.derived{border-top:5px solid var(--green)}.boundary-card.limit{border-top:5px solid var(--rust)}.boundary-card h3{margin-bottom:8px}.boundary-card p:last-child{margin-bottom:0;color:var(--muted)}
+    .later-map{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;margin-top:22px}.later-card{padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}.later-arrow{display:grid;place-items:center;color:var(--green);font-size:2rem}
+    details{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}summary{min-height:48px;padding:14px 18px;cursor:pointer;font-weight:800}.details-body{padding:0 18px 20px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.8rem}th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:nth-child(2),td:nth-child(2){text-align:left}th{color:var(--muted);font:.66rem var(--mono);text-transform:uppercase}pre{overflow-x:auto;padding:16px;border-radius:10px;background:var(--ink);color:var(--surface);font:.75rem/1.55 var(--mono)}
+    footer{padding:44px 0 70px;color:var(--muted)}
+    @keyframes pulse{50%{transform:translateX(5px);box-shadow:0 0 0 3px var(--green-soft)}}
+    @media (max-width:900px){.hero,.selector-layout,.score-layout,.failure-layout,.checker-layout{grid-template-columns:1fr}.hero-note{max-width:650px}.candidate-grid{grid-template-columns:repeat(4,1fr)}.definition-row{grid-template-columns:repeat(2,1fr)}.context-steps{grid-template-columns:repeat(2,1fr)}.checker-summary{position:static}.boundary-grid{grid-template-columns:1fr}.generation-row{grid-template-columns:1fr auto .7fr}.generation-row .next-context{grid-column:1/-1}.generation-row .arrow-last{display:none}}
+    @media (max-width:620px){body{font-size:16px}.shell{width:min(100% - 22px,1180px)}header{padding:38px 0 28px}h1{font-size:clamp(3rem,16vw,4.7rem)}section{padding:62px 0}.topbar .shell{font-size:.6rem}.process{overflow-x:auto;grid-template-columns:repeat(7,92px);justify-content:start}.process a{min-height:66px}.figure-head{display:block;padding:18px}.figure-label{margin-bottom:8px}.figure-body{padding:17px}.history-track{grid-template-columns:repeat(4,1fr)}.history-label{grid-column:1/-1}.history-token:nth-of-type(n+5){margin-top:14px}.window-brace{display:none}.candidate-grid{grid-template-columns:repeat(2,1fr)}.definition-row,.context-steps,.fixed-changed,.prediction,.checker-intro,.score-derivation{grid-template-columns:1fr}.selector-method{grid-template-columns:1fr 1fr}.rank-list{grid-template-columns:1fr}.rank-item{font-size:.7rem}.score-row{grid-template-columns:1.2fr .5fr .35fr .5fr;font-size:.78rem;padding:9px 7px}.score-row.head{font-size:.55rem}.prob-shift{grid-template-columns:1fr}.prob-arrow{transform:rotate(90deg);text-align:center}.prob-ruler{height:78px}.draw-line::before{left:-72px}.sampling-result{grid-template-columns:1fr;text-align:center}.sampling-result .arrow{transform:rotate(90deg)}.mass-donut{max-width:235px}.generation-row{grid-template-columns:1fr}.flow-arrow{transform:rotate(90deg);text-align:center}.checker-intro{gap:10px}.check-step{grid-template-columns:42px 1fr}.position-badge{width:40px;height:40px}.hit-badge{grid-column:2}.checker-chain{grid-template-columns:1fr}.checker-chain .flow-arrow{transform:rotate(90deg)}.later-map{grid-template-columns:1fr}.later-arrow{transform:rotate(90deg)}.boundary-row{font-size:.58rem}.boundary-row .boundary:not(:first-child):not(:last-child){display:none}.legend{gap:8px 13px}}
+    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
+  <div class="topbar"><div class="shell"><span>Text watermarking lab · Stage 2</span><span class="status">Checked four-position trace</span></div></div>
   <header class="shell">
     <div class="hero">
-      <div class="eyebrow">Text watermarking lab / Stage 2</div>
-      <h1>Raise some chances. <em>Keep every choice.</em></h1>
-      <p class="lede">How can a key raise some token chances without forcing one fixed output? We will follow one draw through 20 toy choices, then check the chosen token from its observed history.</p>
-      <div class="promise">
-        <div><strong>20 toy options</strong><span>No tokenizer or language model is involved.</span></div>
-        <div><strong>One fixed draw</strong><span>Only the +2 score boost changes.</span></div>
-        <div><strong>One narrow claim</strong><span>The trace teaches mechanics, not detection accuracy.</span></div>
+      <div>
+        <div class="kicker">One complete worked choice</div>
+        <h1>How a key changes the next token.</h1>
+        <p class="lede">We will follow recorded position 4 from its recent history to one chosen token. Every input, score change, probability, interval, and checker step stays visible.</p>
+        <p class="answer"><strong>The short answer:</strong> the recent IDs and a public teaching key select five of 20 candidates. Those five scores receive +2. All 20 probabilities are recalculated, and one draw still decides the token. The rule changes chances. It does not force a result.</p>
       </div>
+      <aside class="hero-note">
+        <div class="kicker">What this page uses</div>
+        <strong>20 synthetic options. No model. No tokenizer.</strong>
+        <p>The word labels make IDs readable. They are not output from a language model. The trace teaches a KGW-style idea with its own toy selector. It does not reproduce Anthropic's private implementation.</p>
+      </aside>
     </div>
   </header>
 
+  <nav class="process-shell" aria-label="Stage 2 mechanism">
+    <div class="process shell">
+      <a href="#history"><span><b>1</b>history</span></a><a href="#selector"><span><b>2</b>green set</span></a><a href="#scores"><span><b>3</b>logits +2</span></a><a href="#sampling"><span><b>4</b>softmax</span></a><a href="#sampling"><span><b>5</b>draw</span></a><a href="#context"><span><b>6</b>append</span></a><a href="#checker"><span><b>7</b>checker</span></a>
+    </div>
+  </nav>
+
   <main>
-    <section id="choices">
+    <section id="history">
       <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">01 / Meet the choices</div>
-          <h2>The program chooses one of 20 numbered options.</h2>
-          <p>A token in this page is one toy option. The word label helps us read the trace. It did not come from a real tokenizer.</p>
-        </div>
-        <div class="card">
-          <div class="token-grid" id="introTokens" aria-label="Twenty toy token options"></div>
-          <div class="definition-grid">
-            <div class="definition"><strong>Token ID</strong><span>The option number, from 0 to 19.</span></div>
-            <div class="definition"><strong>Score</strong><span>A larger score leads to a larger probability after all scores are converted together.</span></div>
-            <div class="definition"><strong>Probability</strong><span>The width of that option's part of the range from 0 to 1.</span></div>
+        <div class="section-head"><div class="kicker">01 / Locate the worked step</div><h2>Position 4 begins with four recent IDs.</h2><p>The context is the four token IDs immediately before the next choice. The generated sequence has already added IDs 0, 1, and 1, so the four-ID window has arrived at <code>[15, 0, 1, 1]</code>.</p></div>
+        <figure class="figure">
+          <figcaption class="figure-head"><div><div class="figure-label">Recorded history</div><h3>Initial context plus the four generated choices</h3><p>Only choices made with the +2 rule enter this history.</p></div><div class="legend"><span><i class="swatch"></i>initial ID</span><span><i class="swatch green"></i>generated ID</span><span><i class="swatch orange"></i>position 4 focus</span></div></figcaption>
+          <div class="figure-body">
+            <div class="history-track" id="historyTrack"></div>
+            <div class="window-brace"><span></span><span></span><span></span><span>position 4 context: [15, 0, 1, 1]</span></div>
+            <div class="context-steps" id="contextSteps"></div>
+            <p class="flow-note"><strong>State rule:</strong> after each choice, drop the oldest context ID and append the chosen token. The public key stays fixed, but the context changes, so the next green set can change.</p>
           </div>
-        </div>
+        </figure>
       </div>
     </section>
 
-    <section id="ordinary-draw">
+    <section id="candidates">
       <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">02 / Start with no boost</div>
-          <h2>One number selects one probability interval.</h2>
-          <p>The 20 probabilities sit end to end from 0 to 1. The fixed draw selects whichever interval contains it.</p>
-        </div>
-        <div class="prob-panel">
-          <div class="prob-title">
-            <div><h3>Same-context no-boost comparison</h3><p class="muted">Context, key, scores, and draw are fixed.</p></div>
-            <span class="result-chip">selects 1: birch</span>
-          </div>
-          <div class="strip-wrap">
-            <div class="prob-strip" id="plainStrip" aria-label="Original probability intervals"></div>
-            <div class="draw-marker" style="left:30.7310772959%" aria-label="Fixed draw 0.3073"></div>
-          </div>
-          <div class="axis"><span>0</span><span>probabilities total 1</span><span>1</span></div>
-          <div class="callout" style="margin-top:18px">Token 1's interval runs from about 0.185 to 0.336. Draw 0.3073 sits inside it, so the no-boost comparison selects <strong>1: birch</strong>.</div>
+        <div class="section-head"><div class="kicker">02 / Meet the candidates</div><h2>The program must choose one of 20 toy tokens.</h2><p>Each candidate has an ID, a readable label, and a raw logit. A logit is an unrestricted score. A larger logit receives more probability after the complete score list is converted.</p></div>
+        <div class="figure">
+          <div class="figure-head"><div><div class="figure-label">Fixed input</div><h3>Twenty candidates in token-ID order</h3><p>The same raw logits are used at every recorded position so context-dependent membership is easier to see.</p></div></div>
+          <div class="figure-body"><div class="candidate-grid" id="candidateGrid"></div><div class="definition-row"><div class="definition"><strong>Candidate</strong><span>One possible next token.</span></div><div class="definition"><strong>Token ID</strong><span>The candidate number, 0 through 19.</span></div><div class="definition"><strong>Logit</strong><span>A score, not a probability or percentage.</span></div><div class="definition"><strong>Probability</strong><span>The final share after all 20 scores are normalized together.</span></div></div></div>
         </div>
       </div>
     </section>
 
     <section id="selector">
       <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">03 / Select five options</div>
-          <h2>The key and recent IDs choose who gets a boost.</h2>
-          <p>The public teaching key and the four option IDs immediately before this choice always produce the same five selected IDs.</p>
-        </div>
-        <div class="workspace">
-          <div class="fixed-box">
-            <h3>Inputs that stay fixed</h3>
-            <p class="muted">The key is public. It provides reproducibility, not secrecy.</p>
-            <div class="eyebrow" style="margin-top:18px">Previous four IDs</div>
-            <div class="context"><span>15</span><span>0</span><span>1</span><span>1</span></div>
-            <div class="eyebrow">Teaching key</div>
-            <code>stage-02-public-demo-key-v1</code>
-            <div class="button-row">
-              <button class="primary" id="revealSet">Reveal five selected IDs</button>
-              <button id="repeatSet" disabled>Run the same selector again</button>
+        <div class="section-head"><div class="kicker">03 / Build the temporary green set</div><h2>The selector ranks all 20 candidates.</h2><p>“Green” means “receives the +2 boost at this position.” It is temporary membership, not a permanent token property, correctness label, or detection result.</p></div>
+        <div class="figure">
+          <div class="figure-head"><div><div class="figure-label">Context + key → five green IDs</div><h3>The cutoff after rank five makes the selection visible</h3><p>SHA-256 turns the same exact message into the same fingerprint. The toy selector uses those fingerprints only to create a reproducible ranking.</p></div></div>
+          <div class="figure-body selector-layout">
+            <div class="selector-inputs">
+              <h3>Inputs for recorded position 4</h3>
+              <p>The previous four generated IDs:</p><div class="context-ribbon"><span>15</span><span>0</span><span>1</span><span>1</span></div>
+              <p>Public teaching key:</p><code>stage-02-public-demo-key-v1</code>
+              <div class="equation" style="margin-top:18px">20 candidates × selected share 0.25 = <span class="result">5 green candidates</span></div>
+              <p style="margin:18px 0 7px"><strong>One candidate message</strong></p>
+              <div class="equation">lab-02|v1|stage-02-public-demo-key-v1|15,0,1,1|2</div>
+              <div class="selector-method"><div class="method-step">build 20 messages</div><div class="method-step">hash each one</div><div class="method-step">sort fingerprints</div><div class="method-step">take first five</div></div>
+              <button class="primary" id="runSelector" style="margin-top:20px">Run the selector for position 4</button>
+              <p class="feedback" id="selectorFeedback" aria-live="polite">The ranking is already shown so the explanation never disappears. Run it to follow the five selected rows.</p>
             </div>
-            <div class="feedback" id="selectorFeedback">Instruction: reveal the set. Watch exactly five of the 20 options gain a "selected for boost" label.</div>
-          </div>
-          <div class="card">
-            <div class="token-grid" id="selectorTokens" aria-label="Toy options before selector reveal"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="prediction">
-      <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">04 / Predict first</div>
-          <h2>What will the +2 boost do?</h2>
-          <p>The key, context, five selected IDs, original scores, and draw will stay fixed. Only the boost amount changes from 0 to 2.</p>
-        </div>
-        <div class="card">
-          <p class="instruction"><strong>Choose before revealing the result.</strong> Will the boost force a selected token, or raise its chance while unselected tokens remain possible?</p>
-          <div class="button-row" id="predictionChoices">
-            <button class="choice" data-prediction="force">Force a selected token</button>
-            <button class="choice" data-prediction="raise">Raise the chance</button>
-          </div>
-          <div class="feedback" id="predictionFeedback">What to watch next: whether every unselected probability becomes zero.</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="bias">
-      <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">05 / Change one value</div>
-          <h2>The same draw now selects a different token.</h2>
-          <p>Adding 2 changes only the five selected scores. The page recalculates all 20 probabilities so they total 1 again.</p>
-        </div>
-        <p class="instruction"><strong>Try this:</strong> reveal the +2 state. Watch token 2's interval and the selected token. Everything except the boost stays fixed.</p>
-        <div class="button-row" style="margin-bottom:18px">
-          <button class="active" id="showPlain">No boost</button>
-          <button id="showBoosted">Reveal +2 boost</button>
-        </div>
-        <div class="prob-comparison">
-          <div class="prob-panel">
-            <div class="prob-title"><h3>No boost</h3><span class="result-chip">1: birch</span></div>
-            <div class="strip-wrap">
-              <div class="prob-strip" id="comparePlainStrip"></div>
-              <div class="draw-marker" style="left:30.7310772959%"></div>
-            </div>
-            <div class="axis"><span>0</span><span>same draw</span><span>1</span></div>
-            <div class="focus-values">
-              <div class="focus-value"><span class="muted">1: birch</span><strong>15.1%</strong><small>not selected for boost</small></div>
-              <div class="focus-value"><span class="muted">2: cobalt</span><strong>12.4%</strong><small>selected for boost</small></div>
-            </div>
-          </div>
-          <div class="prob-panel locked" id="boostedPanel" aria-live="polite">
-            <div class="prob-title"><h3>After +2 boost</h3><span class="result-chip">result hidden</span></div>
-            <div class="strip-wrap">
-              <div class="prob-strip" id="compareBoostedStrip"></div>
-              <div class="draw-marker" style="left:30.7310772959%"></div>
-            </div>
-            <div class="axis"><span>0</span><span>same draw</span><span>1</span></div>
-            <div class="focus-values">
-              <div class="focus-value"><span class="muted">1: birch</span><strong id="birchBoosted">hidden</strong><small>score stays 1.7</small></div>
-              <div class="focus-value"><span class="muted">2: cobalt</span><strong id="cobaltBoosted">hidden</strong><small>score rises from 1.5 to 3.5</small></div>
+            <div>
+              <div class="instruction"><strong>What to watch:</strong> IDs 11, 5, 2, 6, and 10 occupy ranks 1 through 5. The set is later returned in token-ID order as <code>[2, 5, 6, 10, 11]</code>.</div>
+              <div class="rank-list" id="rankList" aria-label="Candidates ranked by SHA-256 fingerprint"></div>
+              <div class="selector-result"><strong>Result for this context:</strong> IDs 2, 5, 6, 10, and 11 are green. Change the context and every candidate message changes, so token 2 need not be green at another position.</div>
             </div>
           </div>
         </div>
-        <div class="feedback" id="biasFeedback">The no-boost result is visible. Reveal +2 to compare the same draw.</div>
       </div>
     </section>
 
-    <section id="failure-case">
+    <section id="scores">
       <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">06 / Check the common mistake</div>
-          <h2>A preference does not guarantee the result.</h2>
-          <p>Position 2 uses the same +2 rule. The context, selected IDs, and draw differ because this is another recorded step.</p>
-        </div>
-        <div class="failure card">
-          <div>
-            <div class="big-number">72.6%</div>
-            <p>of the probability belongs to the five selected options at position 2.</p>
-          </div>
-          <div>
-            <p class="instruction"><strong>Prediction:</strong> Can an unselected token still win?</p>
-            <button id="revealFailure">Show the recorded choice</button>
-            <div class="feedback" id="failureFeedback">The draw and result are hidden. The unselected options still hold 27.4% total probability.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="replay">
-      <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">07 / Check the observed history</div>
-          <h2>The checker rebuilds membership. It does not resample.</h2>
-          <p>The checker sees the initial four IDs and the choices already made. At each step it uses the same public key and previous four IDs to rebuild the selected set.</p>
-        </div>
-        <div class="replay-layout">
-          <div class="card replay-summary">
-            <h3>Running checker count</h3>
-            <div class="hit-count" id="hitCount">0 of 0</div>
-            <p><code>G</code> counts chosen tokens that belonged to their step's selected set. <code>T</code> counts scored steps.</p>
-            <button class="primary" id="nextStep">Show position 1</button>
-            <div class="feedback" id="replayFeedback">Instruction: advance one position at a time. Watch the four-ID context change and the hit count update.</div>
-          </div>
-          <div class="timeline" id="timeline"></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="mapping">
-      <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">08 / Map the toy to later work</div>
-          <h2>The operation has a clear place in generation.</h2>
-          <p>Stage 2 supplies synthetic scores. A later approved stage would receive scores from a real language model and use actual tokenizer IDs.</p>
-        </div>
-        <div class="mapping">
-          <div class="map-card">
-            <h3>Implemented here</h3>
-            <p>Twenty fixed scores, a toy selection rule, a public key, one draw, and checker replay.</p>
-          </div>
-          <div class="map-word">later</div>
-          <div class="map-card">
-            <h3>Stage 3 preview only</h3>
-            <p>Model scores, real token IDs, explicit sampling order, copied text, and a pinned reference behavior.</p>
+        <div class="section-head"><div class="kicker">04 / Change one input</div><h2>Add 2 to five logits. Leave the other 15 alone.</h2><p>Selection changes scores. It does not choose the token. Key, context, raw logits, green IDs, candidate order, and recorded draw all remain fixed.</p></div>
+        <div class="figure">
+          <div class="figure-head"><div><div class="figure-label">One controlled comparison</div><h3>Boost 0 versus boost 2</h3></div><div class="button-row"><button id="biasOff" class="active">Boost 0</button><button id="biasOn">Boost 2</button></div></div>
+          <div class="figure-body">
+            <div class="fixed-changed"><div><strong>Fixed in both views</strong>key, context, raw logits, five green IDs, draw 0.307311</div><div><strong>Only change</strong>add 0 or add 2 to each green logit</div></div>
+            <div class="prediction"><div><strong>Predict before switching:</strong> birch stays at logit 1.7. Can its probability still fall when five other logits rise?</div><div class="button-row"><button data-prediction="no">No</button><button data-prediction="yes">Yes</button></div></div>
+            <p class="feedback" id="predictionFeedback" aria-live="polite">Watch the shared softmax denominator in the next panel.</p>
+            <div class="score-layout">
+              <div><div class="score-ledger" id="scoreLedger"></div><p class="flow-note"><strong>The direct change:</strong> cobalt is green, so <code>1.5 + 2.0 = 3.5</code>. Birch is red, so <code>1.7 + 0 = 1.7</code>. Four other green rows also receive +2.</p></div>
+              <aside class="math-panel">
+                <h3>Then convert all 20 scores together</h3>
+                <p>A calculation called <strong>softmax</strong> gives higher logits more weight, then divides each weight by one shared total. Subtracting the largest logit first avoids huge numbers and leaves the probabilities unchanged.</p>
+                <div class="math-step"><strong>Stable weight</strong><code>weight = exp(adjusted logit − largest logit)</code></div>
+                <div class="math-step"><strong>Shared total after +2</strong><code>sum of 20 weights = 3.138616</code></div>
+                <div class="math-step"><strong>Cobalt, ID 2</strong><code>exp(3.5 − 3.5) / 3.138616 = 0.318612</code></div>
+                <div class="math-step"><strong>Birch, ID 1</strong><code>exp(1.7 − 3.5) / 3.138616 = 0.052666</code></div>
+                <div class="prob-shift"><div class="prob-number"><span>birch logit</span><strong>1.7 → 1.7</strong><small>unchanged</small></div><div class="prob-arrow">→</div><div class="prob-number"><span>birch probability</span><strong>15.1% → 5.3%</strong><small>shared total grew</small></div></div>
+              </aside>
+            </div>
+            <div class="mass-bars">
+              <div class="mass-title"><strong>Before the boost</strong><span>green IDs own 29.3% of probability</span></div><div class="mass-bar"><div class="mass-green" style="width:29.277%">green 29.3%</div><div class="mass-red" style="width:70.723%">red 70.7%</div></div>
+              <div class="mass-title"><strong>After the +2 boost</strong><span>red IDs still keep nonzero probability</span></div><div class="mass-bar"><div class="mass-green" style="width:75.362%">green 75.4%</div><div class="mass-red" style="width:24.638%">red 24.6%</div></div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="limits">
+    <section id="sampling">
       <div class="shell">
-        <div class="section-head">
-          <div class="eyebrow">09 / Read the result narrowly</div>
-          <h2>Two hits in four steps explain the mechanism.</h2>
-          <p>They do not establish a detection rate. Stage 2 defines no decision threshold and produces no positive or negative detector verdict.</p>
-        </div>
-        <div class="limits">
-          <div class="limit"><h3>No language model</h3><p>The scores and labels are fixed teaching inputs.</p></div>
-          <div class="limit"><h3>No accuracy result</h3><p>Four positions cannot measure false alarms or detection power.</p></div>
-          <div class="limit"><h3>No production security</h3><p>The published key and toy hash rule provide no secrecy or attribution.</p></div>
-          <div class="limit"><h3>No generic AI detector</h3><p>This checker recognizes only the configured toy rule and key.</p></div>
-        </div>
-
-        <details>
-          <summary>Show exact position 4 calculations</summary>
-          <div class="details-body table-wrap"><table id="exactTable"></table></div>
-        </details>
-        <details>
-          <summary>Show formal names and the toy selector</summary>
-          <div class="details-body">
-            <p>The selected share is called <code>gamma</code>. Here it is 0.25, or five of 20 options. The score boost is called <code>delta</code>. Here it is 2.0.</p>
-            <p>For one boosted token compared with one unchanged token, adding 2 multiplies their probability ratio by <code>exp(2)</code>, about 7.389. It does not multiply the boosted token's final probability by 7.389 because all 20 probabilities are recalculated together.</p>
-            <pre>lab-02|v1|&lt;public-key&gt;|&lt;four-context-ids&gt;|&lt;candidate-id&gt;
-
-SHA-256 ranks all 20 candidates.
-The five lowest fingerprints are selected for the boost.</pre>
-            <p>This ranking rule is a teaching device. It is not compatible with an upstream KGW implementation.</p>
+        <div class="section-head"><div class="kicker">05 / Sample from intervals</div><h2>The draw selects an interval, not the largest probability.</h2><p>The 20 probabilities are placed end to end in token-ID order. Each candidate owns an interval whose width equals its probability. The recorded draw is the fixed number <code>0.307310772959</code>.</p></div>
+        <div class="figure">
+          <div class="figure-head"><div><div class="figure-label">Same draw on aligned rulers</div><h3>Only the interval boundaries move</h3><p>The no-boost row is a one-step comparison at the real position 4 context. It is not a second generated sequence.</p></div><div class="legend"><span><i class="swatch green"></i>green at position 4</span><span><i class="swatch orange"></i>fixed draw</span></div></div>
+          <div class="figure-body">
+            <p class="instruction"><strong>Instruction:</strong> switch the boost above or use these aligned rulers. Watch cobalt's interval grow across the orange draw while the marker stays at exactly the same place.</p>
+            <div class="ruler-stack" id="rulerStack"></div>
+            <div class="sampling-result"><div class="choice"><small>No-boost comparison</small>draw lands in <strong>1: birch</strong><small>birch interval [0.184651, 0.335831)</small></div><div class="arrow">→</div><div class="choice"><small>Actual choice after +2</small>same draw lands in <strong>2: cobalt</strong><small>cobalt interval [0.116993, 0.435605)</small></div></div>
+            <p class="flow-note"><strong>Why the choice changed:</strong> the draw stayed fixed. Cobalt's larger logit changed the shared probability list, which expanded cobalt's interval across the draw. Every candidate still retained a probability greater than zero.</p>
           </div>
-        </details>
-        <details>
-          <summary>Show reproduction details</summary>
-          <div class="details-body">
-            <p>Source commit: <code>f7a1690d28cfb48fc825017891b5d3e82eebdd07</code></p>
-            <p>Config fingerprint: <code>a342b4d1d347587098763e8f2ff6aa75dd86cbb538dc78200963a631b2a0defa</code></p>
-            <pre>just lab-02
+        </div>
+      </div>
+    </section>
+
+    <section id="failure">
+      <div class="shell">
+        <div class="section-head"><div class="kicker">06 / Test the common mistake</div><h2>A 72.6% preference can still produce a red token.</h2><p>Recorded position 2 uses the same vocabulary, +2 rule, and sampling method. Its context, green set, and draw differ.</p></div>
+        <div class="figure"><div class="figure-head"><div><div class="figure-label">Recorded counterexample</div><h3>Position 2: green is favored, red birch wins</h3></div><button id="revealFailure">Place the recorded draw</button></div>
+          <div class="figure-body failure-layout"><div><div class="mass-donut"><div class="inside"><strong>72.6%</strong><span>green mass</span></div></div><p style="text-align:center;color:var(--muted)">The 15 red IDs retain 27.4% of total probability.</p></div><div><p><strong>Context:</strong> <code>[7, 11, 15, 0]</code><br><strong>Green IDs:</strong> <code>[2, 4, 9, 11, 17]</code></p><div class="mini-ruler" id="failureRuler"></div><div class="failure-answer" id="failureAnswer"><strong>Prediction:</strong> the ruler is visible. Place draw 0.112284 and check whether it lands in green or red.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="context">
+      <div class="shell">
+        <div class="section-head"><div class="kicker">07 / Append and continue</div><h2>Only the actual +2 choice enters history.</h2><p>The no-boost comparison answers one “what if” question and then disappears. The generated token is appended, the oldest context ID drops, and the next position gets a new four-ID context.</p></div>
+        <div class="figure"><div class="figure-head"><div><div class="figure-label">Rolling state</div><h3>Every recorded context transition</h3></div></div><div class="figure-body"><div class="generation-flow" id="generationFlow"></div><p class="flow-note"><strong>Position 4 completes the recorded output:</strong> initial context <code>[3, 7, 11, 15]</code> generated <code>[0, 1, 1, 2]</code>. A fifth position was not run or implied.</p></div></div>
+      </div>
+    </section>
+
+    <section id="checker">
+      <div class="shell">
+        <div class="section-head"><div class="kicker">08 / Reverse perspective</div><h2>The checker repeats the selector on observed history.</h2><p>It does not generate the sequence again. For each observed token, it rebuilds the green set from the current context and key, tests membership, updates its count, then slides the same context window.</p></div>
+        <div class="figure"><div class="figure-head"><div><div class="figure-label">Key + observed IDs → membership count</div><h3>Generation data the checker uses and omits</h3></div><button class="primary" id="nextCheck">Focus position 1</button></div>
+          <div class="figure-body"><div class="checker-intro"><div class="uses"><strong>The checker uses</strong><p>public key, exact selector rule, initial context <code>[3,7,11,15]</code>, and observed IDs <code>[0,1,1,2]</code>.</p></div><div class="omits"><strong>The checker does not need</strong><p>the generator's logits, probabilities, random draws, or stored green labels.</p></div></div>
+            <div class="checker-layout"><aside class="checker-summary"><div class="kicker">Running count</div><div class="count" id="checkCount">0 of 0</div><div class="count-def"><div><strong id="gValue">G = 0</strong>green hits</div><div><strong id="tValue">T = 0</strong>checked positions</div></div><p class="feedback" id="checkFeedback" aria-live="polite">Choose a position or advance through the observed sequence.</p></aside><div><div class="checker-steps" id="checkerSteps"></div><div class="checker-detail" id="checkerDetail">All four positions remain visible. Focusing a row expands the exact context → set → membership calculation here.</div></div></div>
+            <div class="score-derivation"><div class="derive-step"><span>observed green hits</span><strong>G = 2</strong></div><div class="derive-step"><span>checked positions</span><strong>T = 4</strong></div><div class="derive-step"><span>expected hits</span><strong>4 × 0.25 = 1</strong></div><div class="derive-step"><span>running z-score</span><strong>(2 − 1) / 0.866025 = 1.1547</strong></div></div>
+            <div class="no-verdict"><strong>Score, not a verdict.</strong> The z-score is 1.1547 standard deviations above the 25% toy expectation. Stage 2 defines no decision threshold, so it produces no positive or negative detection decision.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="boundary">
+      <div class="shell">
+        <div class="section-head"><div class="kicker">09 / Read the result narrowly</div><h2>The whole chain is visible. The claim stays small.</h2><p>The worked trace answers the learning question: context-dependent score boosts can change one sampled token while keeping every candidate available, and a checker can reconstruct the temporary membership later.</p></div>
+        <div class="boundary-grid"><article class="boundary-card measured"><div class="kicker">Measured trace</div><h3>What was recorded</h3><p>Four choices <code>[0,1,1,2]</code>, their contexts, four draws, all probability lists, and two green hits.</p></article><article class="boundary-card derived"><div class="kicker">Derived</div><h3>What the rule explains</h3><p>Five IDs per context, the +2 score changes, cumulative intervals, checker replay, and z-score 1.1547.</p></article><article class="boundary-card limit"><div class="kicker">Not established</div><h3>What this cannot claim</h3><p>Language quality, detection accuracy, authorship, model behavior, production security, or a generic AI detector.</p></article></div>
+        <div class="later-map"><div class="later-card"><h3>Implemented Stage 2 input</h3><p>Twenty synthetic logits and toy labels feed the selector, boost, softmax, and sampler shown here.</p></div><div class="later-arrow">→</div><div class="later-card"><h3>Later approved model stage</h3><p>A real model and tokenizer would supply logits and IDs. The conceptual location stays the same, but model access and the exact upstream selector require separate approval.</p></div></div>
+        <details><summary>Exact 20-candidate position 4 table</summary><div class="details-body table-wrap"><table id="exactTable"></table></div></details>
+        <details><summary>Selector and relative-odds notes</summary><div class="details-body"><p>The exact toy message format is:</p><pre>lab-02|v1|&lt;public-key&gt;|&lt;comma-separated-context-ids&gt;|&lt;candidate-id&gt;</pre><p>For one green token compared with one unchanged red token, adding 2 multiplies their probability ratio by <code>exp(2) ≈ 7.389</code>. It does not multiply the green token's final probability by 7.389 because the shared denominator also changes.</p><p>This selector is a teaching rule. It is not an upstream KGW pseudorandom function and must not be presented as compatible with one.</p></div></details>
+        <details><summary>Reproduction details</summary><div class="details-body"><p>Source commit: <code>f7a1690d28cfb48fc825017891b5d3e82eebdd07</code></p><p>Config fingerprint: <code>a342b4d1d347587098763e8f2ff6aa75dd86cbb538dc78200963a631b2a0defa</code></p><pre>just lab-02
 just verify-lab-02
-just check</pre>
-          </div>
-        </details>
+just check</pre></div></details>
       </div>
     </section>
   </main>
-
-  <footer class="shell">
-    Stage 2 selected evidence. Derived from <code>artifacts/lab-02/trace.json</code> and checked with <code>just verify-lab-02</code>.
-  </footer>
+  <footer class="shell">Measured values come from <code>artifacts/lab-02/trace.json</code> and are independently checked by <code>just verify-lab-02</code>.</footer>
 
   <script>
-    const vocabulary = ["amber", "birch", "cobalt", "drift", "ember", "fern", "glow", "harbor", "iris", "juniper", "kite", "linen", "moss", "north", "opal", "pine", "quartz", "river", "stone", "tide"];
-    const rawLogits = [1.9, 1.7, 1.5, 1.3, 1.1, 0.9, 0.7, 0.5, 0.3, 0.1, -0.1, -0.3, -0.5, -0.7, -0.9, -1.1, -1.3, -1.5, -1.7, -1.9];
-    const originalProbabilities = [0.18465125258471216, 0.15117965908547404, 0.12377543613312271, 0.10133875603782722, 0.08296915604683616, 0.06792939961247077, 0.055615888500853354, 0.04553443827540474, 0.03728044494020501, 0.03052264676097628, 0.024989829568547332, 0.02045994198194718, 0.016751183706811428, 0.013714709251225343, 0.011228654233501289, 0.009193244536646777, 0.007526792022718858, 0.006162416101021958, 0.005045359575169589, 0.004130791044527804];
-    const position4 = {
-      context: [15, 0, 1, 1],
-      green: [2, 5, 6, 10, 11],
-      adjusted: [1.9, 1.7, 3.5, 1.3, 1.1, 2.9, 2.7, 0.5, 0.3, 0.1, 1.9, 1.7, -0.5, -0.7, -0.9, -1.1, -1.3, -1.5, -1.7, -1.9],
-      probabilities: [0.06432660091767409, 0.05266616641227411, 0.31861174009636434, 0.03530318709399622, 0.02890380495552042, 0.17485783036105043, 0.14316148313308485, 0.01586274448698179, 0.012987316739710205, 0.010633115614765216, 0.06432660091767409, 0.05266616641227411, 0.005835577577316238, 0.004777766824521108, 0.003911704630271164, 0.0032026328777605413, 0.0026220940278411913, 0.002146789018055697, 0.0017576421894522818, 0.0014390357134118992]
-    };
-    const steps = [
-      {position: 1, context: [3, 7, 11, 15], green: [0, 10, 11, 12, 14], sampled: 0, hit: true, hits: 1, z: 1.7320508075688774},
-      {position: 2, context: [7, 11, 15, 0], green: [2, 4, 9, 11, 17], sampled: 1, hit: false, hits: 1, z: 0.8164965809277261},
-      {position: 3, context: [11, 15, 0, 1], green: [8, 12, 15, 16, 19], sampled: 1, hit: false, hits: 1, z: 0.3333333333333333},
-      {position: 4, context: [15, 0, 1, 1], green: [2, 5, 6, 10, 11], sampled: 2, hit: true, hits: 2, z: 1.1547005383792517}
+    const words=["amber","birch","cobalt","drift","ember","fern","glow","harbor","iris","juniper","kite","linen","moss","north","opal","pine","quartz","river","stone","tide"];
+    const raw=[1.9,1.7,1.5,1.3,1.1,.9,.7,.5,.3,.1,-.1,-.3,-.5,-.7,-.9,-1.1,-1.3,-1.5,-1.7,-1.9];
+    const plain=[.18465125258471216,.15117965908547404,.12377543613312271,.10133875603782722,.08296915604683616,.06792939961247077,.055615888500853354,.04553443827540474,.03728044494020501,.03052264676097628,.024989829568547332,.02045994198194718,.016751183706811428,.013714709251225343,.011228654233501289,.009193244536646777,.007526792022718858,.006162416101021958,.005045359575169589,.004130791044527804];
+    const boosted=[.06432660091767409,.05266616641227411,.31861174009636434,.03530318709399622,.02890380495552042,.17485783036105043,.14316148313308485,.01586274448698179,.012987316739710205,.010633115614765216,.06432660091767409,.05266616641227411,.005835577577316238,.004777766824521108,.003911704630271164,.0032026328777605413,.0026220940278411913,.002146789018055697,.0017576421894522818,.0014390357134118992];
+    const green4=[2,5,6,10,11], adjusted=raw.map((v,i)=>v+(green4.includes(i)?2:0));
+    const rank=[[11,"1f82b78762"],[5,"4571366736"],[2,"5121a02245"],[6,"53b61715fd"],[10,"56138bc661"],[4,"5b21af9f2e"],[15,"5e4c71b97e"],[7,"6b4b86658f"],[12,"844f8dc6dc"],[13,"85526a5881"],[18,"8951cfd187"],[0,"a34b9a99f5"],[16,"a46cbc80cb"],[9,"a873100cce"],[8,"ae475ae702"],[3,"ae8ca8854e"],[1,"af8609c21a"],[17,"b9b53adb30"],[14,"bc85838c1d"],[19,"fc7599df26"]];
+    const steps=[
+      {p:1,c:[3,7,11,15],g:[0,10,11,12,14],d:.03533183782698912,b:0,s:0,h:1,z:1.7320508075688774},
+      {p:2,c:[7,11,15,0],g:[2,4,9,11,17],d:.1122842306510452,b:0,s:1,h:1,z:.8164965809277261},
+      {p:3,c:[11,15,0,1],g:[8,12,15,16,19],d:.15657967059376254,b:0,s:1,h:1,z:.3333333333333333},
+      {p:4,c:[15,0,1,1],g:[2,5,6,10,11],d:.30731077295889175,b:1,s:2,h:2,z:1.1547005383792517}
     ];
-
-    function renderTokens(container, green = [], chosen = null, revealed = false) {
-      container.innerHTML = vocabulary.map((label, id) => {
-        const boosted = revealed && green.includes(id);
-        const membership = revealed ? (boosted ? "selected for boost" : "not selected") : "membership hidden";
-        return `<div class="token ${boosted ? "boosted" : ""} ${chosen === id ? "chosen" : ""}"><span class="id">ID ${id}</span><span class="label">${label}</span><span class="membership">${membership}</span></div>`;
-      }).join("");
-    }
-
-    function renderStrip(container, probabilities, green, selected) {
-      container.innerHTML = probabilities.map((probability, id) => {
-        const width = probability * 100;
-        const showLabel = width >= 5.4;
-        return `<div class="segment ${green.includes(id) ? "boosted" : ""} ${selected === id ? "selected" : ""}" style="width:${width}%" title="ID ${id} ${vocabulary[id]}: ${(probability * 100).toFixed(2)}%">${showLabel ? `<span>${id}</span>` : ""}</div>`;
-      }).join("");
-    }
-
-    renderTokens(document.querySelector("#introTokens"), [], null, false);
-    renderTokens(document.querySelector("#selectorTokens"), position4.green, null, false);
-    renderStrip(document.querySelector("#plainStrip"), originalProbabilities, [], 1);
-    renderStrip(document.querySelector("#comparePlainStrip"), originalProbabilities, position4.green, 1);
-    renderStrip(document.querySelector("#compareBoostedStrip"), position4.probabilities, position4.green, 2);
-
-    const revealSet = document.querySelector("#revealSet");
-    const repeatSet = document.querySelector("#repeatSet");
-    const selectorFeedback = document.querySelector("#selectorFeedback");
-    revealSet.addEventListener("click", () => {
-      renderTokens(document.querySelector("#selectorTokens"), position4.green, null, true);
-      selectorFeedback.textContent = "IDs 2, 5, 6, 10, and 11 are selected for the boost. Green is temporary membership for this context, not a permanent token property.";
-      repeatSet.disabled = false;
-      revealSet.textContent = "Five IDs revealed";
-    });
-    repeatSet.addEventListener("click", () => {
-      renderTokens(document.querySelector("#selectorTokens"), position4.green, null, true);
-      selectorFeedback.textContent = "Same public key and same four IDs produce the same five selected IDs again.";
-    });
-
-    document.querySelectorAll("[data-prediction]").forEach(button => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll("[data-prediction]").forEach(item => item.classList.remove("selected"));
-        button.classList.add("selected");
-        const correct = button.dataset.prediction === "raise";
-        document.querySelector("#predictionFeedback").textContent = correct
-          ? "Correct. The boost changes probability intervals. Unselected tokens keep nonzero probability."
-          : "The boost does not force a selected result. Unselected tokens keep nonzero probability and can still win.";
-      });
-    });
-
-    const boostedPanel = document.querySelector("#boostedPanel");
-    const showPlain = document.querySelector("#showPlain");
-    const showBoosted = document.querySelector("#showBoosted");
-    showPlain.addEventListener("click", () => {
-      showPlain.classList.add("active");
-      showBoosted.classList.remove("active");
-      document.querySelector("#biasFeedback").textContent = "No boost: draw 0.3073 lands in token 1's interval, so the comparison choice is birch.";
-    });
-    showBoosted.addEventListener("click", () => {
-      boostedPanel.classList.remove("locked");
-      boostedPanel.querySelector(".result-chip").textContent = "selects 2: cobalt";
-      document.querySelector("#birchBoosted").textContent = "5.3%";
-      document.querySelector("#cobaltBoosted").textContent = "31.9%";
-      showBoosted.classList.add("active");
-      showPlain.classList.remove("active");
-      document.querySelector("#biasFeedback").textContent = "Only the boost changed. Cobalt rose from 12.4% to 31.9%. The fixed draw now lands in cobalt's interval instead of birch's.";
-    });
-
-    document.querySelector("#revealFailure").addEventListener("click", event => {
-      document.querySelector("#failureFeedback").innerHTML = "The +2 boost was active, but draw <code>0.1123</code> selected unboosted <strong>1: birch</strong>. The rule changes chances. It does not require a selected result.";
-      event.currentTarget.textContent = "Recorded choice revealed";
-    });
-
-    const timeline = document.querySelector("#timeline");
-    timeline.innerHTML = steps.map(step => `<article class="trace-step" data-position="${step.position}"><div class="trace-head"><h3>Position ${step.position}: chose ${step.sampled}:${vocabulary[step.sampled]}</h3><span class="member-badge ${step.hit ? "yes" : "no"}">${step.hit ? "selected set: yes" : "selected set: no"}</span></div><p><strong>Previous four IDs:</strong> <code>[${step.context.join(", ")}]</code></p><p><strong>Rebuilt selected IDs:</strong> <code>[${step.green.join(", ")}]</code></p><p class="muted">Checker count after this step: ${step.hits} selected-set hit${step.hits === 1 ? "" : "s"} among ${step.position} scored step${step.position === 1 ? "" : "s"}.</p></article>`).join("");
-    let replayIndex = 0;
-    document.querySelector("#nextStep").addEventListener("click", event => {
-      if (replayIndex >= steps.length) {
-        replayIndex = 0;
-        document.querySelectorAll(".trace-step").forEach(step => step.classList.remove("visible"));
-      }
-      document.querySelector(`.trace-step[data-position="${replayIndex + 1}"]`).classList.add("visible");
-      const step = steps[replayIndex];
-      replayIndex += 1;
-      document.querySelector("#hitCount").textContent = `${step.hits} of ${step.position}`;
-      document.querySelector("#replayFeedback").textContent = replayIndex === steps.length
-        ? "The checker rebuilt each selected set from preceding observed IDs. The trace contains two selected-set hits in four positions."
-        : `Position ${step.position} checked. Next, the context shifts and includes the choice just made.`;
-      event.currentTarget.textContent = replayIndex === steps.length ? "Replay all four again" : `Show position ${replayIndex + 1}`;
-    });
-
-    const exactTable = document.querySelector("#exactTable");
-    exactTable.innerHTML = `<thead><tr><th>ID</th><th>Label</th><th>Selected</th><th>Raw score</th><th>Boosted score</th><th>No boost</th><th>After +2</th></tr></thead><tbody>${vocabulary.map((label, id) => `<tr><td>${id}</td><td>${label}</td><td>${position4.green.includes(id) ? "yes" : "no"}</td><td>${rawLogits[id].toFixed(1)}</td><td>${position4.adjusted[id].toFixed(1)}</td><td>${(originalProbabilities[id] * 100).toFixed(3)}%</td><td>${(position4.probabilities[id] * 100).toFixed(3)}%</td></tr>`).join("")}</tbody>`;
+    const history=[3,7,11,15,0,1,1,2];
+    document.querySelector('#historyTrack').innerHTML='<span class="history-label">IDs</span>'+history.map((id,i)=>`<div class="history-token ${i<4?'initial':'generated'} ${i===7?'focus':''}"><span class="id">${id}</span><small>${words[id]}</small></div>`).join('');
+    document.querySelector('#contextSteps').innerHTML=steps.map(s=>`<div class="context-step ${s.p===4?'active':''}"><strong>Position ${s.p}</strong><code>[${s.c.join(', ')}]</code><div class="transition">choose <span class="append">${s.s}:${words[s.s]}</span>${s.p<4?` → next context`:''}</div></div>`).join('');
+    document.querySelector('#candidateGrid').innerHTML=words.map((w,i)=>`<div class="candidate"><span class="cid">${i}</span><span><strong>${w}</strong><small>raw logit ${raw[i].toFixed(1)}</small></span></div>`).join('');
+    const rankList=document.querySelector('#rankList'); rankList.innerHTML=rank.map(([id,hash],i)=>`<div class="rank-item ${i<5?'selected':''} ${i===4?'cutoff':''}" data-rank="${i+1}"><span class="rank">${i+1}</span><strong>${id}:${words[id]}</strong><span class="hash">${hash}…</span></div>`).join('');
+    document.querySelector('#runSelector').addEventListener('click',e=>{rankList.querySelectorAll('.selected').forEach((el,i)=>setTimeout(()=>el.classList.add('pulse'),i*110));setTimeout(()=>rankList.querySelectorAll('.pulse').forEach(el=>el.classList.remove('pulse')),1200);document.querySelector('#selectorFeedback').textContent='The same key and context reproduce the same five ranked candidates. The green set is [2, 5, 6, 10, 11] in token-ID order.';e.currentTarget.textContent='Repeat with the same key and context'});
+    function renderLedger(on){const ids=[1,2,5,6,10,11];document.querySelector('#scoreLedger').innerHTML=`<div class="score-row head"><span>candidate</span><span>raw</span><span>add</span><span>adjusted</span></div>`+ids.map(id=>`<div class="score-row ${green4.includes(id)?'green':''}"><span class="token-name">${id}:${words[id]}<small>${green4.includes(id)?'green at position 4':'red comparison row'}</small></span><span>${raw[id].toFixed(1)}</span><span class="plus">+${on&&green4.includes(id)?'2.0':'0'}</span><span class="total">${(on?adjusted[id]:raw[id]).toFixed(1)}</span></div>`).join('')+`<div class="score-row"><span class="token-name">14 other rows<small>available in exact table</small></span><span>fixed</span><span>+${on?'0 or 2':'0'}</span><span>nonzero</span></div>`}
+    renderLedger(false); const off=document.querySelector('#biasOff'),on=document.querySelector('#biasOn'); off.addEventListener('click',()=>{renderLedger(false);off.classList.add('active');on.classList.remove('active')});on.addEventListener('click',()=>{renderLedger(true);on.classList.add('active');off.classList.remove('active')});
+    document.querySelectorAll('[data-prediction]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-prediction]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelector('#predictionFeedback').textContent=b.dataset.prediction==='yes'?'Yes. Birch keeps logit 1.7, but five larger weights increase the shared total, so birch receives a smaller share.':'Birch can fall even with an unchanged logit. Softmax divides every weight by the new shared total.'}));
+    function ruler(probs,green,winner,label,bounds){return `<div class="ruler-block"><div class="ruler-title"><strong>${label}</strong><span>probabilities total 1.000000</span></div><div class="prob-ruler">${probs.map((p,i)=>`<div class="segment ${green.includes(i)?'green':''} ${i===winner?'winner':''}" style="width:${p*100}%" aria-label="ID ${i} ${words[i]} ${(p*100).toFixed(3)} percent">${p>.05?`<span class="seg-id">${i}</span>`:''}</div>`).join('')}</div><div class="draw-line" style="left:30.7310772959%"></div><div class="boundary-row">${bounds.map(([x,t])=>`<span class="boundary" style="left:${x*100}%">${t}</span>`).join('')}</div></div>`}
+    document.querySelector('#rulerStack').innerHTML=ruler(plain,green4,1,'No boost: draw selects 1:birch',[[0,'0'],[.184651,'0.184651'],[.335831,'0.335831'],[.459606,'0.459606'],[1,'1']])+ruler(boosted,green4,2,'After +2: same draw selects 2:cobalt',[[0,'0'],[.064327,'0.064327'],[.116993,'0.116993'],[.435605,'0.435605'],[1,'1']]);
+    const fail=[.06874567336399426,.05628419692415598,.3404995492087392,.037728425473279224,.2282436735007165,.025290119900100716,.02070579891124192,.016952474335682352,.013879512079388371,.08396615505836072,.009303715176007823,.05628419692415598,.006236466785084041,.005105987147497677,.004180428702477268,.0034226455397680274,.002802225160293272,.016952474335682352,.001878387698450012,.001537893774924395];
+    document.querySelector('#failureRuler').innerHTML=`<div class="prob-ruler">${fail.map((p,i)=>`<div class="segment ${[2,4,9,11,17].includes(i)?'green':''} ${i===1?'winner':''}" style="width:${p*100}%">${p>.05?`<span class="seg-id">${i}</span>`:''}</div>`).join('')}</div><div class="boundary-row"><span class="boundary" style="left:0">0</span><span class="boundary" style="left:6.8746%">0.068746</span><span class="boundary" style="left:12.503%">0.125030</span><span class="boundary" style="left:100%">1</span></div>`;
+    document.querySelector('#revealFailure').addEventListener('click',e=>{if(!document.querySelector('#failureRuler .draw-line'))document.querySelector('#failureRuler').insertAdjacentHTML('beforeend','<div class="draw-line" style="left:11.2284230651%"></div>');document.querySelector('#failureAnswer').innerHTML='<strong>Recorded result:</strong> draw 0.112284 lies inside red birch interval [0.068746, 0.125030). Green owns most of the probability, but red token 1 still wins. A preference is not a guarantee.';e.currentTarget.textContent='Recorded draw placed'});
+    document.querySelector('#generationFlow').innerHTML=steps.map((s,i)=>`<div class="generation-row"><code>[<span class="drop">${s.c[0]}</span>, ${s.c.slice(1).join(', ')}]</code><span class="flow-arrow">+</span><span class="append">${s.s}:${words[s.s]}</span><span class="flow-arrow arrow-last">→</span><code class="next-context">${i<3?`[${s.c.slice(1).concat(s.s).join(', ')}]`:'recorded output complete'}</code></div>`).join('');
+    const checkerSteps=document.querySelector('#checkerSteps');checkerSteps.innerHTML=steps.map(s=>`<article class="check-step" data-p="${s.p}" tabindex="0"><div class="position-badge">P${s.p}</div><div><h3>Observed ${s.s}:${words[s.s]}</h3><p>Context [${s.c.join(', ')}] → green IDs [${s.g.join(', ')}]</p></div><span class="hit-badge ${s.g.includes(s.s)?'':'miss'}">${s.g.includes(s.s)?'green hit':'red result'}</span></article>`).join('');
+    let activeCheck=-1;function focusCheck(index){activeCheck=index;const s=steps[index];document.querySelectorAll('.check-step').forEach((el,i)=>el.classList.toggle('active',i===index));document.querySelector('#checkCount').textContent=`${s.h} of ${s.p}`;document.querySelector('#gValue').textContent=`G = ${s.h}`;document.querySelector('#tValue').textContent=`T = ${s.p}`;document.querySelector('#checkFeedback').textContent=`Position ${s.p}: the checker rebuilt the green set, tested observed token ${s.s}, and ${s.g.includes(s.s)?'added one green hit':'recorded a red result'}.`;document.querySelector('#checkerDetail').innerHTML=`<div class="checker-chain"><div><strong>Observed context</strong>[${s.c.join(', ')}]</div><span class="flow-arrow">→</span><div><strong>Rebuilt green set</strong>[${s.g.join(', ')}]</div><span class="flow-arrow">→</span><div><strong>${s.g.includes(s.s)?'Green hit':'Red result'}</strong>observed ${s.s}:${words[s.s]} is ${s.g.includes(s.s)?'in':'not in'} the set</div></div>`;document.querySelector('#nextCheck').textContent=index===3?'Replay from position 1':`Focus position ${index+2}`}
+    checkerSteps.querySelectorAll('.check-step').forEach((el,i)=>{el.addEventListener('click',()=>focusCheck(i));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();focusCheck(i)}})});document.querySelector('#nextCheck').addEventListener('click',()=>focusCheck(activeCheck<0||activeCheck===3?0:activeCheck+1));
+    document.querySelector('#exactTable').innerHTML=`<thead><tr><th>ID</th><th>Label</th><th>Green</th><th>Raw logit</th><th>Adjusted</th><th>No boost</th><th>After +2</th></tr></thead><tbody>${words.map((w,i)=>`<tr><td>${i}</td><td>${w}</td><td>${green4.includes(i)?'yes':'no'}</td><td>${raw[i].toFixed(1)}</td><td>${adjusted[i].toFixed(1)}</td><td>${(plain[i]*100).toFixed(3)}%</td><td>${(boosted[i]*100).toFixed(3)}%</td></tr>`).join('')}</tbody>`;
   </script>
 </body>
 </html>
