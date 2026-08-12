@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>How a text watermark detector learns from a biased coin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,650;6..72,750&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#f2eee5; --paper:#fffaf1; --paper2:#fffdf8; --ink:#24211c; --muted:#71695d;
+      --line:rgba(48,42,34,.16); --blue:#1971aa; --blue-soft:#dcecf7; --orange:#d96219;
+      --orange-soft:#f8dfcc; --green:#0b7b6f; --green-soft:#d9eee9; --red:#b54242;
+      --shadow:0 22px 60px rgba(61,50,35,.12); --radius:22px;
+    }
+    @media (prefers-color-scheme:dark){:root{
+      --bg:#171613; --paper:#22201b; --paper2:#29261f; --ink:#f5eddf; --muted:#bdb2a2;
+      --line:rgba(255,244,226,.14); --blue:#78bced; --blue-soft:#1b3649; --orange:#ff8b42;
+      --orange-soft:#4b2b19; --green:#61cdbd; --green-soft:#173d39; --red:#f08a8a;
+      --shadow:0 24px 70px rgba(0,0,0,.28)
+    }}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;color:var(--ink);font-family:"Newsreader",Georgia,serif;line-height:1.56;background:radial-gradient(circle at 8% 2%,color-mix(in srgb,var(--orange) 12%,transparent),transparent 30rem),radial-gradient(circle at 95% 12%,color-mix(in srgb,var(--green) 10%,transparent),transparent 34rem),linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px),var(--bg);background-size:auto,auto,32px 32px,32px 32px,auto}
+    a{color:var(--green);text-underline-offset:3px} button,code,.mono,.eyebrow,.label,.chip{font-family:"DM Mono",ui-monospace,monospace} button{font-size:.84rem}
+    .progress{position:fixed;inset:0 auto auto 0;width:0;height:4px;z-index:30;background:linear-gradient(90deg,var(--orange),var(--green))}
+    .shell{width:min(1120px,calc(100% - 32px));margin:auto} header{min-height:88vh;display:grid;align-items:center;padding:56px 0 32px}.hero{padding:clamp(30px,7vw,82px);border:1px solid var(--line);border-radius:30px;background:color-mix(in srgb,var(--paper) 94%,transparent);box-shadow:var(--shadow)}
+    .eyebrow{font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--orange);font-weight:600} h1,h2,h3,p{margin-top:0} h1{max-width:920px;margin:18px 0 24px;font-size:clamp(3rem,7.5vw,6.8rem);letter-spacing:-.05em;line-height:.92} h1 em{font-style:normal;color:var(--green)} .lede{max-width:790px;color:var(--muted);font-size:clamp(1.16rem,2vw,1.48rem)}
+    .promise{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:34px}.promise div{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--paper2)}.promise strong{display:block;font-size:1.05rem}.promise span{color:var(--muted);font-size:.92rem}
+    main{padding-bottom:100px} section{padding:70px 0}.section-head{max-width:800px;margin-bottom:30px}.section-head p{font-size:1.16rem;color:var(--muted)} h2{font-size:clamp(2.35rem,5vw,4.5rem);letter-spacing:-.04em;line-height:1;margin-bottom:16px} h3{font-size:1.38rem;line-height:1.2;margin-bottom:10px}.muted{color:var(--muted)}
+    .card{padding:clamp(22px,4vw,36px);border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:0 14px 42px rgba(54,44,30,.08)}.callout{padding:22px 25px;border-left:5px solid var(--green);border-radius:0 16px 16px 0;background:var(--green-soft);font-size:1.15rem}.callout.warn{border-color:var(--orange);background:var(--orange-soft)}
+    .plain-definition{display:grid;grid-template-columns:150px 1fr;gap:22px;align-items:center}.calculator{width:130px;height:150px;padding:15px;border-radius:18px;background:var(--ink);color:var(--paper);display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.calculator span{border-radius:5px;background:color-mix(in srgb,var(--paper) 22%,transparent)}.calculator .screen{grid-column:1/-1;background:var(--green);height:34px}.plain-definition p{font-size:1.25rem;margin-bottom:10px}
+    .story-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}.story-step{padding:22px;border-radius:18px;background:var(--paper2);border:1px solid var(--line)}.story-step .num{display:grid;place-items:center;width:32px;height:32px;margin-bottom:14px;border-radius:50%;background:var(--orange);color:#fff;font-family:"DM Mono"}
+    .coin-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.coin-panel{padding:26px;border:1px solid var(--line);border-radius:20px;background:var(--paper)}.coin-panel.baseline{border-top:5px solid var(--blue)}.coin-panel.nudged{border-top:5px solid var(--orange)}.coin-title{display:flex;justify-content:space-between;gap:12px;align-items:start}.coin-title strong{font-size:1.35rem}.chance{font:600 1.35rem "DM Mono";color:var(--blue)}.nudged .chance{color:var(--orange)}
+    .coin-picture{display:flex;align-items:center;gap:22px;margin:22px 0}.coin{position:relative;display:grid;place-items:center;flex:0 0 92px;aspect-ratio:1;border-radius:50%;border:7px double color-mix(in srgb,var(--ink) 35%,transparent);background:linear-gradient(145deg,#f6d678,#caa438);color:#292117;font:700 2.4rem "DM Mono";box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 7px 14px rgba(58,42,9,.15)}.ratio-box{display:flex;gap:4px}.ratio-box span{width:24px;height:48px;border:1px solid var(--line);background:var(--blue-soft)}.ratio-box span.hit{background:var(--blue)}.nudged .ratio-box span{background:var(--orange-soft)}.nudged .ratio-box span.hit{background:var(--orange)}
+    .flips{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:20px 0}.flip{display:grid;place-items:center;aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--ink) 8%,transparent);border:1px solid var(--line);font:600 clamp(.55rem,1.5vw,.75rem) "DM Mono";color:var(--muted)}.flip.heads{background:var(--green);border-color:transparent;color:#fff}.count-readout{min-height:62px;padding:12px 14px;border-radius:12px;background:var(--paper2);font-family:"DM Mono"}.count-readout strong{font-size:1.35rem}
+    button{cursor:pointer;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper2);color:var(--ink)}button:hover,button:focus-visible{border-color:var(--green);outline:none}.primary{background:var(--ink);color:var(--paper);border-color:transparent}.button-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.button-row .active{background:var(--green);color:#fff;border-color:transparent}
+    .worked{display:grid;grid-template-columns:minmax(270px,.72fr) 1.3fr;gap:18px}.sample-box{padding:28px;border-radius:20px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;justify-content:space-between}.sample-box .huge{font-size:clamp(4rem,10vw,7rem);line-height:.85}.sample-box .huge span{font-size:.2em;color:color-mix(in srgb,var(--paper) 68%,transparent)}.sample-box p{color:color-mix(in srgb,var(--paper) 72%,transparent)}.steps{display:grid;gap:10px}.work-step{display:grid;grid-template-columns:38px 1fr auto;gap:14px;align-items:center;padding:15px 17px;border:1px solid var(--line);border-radius:14px;background:var(--paper2);opacity:.25;filter:grayscale(1);transition:.25s}.work-step.visible{opacity:1;filter:none}.work-step .n{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--orange-soft);color:var(--orange);font-family:"DM Mono"}.work-step strong{font-family:"DM Mono";font-size:1.1rem}.work-step output{font:600 1.3rem "DM Mono";color:var(--green)}
+    .batch-list{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin:18px 0}.batch{position:relative;height:110px;border-radius:9px;background:var(--blue-soft);overflow:hidden}.batch span{position:absolute;inset:auto 0 0;background:var(--blue);height:50%;transition:.3s}.batch b{position:absolute;inset:7px 0 auto;text-align:center;font:500 .7rem "DM Mono";z-index:2}.chart-card{padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--paper2)}svg{width:100%;height:auto;display:block}.axis-text{fill:var(--muted);font:12px "DM Mono"}.chart-label{fill:var(--ink);font:600 14px "DM Mono"}
+    .z-line-wrap{padding:30px 20px 18px;border:1px solid var(--line);border-radius:18px;background:var(--paper2);overflow-x:auto}.z-line{position:relative;min-width:690px;height:170px;margin:10px 30px}.z-line:before{content:"";position:absolute;left:4%;right:4%;top:72px;height:4px;border-radius:2px;background:var(--line)}.z-point{position:absolute;top:54px;transform:translateX(-50%);text-align:center}.z-point:before{content:"";display:block;width:18px;height:18px;margin:auto;border-radius:50%;background:var(--blue);border:4px solid var(--paper2)}.z-point strong,.z-point span{display:block;font-family:"DM Mono"}.z-point span{font-size:.72rem;color:var(--muted)}.z-point.focus:before{background:var(--orange);transform:scale(1.25)}.z-point.focus strong{color:var(--orange)}
+    .decision{display:grid;grid-template-columns:1fr 1fr;gap:18px}.decision-rule{padding:28px;border-radius:18px;background:var(--paper2);border:1px solid var(--line)}.rule-line{display:flex;align-items:center;gap:20px;margin:22px 0}.score-pin{padding:13px 16px;border-radius:12px;background:var(--orange-soft);color:var(--orange);font:600 1.2rem "DM Mono"}.cutoff-pin{padding:13px 16px;border-radius:12px;background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red);font:600 1.2rem "DM Mono"}.less{font:600 1.4rem "DM Mono"}.decision-result{padding:28px;border-radius:18px;background:var(--ink);color:var(--paper)}.decision-result p{color:color-mix(in srgb,var(--paper) 72%,transparent)}
+    .length-layout{display:grid;grid-template-columns:.75fr 1.25fr;gap:18px}.lesson-control{padding:26px;border:1px solid var(--line);border-radius:20px;background:var(--paper)}.what-watch{padding:17px;border-radius:13px;background:var(--green-soft);margin-top:18px}.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--paper2)}.label{display:block;color:var(--muted);font-size:.68rem;letter-spacing:.07em;text-transform:uppercase}.metric strong{display:block;margin-top:7px;font-size:2rem;line-height:1}.signal-visual{margin-top:18px}.bar-row{display:grid;grid-template-columns:150px 1fr 60px;gap:12px;align-items:center;margin:12px 0}.bar-track{height:18px;border-radius:9px;background:color-mix(in srgb,var(--ink) 8%,transparent);overflow:hidden}.bar-fill{height:100%;border-radius:inherit;transition:width .35s}.bar-fill.signal{background:var(--orange)}.bar-fill.noise{background:var(--blue)}
+    .distribution-layout{display:grid;grid-template-columns:1.4fr .7fr;gap:18px}.dist-controls{padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--paper)}.rate-grid{display:grid;gap:10px;margin:18px 0}.rate{padding:15px;border-radius:12px;background:var(--paper2);border:1px solid var(--line)}.rate strong{display:block;font-size:1.65rem}.rate.false strong{color:var(--blue)}.rate.caught strong{color:var(--orange)}.watch-copy{min-height:105px;padding:15px;border-radius:12px;background:var(--green-soft)}details{margin-top:18px;border:1px solid var(--line);border-radius:14px;background:var(--paper2)}summary{cursor:pointer;padding:16px 18px;font-weight:650}.details-body{padding:0 18px 18px}.slider-row{margin:14px 0}.slider-row label{display:flex;justify-content:space-between;gap:10px}input[type=range]{width:100%;accent-color:var(--orange)}
+    .game-layout{display:grid;grid-template-columns:1.3fr .7fr;gap:18px}.mystery{padding:26px;border-radius:20px;background:var(--paper);border:1px solid var(--line)}.answer{padding:22px;border-radius:16px;background:var(--paper2);border:1px solid var(--line);min-height:250px}.answer dl{display:grid;grid-template-columns:1fr auto;gap:8px 14px;margin:0}.answer dt{color:var(--muted)}.answer dd{margin:0;font-family:"DM Mono";text-align:right}.answer .lesson{margin-top:16px;padding:14px;border-radius:10px;background:var(--orange-soft)}
+    .mapping{display:grid;grid-template-columns:1fr 90px 1fr;gap:16px;align-items:stretch}.mapping-side{padding:26px;border:1px solid var(--line);border-radius:20px;background:var(--paper)}.map-arrow{display:grid;place-items:center;color:var(--green);font:600 2rem "DM Mono"}.token-choice{display:flex;flex-wrap:wrap;gap:8px;margin:17px 0}.token-choice span{padding:9px 12px;border-radius:9px;background:color-mix(in srgb,var(--ink) 7%,transparent);font-family:"DM Mono"}.token-choice .green-token{background:var(--green-soft);border:2px solid var(--green)}.mapping-table{display:grid;grid-template-columns:1fr 1fr;margin-top:18px;border:1px solid var(--line);border-radius:15px;overflow:hidden}.mapping-table div{padding:12px 15px;border-bottom:1px solid var(--line)}.mapping-table div:nth-child(odd){background:var(--blue-soft)}.mapping-table div:nth-child(even){background:var(--green-soft)}
+    .result-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:18px}.result-note{padding:24px;border-radius:18px;background:var(--paper);border:1px solid var(--line)}.limits{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.limit{padding:22px;border:1px solid var(--line);border-radius:17px;background:var(--paper)}.limit strong{display:block;margin-bottom:8px;font-size:1.15rem}.formula{padding:22px;border-radius:15px;background:var(--ink);color:var(--paper);overflow-x:auto;font:500 clamp(1rem,3vw,1.45rem) "DM Mono";text-align:center}.sources{font-size:.96rem}.sources li{margin:8px 0}
+    footer{padding:40px 0 80px;color:var(--muted)}
+    @media(max-width:800px){.promise,.story-flow,.coin-grid,.decision,.limits{grid-template-columns:1fr}.worked,.length-layout,.distribution-layout,.game-layout,.result-grid{grid-template-columns:1fr}.mapping{grid-template-columns:1fr}.map-arrow{transform:rotate(90deg);min-height:50px}.plain-definition{grid-template-columns:1fr}.calculator{display:none}.batch-list{grid-template-columns:repeat(5,1fr)}.mapping-table{font-size:.9rem}}
+    @media(max-width:520px){.shell{width:min(100% - 20px,1120px)}section{padding:52px 0}header{min-height:auto;padding:24px 0}.hero{padding:28px 20px}h1{font-size:3.15rem}.flips{grid-template-columns:repeat(8,1fr)}.work-step{grid-template-columns:32px 1fr}.work-step output{grid-column:2}.metrics{grid-template-columns:1fr}.bar-row{grid-template-columns:105px 1fr 42px}.coin-picture{align-items:flex-start}.ratio-box span{width:19px}.mapping-table{grid-template-columns:1fr}.mapping-table div:nth-child(odd){font-weight:650;border-bottom:0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header class="shell">
+    <div class="hero">
+      <div class="eyebrow">Text watermarking lab · Stage 1</div>
+      <h1>Start with a <em>weighted coin.</em></h1>
+      <p class="lede">We want to learn one idea: a small, repeated preference can be hard to see in a short sample and easy to measure in a long one. We will build the checker one piece at a time, then map every piece back to generated text.</p>
+      <div class="promise">
+        <div><strong>First, no formulas</strong><span>We flip two coins and watch what changes.</span></div>
+        <div><strong>Then, one example</strong><span>We explain every number in an 80-flip result.</span></div>
+        <div><strong>Finally, real terms</strong><span>Only after the idea is clear do we name z, threshold, and false alarm.</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="premise">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">01 · The actual job</div>
+          <h2>What are we trying to detect?</h2>
+          <p>A text generator chooses one small piece of text at a time. During generation, a watermark can slightly favor a secret group of valid choices. Someone who knows the same secret can later count how often the finished text used those choices.</p>
+        </div>
+        <div class="card plain-definition">
+          <div class="calculator" aria-hidden="true"><span class="screen"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div>
+            <h3>A detector is a small calculator.</h3>
+            <p>It counts selected positions, compares the count with an ordinary average, and returns a score. A fixed cutoff turns that score into a possible-signal result.</p>
+            <p class="muted">It does not read the meaning of the passage. It does not decide who wrote it. It tests for one watermark pattern that was configured in advance.</p>
+          </div>
+        </div>
+        <div class="story-flow">
+          <div class="story-step"><span class="num">1</span><h3>Generate</h3><p>A secret rule slightly favors some valid next-token choices.</p></div>
+          <div class="story-step"><span class="num">2</span><h3>Count</h3><p>The checker uses the same rule on the finished text and counts favored choices.</p></div>
+          <div class="story-step"><span class="num">3</span><h3>Compare</h3><p>It asks whether the extra count is larger than ordinary random variation.</p></div>
+        </div>
+        <div class="callout warn" style="margin-top:22px"><strong>The claim is narrow.</strong> A positive result means “consistent with this configured watermark and secret key.” It does not mean “AI-written.”</div>
+      </div>
+    </section>
+
+    <section id="coins">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">02 · Replace text with coin flips</div>
+          <h2>Two sources. One small difference.</h2>
+          <p>Stage 1 removes language from the problem. Each future token choice becomes one coin flip. Heads means the source made a favored choice. Tails means it made another valid choice.</p>
+        </div>
+        <div class="callout"><strong>These are weighted coins, not fair 50/50 coins.</strong> The baseline coin lands heads 25% of the time. The nudged coin lands heads 40% of the time. Here, <code>p</code> simply means “chance of heads on the next flip.” We use 25% because the later watermark experiment places about one quarter of the available token choices in its secret favored set.</div>
+        <div class="coin-grid" style="margin-top:22px">
+          <article class="coin-panel baseline">
+            <div class="coin-title"><div><strong>Baseline coin</strong><div class="muted">No added preference</div></div><span class="chance">p = 25%</span></div>
+            <div class="coin-picture"><div class="coin">H</div><div><div class="ratio-box" aria-label="one heads chance in four"><span class="hit"></span><span></span><span></span><span></span></div><small class="muted">About 1 head in 4 flips</small></div></div>
+            <div class="flips" id="baselineFlips" aria-label="40 baseline coin flips"></div>
+            <div class="count-readout" id="baselineCount"></div>
+          </article>
+          <article class="coin-panel nudged">
+            <div class="coin-title"><div><strong>Nudged coin</strong><div class="muted">A persistent preference for heads</div></div><span class="chance">p = 40%</span></div>
+            <div class="coin-picture"><div class="coin">H</div><div><div class="ratio-box" aria-label="two heads chances in five"><span class="hit"></span><span class="hit"></span><span></span><span></span><span></span></div><small class="muted">About 2 heads in 5 flips</small></div></div>
+            <div class="flips" id="nudgedFlips" aria-label="40 nudged coin flips"></div>
+            <div class="count-readout" id="nudgedCount"></div>
+          </article>
+        </div>
+        <div class="button-row"><button class="primary" id="flipAgain">Flip both coins 40 times again</button></div>
+        <p class="muted" style="margin-top:14px">What to notice: the nudged coin tends to produce more heads, but not on every run. The two counts can overlap. A probability changes what happens on average, not what must happen once.</p>
+      </div>
+    </section>
+
+    <section id="one-batch">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">03 · Follow one result</div>
+          <h2>We saw 32 heads in 80 flips.</h2>
+          <p>Could the baseline coin have produced that count by chance? We can answer without guessing. Reveal the calculation one line at a time.</p>
+        </div>
+        <div class="worked">
+          <div class="sample-box">
+            <div><div class="eyebrow">Observed batch</div><div class="huge">32 <span>heads</span></div></div>
+            <p>There were 80 independent flips. “Independent” means one flip does not change the chance on the next flip.</p>
+          </div>
+          <div>
+            <div class="steps">
+              <div class="work-step" data-work-step="1"><span class="n">1</span><div><strong>Baseline average</strong><div class="muted">80 flips × 25% heads</div></div><output>20 heads</output></div>
+              <div class="work-step" data-work-step="2"><span class="n">2</span><div><strong>Observed excess</strong><div class="muted">32 observed − 20 expected</div></div><output>12 extra</output></div>
+              <div class="work-step" data-work-step="3"><span class="n">3</span><div><strong>Usual baseline variation</strong><div class="muted">Repeated 80-flip baseline batches vary by about this much</div></div><output>3.87 heads</output></div>
+              <div class="work-step" data-work-step="4"><span class="n">4</span><div><strong>Evidence score</strong><div class="muted">12 extra ÷ 3.87 usual variation</div></div><output>3.10</output></div>
+            </div>
+            <div class="button-row"><button class="primary" id="nextWorkStep">Show the first step</button><button id="showAllWork">Show all steps</button></div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:22px"><strong>Expected does not mean guaranteed.</strong> Twenty heads is the average across many baseline batches. A single baseline batch might contain 17, 23, or another nearby count. We need to learn what “nearby” usually looks like.</div>
+      </div>
+    </section>
+
+    <section id="variation">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">04 · See ordinary variation</div>
+          <h2>The same baseline coin gives different counts.</h2>
+          <p>Below are 20 batches from the baseline coin. Each batch contains 80 flips. The bar height is the number of heads. Most counts sit near 20, but chance moves them around.</p>
+        </div>
+        <div class="card">
+          <div class="batch-list" id="batchList" aria-label="Twenty simulated baseline batches"></div>
+          <div class="button-row"><button id="rerunBatches">Run 20 new baseline batches</button></div>
+          <div class="callout" style="margin-top:20px"><strong>Standard deviation names the usual amount of movement.</strong> For 80 baseline flips, it is 3.87 heads. This does not set a hard boundary. It gives us a useful unit for distance from the average.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="z-score">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">05 · Give distance a name</div>
+          <h2>A z-score is distance in “usual variation” units.</h2>
+          <p>Instead of saying “12 extra heads,” we say how large that excess is compared with normal baseline movement. That lets us compare results of different lengths on one scale.</p>
+        </div>
+        <div class="z-line-wrap">
+          <div class="z-line" aria-label="Head counts converted to z-scores">
+            <div class="z-point" style="left:10%"><strong>20 heads</strong><span>z = 0</span></div>
+            <div class="z-point" style="left:35%"><strong>24 heads</strong><span>z ≈ 1</span></div>
+            <div class="z-point" style="left:60%"><strong>28 heads</strong><span>z ≈ 2</span></div>
+            <div class="z-point focus" style="left:85%"><strong>32 heads</strong><span>z = 3.10</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>Read the score as a sentence.</h3>
+          <p style="font-size:1.3rem"><strong><code>z = 3.10</code></strong> means: “The observed head count is 3.10 standard deviations above the baseline average.”</p>
+          <p class="muted"><code>z = 0</code> means the count equals the baseline average. It does not prove that the source is baseline. It only describes the count.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="decision">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">06 · Turn a score into a decision</div>
+          <h2>The checker needs a cutoff.</h2>
+          <p>A score alone does not say yes or no. Before looking at a result, we choose a line. In this lab, the checker reports a possible signal when <code>z ≥ 3</code>.</p>
+        </div>
+        <div class="decision">
+          <div class="decision-rule">
+            <h3>Our 80-flip example</h3>
+            <div class="rule-line"><span class="score-pin">score 3.10</span><span class="less">≥</span><span class="cutoff-pin">cutoff 3</span></div>
+            <p>The score crosses the line. The checker raises an alarm.</p>
+          </div>
+          <div class="decision-result">
+            <div class="eyebrow">What this decision means</div>
+            <h3>32 or more heads is rare under the baseline coin.</h3>
+            <p>The exact baseline coin model produces 32 or more heads in 80 flips about <strong>0.22%</strong> of the time. Rare does not mean impossible, so the result is evidence rather than proof.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="length">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">07 · Change one thing</div>
+          <h2>Keep the bias fixed. Add more flips.</h2>
+          <p>The baseline stays at 25%, the nudged source stays at 40%, and the cutoff stays at 3. Choose a length and watch how much evidence the same bias is expected to produce.</p>
+        </div>
+        <div class="length-layout">
+          <div class="lesson-control">
+            <h3>Number of flips</h3>
+            <div class="button-row" id="lengthButtons">
+              <button data-length="40" class="active">40</button><button data-length="80">80</button><button data-length="160">160</button><button data-length="200">200</button><button data-length="400">400</button>
+            </div>
+            <div class="what-watch"><strong>Try this:</strong> compare 40 flips with 400. Only the length changes. Watch the orange excess grow faster than the blue baseline variation.</div>
+            <p class="muted" style="margin-top:16px">A stronger nudge would also be easier to detect because it creates more extra heads. This Stage 1 experiment keeps the nudge fixed at 40% so we can study length by itself.</p>
+          </div>
+          <div class="card">
+            <div class="metrics">
+              <div class="metric"><span class="label">Baseline average</span><strong id="lenBaseline">10</strong><span class="muted">heads</span></div>
+              <div class="metric"><span class="label">Nudged average</span><strong id="lenNudged">16</strong><span class="muted">heads</span></div>
+              <div class="metric"><span class="label">Persistent excess</span><strong id="lenExcess">6</strong><span class="muted">heads</span></div>
+              <div class="metric"><span class="label">Expected evidence score</span><strong id="lenZ">2.19</strong><span class="muted">z units</span></div>
+            </div>
+            <div class="signal-visual">
+              <div class="bar-row"><span>Baseline variation</span><div class="bar-track"><div class="bar-fill noise" id="noiseBar"></div></div><output id="noiseOut">2.74</output></div>
+              <div class="bar-row"><span>Persistent excess</span><div class="bar-track"><div class="bar-fill signal" id="signalBar"></div></div><output id="signalOut">6.00</output></div>
+            </div>
+            <p class="muted" id="lengthSentence" style="margin:16px 0 0"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="many-batches">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">08 · Repeat the whole experiment</div>
+          <h2>One run gives a score. Many runs make two hills.</h2>
+          <p>Each simulated batch produces one z-score. The blue hill shows scores from 2,000 baseline batches. The orange hill shows 2,000 nudged batches. The vertical red line is the cutoff. Every score to its right raises an alarm.</p>
+        </div>
+        <div class="distribution-layout">
+          <div class="chart-card">
+            <svg id="distributionChart" viewBox="0 0 820 430" role="img" aria-label="Baseline and nudged score distributions with cutoff"></svg>
+            <div class="callout warn" style="margin-top:14px"><strong>The hills overlap because random samples vary.</strong> A baseline batch can cross the line by chance. A nudged batch can stay below it.</div>
+          </div>
+          <div class="dist-controls">
+            <h3>Three guided experiments</h3>
+            <div class="label">1. Choose length</div>
+            <div class="button-row" id="distLengthButtons"><button data-length="40">40</button><button data-length="80" class="active">80</button><button data-length="400">400</button></div>
+            <div class="label" style="margin-top:18px">2. Choose checker style</div>
+            <div class="button-row" id="thresholdButtons"><button data-cut="2">Eager · 2</button><button data-cut="3" class="active">Lab · 3</button><button data-cut="4.5">Cautious · 4.5</button></div>
+            <div class="rate-grid">
+              <div class="rate false"><span class="label">False alarms</span><strong id="falseAlarmRate">—</strong><span class="muted">baseline batches marked as signals</span></div>
+              <div class="rate caught"><span class="label">Caught signals</span><strong id="caughtRate">—</strong><span class="muted">nudged batches marked as signals</span></div>
+            </div>
+            <div class="watch-copy" id="distLesson"></div>
+            <details>
+              <summary>Explore an exact cutoff</summary>
+              <div class="details-body"><div class="slider-row"><label for="cutSlider">Cutoff <output id="cutOut">3.00</output></label><input id="cutSlider" type="range" min="1" max="6" step="0.25" value="3"></div><p class="muted">Lowering the line catches more nudged batches and also creates more false alarms.</p></div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="game">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">09 · Now try a hidden source</div>
+          <h2>Can one short sequence fool you?</h2>
+          <p>This game comes after the lesson because you now know what every number means. Choose a source, then compare your guess with the fixed checker.</p>
+        </div>
+        <div class="game-layout">
+          <div class="mystery">
+            <div class="coin-title"><div><h3>Hidden 40-flip sequence</h3><span class="muted">Green circles are heads. Gray circles are tails.</span></div><span class="chance" id="gameCount">? heads</span></div>
+            <div class="flips" id="gameFlips"></div>
+            <div class="button-row" id="guessButtons"><button data-guess="baseline">Probably baseline</button><button data-guess="nudged">Probably nudged</button><button data-guess="unsure">I cannot tell</button></div>
+            <div class="button-row"><button class="primary" id="newGame">Deal another sequence</button></div>
+          </div>
+          <div class="answer" id="gameAnswer">
+            <h3>Make a guess first.</h3>
+            <p class="muted">The reveal will show the actual source, the raw count, the baseline average, the usual variation, the z-score, and the cutoff decision.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="text-map">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">10 · Return to language</div>
+          <h2>The coin was standing in for one token choice.</h2>
+          <p>A token is a small unit used by a text generator. It can be a word, part of a word, or punctuation. At each eligible position, a secret rule divides valid next tokens into a favored set and the rest.</p>
+        </div>
+        <div class="mapping">
+          <div class="mapping-side"><div class="eyebrow">Coin version</div><h3>One weighted flip</h3><div class="coin-picture"><div class="coin">H</div><p>Heads is a hit.<br>Tails is not a hit.</p></div></div>
+          <div class="map-arrow">→</div>
+          <div class="mapping-side"><div class="eyebrow">Text version</div><h3>One next-token choice</h3><p>The model is about to continue “The small boat was…”</p><div class="token-choice"><span class="green-token">quiet</span><span>old</span><span class="green-token">blue</span><span>ready</span></div><p class="muted">The secret rule marks “quiet” and “blue” as favored for this context. The watermark slightly raises their chance. The color is only a label.</p></div>
+        </div>
+        <div class="mapping-table">
+          <div>One coin flip</div><div>One eligible token position</div>
+          <div>Heads</div><div>Chosen token belongs to the secret favored set</div>
+          <div>25% baseline chance</div><div>Expected favored-token fraction without a nudge</div>
+          <div>40% nudged chance</div><div>Toy watermarked generator favors that set</div>
+          <div>Count heads and score</div><div>Count favored tokens and run the same checker</div>
+        </div>
+        <p class="muted" style="margin-top:16px">“Eligible” means the checker is allowed to score that position. In Stage 1 every flip is eligible. Later text stages define eligibility from the token context.</p>
+      </div>
+    </section>
+
+    <section id="results">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">11 · The committed Stage 1 experiment</div>
+          <h2>Longer nudged sequences are easier to catch.</h2>
+          <p>The repository runs 10,000 baseline sequences and 10,000 nudged sequences at each length, using the fixed 25% baseline, 40% nudge, and z = 3 cutoff. These are results from the toy coin experiment, not claims about a real language model.</p>
+        </div>
+        <div class="result-grid">
+          <div class="chart-card"><svg id="resultChart" viewBox="0 0 820 410" role="img" aria-label="Committed detection rates by sequence length"></svg></div>
+          <div class="result-note">
+            <h3>Read the chart</h3>
+            <p><strong>Orange:</strong> nudged sequences caught by the checker.</p>
+            <p><strong>Blue:</strong> baseline sequences that raised a false alarm.</p>
+            <p>At 40 flips, most nudged sequences are missed. At 400 flips, the two sources are easy to separate under this simple model.</p>
+            <p class="muted">The persistent excess grows in direct proportion to length. Baseline variation grows more slowly, in proportion to the square root of length.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="math-note">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">12 · Optional math and history</div>
+          <h2>Where did the formula come from?</h2>
+          <p>It was not invented for text watermarks. It is the standard score applied to a binomial count: the number of heads in a fixed number of independent yes-or-no trials.</p>
+        </div>
+        <details open>
+          <summary>See the exact formula, now that each part has a meaning</summary>
+          <div class="details-body">
+            <p>For <code>T</code> flips and baseline head chance <code>γ</code>, the binomial model gives an average of <code>Tγ</code> heads and a standard deviation of <code>√(Tγ(1−γ))</code>. We subtract the average from the observed count <code>G</code>, then divide by the standard deviation.</p>
+            <div class="formula">z = (G − Tγ) / √(Tγ(1 − γ))</div>
+            <p style="margin-top:16px"><code>T</code> is the number of flips. <code>G</code> is the observed number of heads. <code>γ</code> is the baseline chance of heads. Statisticians often call the baseline model the <em>null hypothesis</em>.</p>
+            <p class="muted">The normal approximation to binomial counts was developed through work by Abraham de Moivre and later Pierre-Simon Laplace. The basic mean and standard-deviation formulas come from the binomial model itself. For the committed fixed-length checks, the lab also compares its result with the exact binomial upper tail.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="limits">
+      <div class="shell">
+        <div class="section-head"><div class="eyebrow">13 · What we learned, and what we did not</div><h2>This stage proves a mechanism, not a product.</h2></div>
+        <div class="limits">
+          <div class="limit"><strong>Learned</strong><p>A persistent probability shift can be detected by counting hits and comparing them with baseline variation.</p></div>
+          <div class="limit"><strong>Measured</strong><p>With these locked toy settings, more flips sharply improve the chance of catching the nudged source.</p></div>
+          <div class="limit"><strong>Not yet tested</strong><p>No tokenizer, language model, real text, editing attack, secret-key implementation, or production detector is involved in Stage 1.</p></div>
+        </div>
+        <div class="card sources" style="margin-top:22px">
+          <h3>Sources and further reading</h3>
+          <ul>
+            <li><a href="https://www.statlearning.com/" target="_blank" rel="noreferrer">An Introduction to Statistical Learning</a> for its concept-first treatment and chapter labs.</li>
+            <li><a href="https://itl.nist.gov/div898/handbook/eda/section3/eda366i.htm" target="_blank" rel="noreferrer">NIST: the binomial distribution</a> for the mean and standard-deviation formulas.</li>
+            <li><a href="https://encyclopediaofmath.org/wiki/Laplace_theorem" target="_blank" rel="noreferrer">Encyclopedia of Mathematics: Laplace theorem</a> for the standardized binomial form and historical note.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="shell">Built as a teaching companion for Stage 1 of the text-watermarking lab. All simulations on this page run locally in your browser.</footer>
+
+  <script>
+    const q = (s, root=document) => root.querySelector(s);
+    const qa = (s, root=document) => [...root.querySelectorAll(s)];
+    function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+    function binomial(n,p,random){let count=0;for(let i=0;i<n;i++)if(random()<p)count++;return count}
+    function makeFlips(el,n,p,random){el.innerHTML='';let heads=0;for(let i=0;i<n;i++){const hit=random()<p;heads+=hit;const dot=document.createElement('span');dot.className='flip'+(hit?' heads':'');dot.textContent=hit?'H':'T';el.append(dot)}return heads}
+
+    let coinRound=0;
+    function flipCoins(){coinRound++;const a=makeFlips(q('#baselineFlips'),40,.25,rng(1123+coinRound*97));const b=makeFlips(q('#nudgedFlips'),40,.40,rng(8849+coinRound*131));q('#baselineCount').innerHTML=`This run: <strong>${a} heads</strong><br><span class="muted">Long-run average: 10 heads</span>`;q('#nudgedCount').innerHTML=`This run: <strong>${b} heads</strong><br><span class="muted">Long-run average: 16 heads</span>`}
+    q('#flipAgain').addEventListener('click',flipCoins);flipCoins();
+
+    let workStep=0;function setWork(n){workStep=n;qa('[data-work-step]').forEach(el=>el.classList.toggle('visible',Number(el.dataset.workStep)<=n));q('#nextWorkStep').textContent=n>=4?'Start again':`Show step ${n+1}`}
+    q('#nextWorkStep').addEventListener('click',()=>setWork(workStep>=4?0:workStep+1));q('#showAllWork').addEventListener('click',()=>setWork(4));
+
+    let batchRound=0;function drawBatches(){batchRound++;const random=rng(6001+batchRound*401);q('#batchList').innerHTML='';for(let i=0;i<20;i++){const count=binomial(80,.25,random);const el=document.createElement('div');el.className='batch';el.innerHTML=`<b>${count}</b><span style="height:${Math.min(100,count/36*100)}%"></span>`;el.title=`Batch ${i+1}: ${count} heads`;q('#batchList').append(el)}}q('#rerunBatches').addEventListener('click',drawBatches);drawBatches();
+
+    const lengthData={40:{base:10,nudge:16,excess:6,sd:2.74,z:2.19},80:{base:20,nudge:32,excess:12,sd:3.87,z:3.10},160:{base:40,nudge:64,excess:24,sd:5.48,z:4.38},200:{base:50,nudge:80,excess:30,sd:6.12,z:4.90},400:{base:100,nudge:160,excess:60,sd:8.66,z:6.93}};
+    function setLength(n){const d=lengthData[n];qa('#lengthButtons button').forEach(b=>b.classList.toggle('active',Number(b.dataset.length)===n));q('#lenBaseline').textContent=d.base;q('#lenNudged').textContent=d.nudge;q('#lenExcess').textContent=d.excess;q('#lenZ').textContent=d.z.toFixed(2);q('#noiseOut').textContent=d.sd.toFixed(2);q('#signalOut').textContent=d.excess.toFixed(2);q('#noiseBar').style.width=`${d.sd/8.66*68}%`;q('#signalBar').style.width=`${d.excess/60*100}%`;q('#lengthSentence').textContent=`At ${n} flips, the nudged source averages ${d.nudge} heads while the baseline predicts ${d.base}. The expected evidence score is ${d.z.toFixed(2)}${d.z>=3?', above the lab cutoff of 3':', below the lab cutoff of 3'}.`}
+    qa('#lengthButtons button').forEach(b=>b.addEventListener('click',()=>setLength(Number(b.dataset.length))));setLength(40);
+
+    let distLength=80,distCut=3,distScores={base:[],nudge:[]};
+    function simulateScores(){const random=rng(20260812+distLength*113);const sd=Math.sqrt(distLength*.25*.75),mean=distLength*.25;distScores.base=[];distScores.nudge=[];for(let i=0;i<2000;i++){distScores.base.push((binomial(distLength,.25,random)-mean)/sd);distScores.nudge.push((binomial(distLength,.40,random)-mean)/sd)}}
+    function hist(values,min,max,bins){const out=Array(bins).fill(0),w=(max-min)/bins;values.forEach(v=>{const i=Math.floor((v-min)/w);if(i>=0&&i<bins)out[i]++});return out}
+    function svgEl(tag,attrs={},text=''){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));e.textContent=text;return e}
+    function drawDistribution(){const svg=q('#distributionChart');svg.innerHTML='';const W=820,H=430,m={l:56,r:24,t:42,b:70},iw=W-m.l-m.r,ih=H-m.t-m.b,min=-4,max=11,bins=30,blue=getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),orange=getComputedStyle(document.documentElement).getPropertyValue('--orange').trim(),red=getComputedStyle(document.documentElement).getPropertyValue('--red').trim(),line=getComputedStyle(document.documentElement).getPropertyValue('--line').trim();const hb=hist(distScores.base,min,max,bins),hn=hist(distScores.nudge,min,max,bins),peak=Math.max(...hb,...hn)*1.1,x=v=>m.l+(v-min)/(max-min)*iw,y=v=>m.t+(1-v/peak)*ih,w=iw/bins;
+      for(let z=-4;z<=10;z+=2){svg.append(svgEl('line',{x1:x(z),y1:m.t,x2:x(z),y2:H-m.b,stroke:line}));svg.append(svgEl('text',{x:x(z),y:H-m.b+24,'text-anchor':'middle',class:'axis-text'},String(z)))}
+      const path=arr=>{let d=`M ${m.l} ${H-m.b}`;arr.forEach((v,i)=>d+=` L ${m.l+(i+.5)*w} ${y(v)}`);return d+` L ${m.l+iw} ${H-m.b} Z`};svg.append(svgEl('path',{d:path(hb),fill:blue,'fill-opacity':'.42',stroke:blue,'stroke-width':'3'}));svg.append(svgEl('path',{d:path(hn),fill:orange,'fill-opacity':'.38',stroke:orange,'stroke-width':'3'}));svg.append(svgEl('line',{x1:x(distCut),y1:m.t-8,x2:x(distCut),y2:H-m.b,stroke:red,'stroke-width':'3','stroke-dasharray':'8 5'}));svg.append(svgEl('text',{x:x(distCut)+7,y:m.t,class:'chart-label',fill:red},`cutoff ${distCut}`));svg.append(svgEl('text',{x:m.l+12,y:m.t+23,class:'chart-label',fill:blue},'baseline batches'));svg.append(svgEl('text',{x:m.l+iw-12,y:m.t+23,'text-anchor':'end',class:'chart-label',fill:orange},'nudged batches'));svg.append(svgEl('text',{x:m.l+iw/2,y:H-13,'text-anchor':'middle',class:'axis-text'},'evidence score (z)'));
+      const falseRate=distScores.base.filter(v=>v>=distCut).length/20,caught=distScores.nudge.filter(v=>v>=distCut).length/20;q('#falseAlarmRate').textContent=`${falseRate.toFixed(1)}%`;q('#caughtRate').textContent=`${caught.toFixed(1)}%`;q('#cutOut').textContent=distCut.toFixed(2);q('#cutSlider').value=distCut;
+      let lesson=`At ${distLength} flips and cutoff ${distCut}, `;if(distLength===40)lesson+='the hills overlap heavily. A short sequence often hides the nudge.';else if(distLength===400)lesson+='the orange hill moves far to the right. Length makes the persistent preference clear.';else lesson+='some nudged batches cross the line and some remain below it.';lesson+=distCut<3?' The eager checker catches more signals, but it also raises more false alarms.':distCut>3?' The cautious checker reduces false alarms, but misses more signals.':'';q('#distLesson').textContent=lesson}
+    function refreshDist(){simulateScores();drawDistribution()}
+    qa('#distLengthButtons button').forEach(b=>b.addEventListener('click',()=>{distLength=Number(b.dataset.length);qa('#distLengthButtons button').forEach(x=>x.classList.toggle('active',x===b));refreshDist()}));qa('#thresholdButtons button').forEach(b=>b.addEventListener('click',()=>{distCut=Number(b.dataset.cut);qa('#thresholdButtons button').forEach(x=>x.classList.toggle('active',x===b));drawDistribution()}));q('#cutSlider').addEventListener('input',e=>{distCut=Number(e.target.value);qa('#thresholdButtons button').forEach(x=>x.classList.remove('active'));drawDistribution()});refreshDist();
+
+    let gameRound=0,gameSource='baseline',gameHeads=0;function newGame(){gameRound++;gameSource=rng(7701+gameRound*17)()<.5?'baseline':'nudged';const p=gameSource==='baseline' ? .25 : .40;gameHeads=makeFlips(q('#gameFlips'),40,p,rng(9551+gameRound*311));q('#gameCount').textContent='? heads';q('#gameAnswer').innerHTML='<h3>Make a guess first.</h3><p class="muted">The reveal will show every part of the calculation.</p>'}
+    function revealGame(guess){const expected=10,sd=Math.sqrt(40*.25*.75),extra=gameHeads-expected,z=(extra/sd),alarm=z>=3,actual=gameSource==='baseline'?'baseline coin':'nudged coin';q('#gameCount').textContent=`${gameHeads} heads`;let lesson;if(gameSource==='nudged'&&!alarm)lesson='This is a missed signal. The source was nudged, but this short sample did not give the checker enough evidence.';else if(gameSource==='baseline'&&alarm)lesson='This is a false alarm. A baseline sample crossed the cutoff by chance.';else if(alarm)lesson='The checker caught the nudged signal.';else lesson='The checker stayed quiet on a baseline sample.';q('#gameAnswer').innerHTML=`<h3>Actual source: ${actual}</h3><dl><dt>Your guess</dt><dd>${guess==='unsure'?'cannot tell':guess}</dd><dt>Observed count</dt><dd>${gameHeads} heads</dd><dt>Baseline average</dt><dd>10 heads</dd><dt>Excess</dt><dd>${extra>=0?'+':''}${extra} heads</dd><dt>Usual variation</dt><dd>${sd.toFixed(2)} heads</dd><dt>Evidence score</dt><dd>z = ${z.toFixed(2)}</dd><dt>Decision</dt><dd>${alarm?'alarm':'stays quiet'}</dd></dl><div class="lesson">${lesson}</div>`}
+    qa('#guessButtons button').forEach(b=>b.addEventListener('click',()=>revealGame(b.dataset.guess)));q('#newGame').addEventListener('click',newGame);newGame();
+
+    const resultData=[{n:40,caught:21.33,false:0.16},{n:80,caught:54.20,false:0.13},{n:160,caught:88.62,false:0.21},{n:200,caught:95.23,false:0.17},{n:400,caught:100,false:0.20}];
+    function drawResults(){
+      const svg=q('#resultChart');
+      svg.innerHTML='';
+      const W=820,H=410,m={l:70,r:25,t:28,b:65};
+      const iw=W-m.l-m.r,ih=H-m.t-m.b;
+      const styles=getComputedStyle(document.documentElement);
+      const blue=styles.getPropertyValue('--blue').trim();
+      const orange=styles.getPropertyValue('--orange').trim();
+      const line=styles.getPropertyValue('--line').trim();
+      const x=n=>m.l+(n-40)/360*iw;
+      const y=v=>m.t+(1-v/100)*ih;
+      for(let v=0;v<=100;v+=25){
+        svg.append(svgEl('line',{x1:m.l,y1:y(v),x2:W-m.r,y2:y(v),stroke:line}));
+        svg.append(svgEl('text',{x:m.l-12,y:y(v)+4,'text-anchor':'end',class:'axis-text'},`${v}%`));
+      }
+      resultData.forEach(d=>svg.append(svgEl('text',{x:x(d.n),y:H-m.b+24,'text-anchor':'middle',class:'axis-text'},String(d.n))));
+      const path=key=>resultData.map((d,i)=>`${i?'L':'M'} ${x(d.n)} ${y(d[key])}`).join(' ');
+      svg.append(svgEl('path',{d:path('caught'),fill:'none',stroke:orange,'stroke-width':'4'}));
+      svg.append(svgEl('path',{d:path('false'),fill:'none',stroke:blue,'stroke-width':'4'}));
+      resultData.forEach(d=>{
+        svg.append(svgEl('circle',{cx:x(d.n),cy:y(d.caught),r:6,fill:orange}));
+        svg.append(svgEl('text',{x:x(d.n),y:y(d.caught)-12,'text-anchor':'middle',class:'chart-label',fill:orange},`${d.caught}%`));
+        svg.append(svgEl('circle',{cx:x(d.n),cy:y(d.false),r:5,fill:blue}));
+      });
+      svg.append(svgEl('text',{x:m.l+iw/2,y:H-12,'text-anchor':'middle',class:'axis-text'},'number of flips'));
+    }
+    drawResults();
+
+    addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;q('#progress').style.width=`${max?scrollY/max*100:0}%`},{passive:true});
+  </script>
+</body>
+</html>

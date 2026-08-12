@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stage Visual Lesson"
+  short_description: "Build concept-first interactive stage walkthroughs"
+  default_prompt: "Use $stage-visual-lesson to turn this project stage into a novice-friendly interactive HTML lesson."
