@@ -2,7 +2,7 @@
 
 ## Current stage
 
-Stage 0 repository foundation.
+Stage 1 code implemented; evidence run pending.
 
 ## Implemented
 
@@ -12,6 +12,8 @@ Stage 0 repository foundation.
 - Ruff, Pyright, Pytest, and coverage configuration.
 - Project README, MIT license, Codex instructions, claims ledger, and architecture decision.
 - Start-here map to the canonical Obsidian research and implementation handoff.
+- Biased-coin statistics, immutable result records, readable simulation, and independent verifier.
+- Fixed Stage 1 configuration and pending-evidence blog note.
 
 ## Verified
 
@@ -21,7 +23,7 @@ Stage 0 repository foundation.
 
 ## Not implemented
 
-- Statistical detector code, tests, configurations, figures, or blog evidence.
+- Stage 1 selected summary and figures.
 - Model/tokenizer integration.
 - Dataset access or manifests.
 - Modal or other hosted compute setup.
@@ -31,12 +33,12 @@ No detector experiment has run.
 
 ## Approval required next
 
-Stage 1 biased-coin detector implementation under the approved Stage 0–1 slice. Model,
-tokenizer, dataset, cloud, GPU, GitHub remote, publishing, and public deployment remain
-separate gates.
+The clean-commit Stage 1 evidence run under the approved Stage 0–1 slice. Model, tokenizer,
+dataset, cloud, GPU, GitHub remote, publishing, and public deployment remain separate gates.
 
 ## Known limitations
 
-- Stage 0 checks the repository contract but produces no scientific result.
+- Stage 1 code is not scientific evidence until the clean source commit is recorded in generated
+  artifacts and those artifacts pass independent recomputation.
 - The canonical research material currently lives outside this repository in the user's Obsidian vault.
 - The future detector will detect only this project's deliberately embedded watermark profile, not arbitrary AI-generated text.

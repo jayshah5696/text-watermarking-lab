@@ -11,8 +11,8 @@ AI-written text.
 
 ## Current status
 
-Stage 0 provides the reproducible Python 3.12, `uv`, and `just` project foundation. No detector
-experiment, model integration, dataset access, cloud configuration, or GPU operation has run.
+Stages 0–1 provide the reproducible Python 3.12 foundation and the CPU-only biased-coin detector.
+The Stage 1 evidence run remains pending until its code is committed and the worktree is clean.
 
 ```console
 just --list
@@ -20,8 +20,13 @@ just setup
 just check
 ```
 
-After Stage 1 is implemented, `just lab-01` will be the intentional, clean-commit evidence
-command. It is not available as publication evidence until the Stage 1 code is committed.
+`just lab-01` is the intentional, clean-commit evidence command. It refuses a dirty worktree,
+uses `configs/lab_01.toml`, writes ignored raw rows, and regenerates the selected artifacts.
+
+```console
+just lab-01
+just verify-lab-01
+```
 
 ## Scope boundary
 

@@ -1,0 +1,7 @@
+schema_version = 1
+base_seed = 20260811
+lengths = [40, 80, 160, 200, 400]
+replicates = 10000
+null_hit_probability = 0.25
+alternative_hit_probability = 0.40
+z_threshold = 3.0

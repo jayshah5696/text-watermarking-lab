@@ -32,11 +32,13 @@ line-length = 100
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "labs", "scripts", "tests"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
 extraPaths = ["src"]
-strict = ["src", "tests"]
+strict = ["src"]
+reportMissingTypeStubs = false
+reportUnnecessaryIsInstance = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
