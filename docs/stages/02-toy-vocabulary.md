@@ -56,3 +56,6 @@ files, verify the exact configuration bytes at the recorded source commit, and f
 
 Stage 2 is complete when a reader can follow every green-set decision, probability, random draw,
 sampled token, and detector score by hand. Stop before Stage 3 model or tokenizer integration.
+
+The final-blog role, figure inventory, captions, alt text, allowed claims, and decision to preserve
+the locked fixture are recorded in [`02-publication-brief.md`](02-publication-brief.md).

@@ -46,5 +46,8 @@ a separate explicit approval. Model or tokenizer access, downloads, datasets, Mo
 GitHub remotes, and publishing remain separate gates.
 
 The next implementation agent must read the matching roadmap and algorithm notes, then prepare or
-review a Stage 3 implementation contract before any model work begins. A planning document does
-not grant that approval.
+review a Stage 3 implementation contract before any model work begins. The contract must include
+a teaching and publication brief following
+[`docs/TEACHING_AND_PUBLICATION_WORKFLOW.md`](TEACHING_AND_PUBLICATION_WORKFLOW.md), so prompts,
+trace fields, diagrams, and blog evidence are designed together. A planning document does not
+grant implementation or model-access approval.

@@ -47,6 +47,9 @@ Stages 0–1 must not import Transformers, Torch, Datasets, Modal, MLX, or any m
 
 - Implement only the approved stage and its exit gate.
 - Start from the exact contracts in the canonical handoff; do not silently change statistics, schemas, dependencies, commands, or artifact paths.
+- Before locking a later stage's vocabulary, prompts, seeds, trace schema, or figure inputs, write
+  its teaching and publication brief using `docs/TEACHING_AND_PUBLICATION_WORKFLOW.md`. Design the
+  final explanation, failure case, visual panels, and required evidence before implementation.
 - Use `apply_patch` for focused file edits.
 - Inspect the worktree before editing and preserve unrelated user changes.
 - Run the proportionate checks required by the handoff and report what remains unverified.

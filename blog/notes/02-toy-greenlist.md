@@ -1,5 +1,12 @@
 # Color a toy vocabulary
 
+## Article handoff
+
+This note supports the final article section “The secret green-list coin.” The publication brief
+in `docs/stages/02-publication-brief.md` defines the three required figures, their captions and alt
+text, the position 4 teaching spine, the position 2 failure panel, and the claims this trace can
+support.
+
 ## Question
 
 How can a key change the chance of picking a token without forcing one fixed output?
@@ -72,4 +79,6 @@ reproducibility for teaching. They do not provide production security.
 ## Next stage
 
 Stage 3 would place the same conceptual step between real model logits and token sampling. That
-stage needs separate approval because it introduces a model and tokenizer.
+stage needs separate approval because it introduces a model and tokenizer. Its prompt fixture,
+paired trace, visual diagram, and blog evidence should be designed together before any prompt,
+seed, model revision, or trace schema is locked.

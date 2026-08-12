@@ -18,6 +18,10 @@ Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user revi
 - Typed green-set selection, logit bias, stable softmax, visible sampling, and detector replay.
 - Deterministic JSON and annotated Markdown trace with an independent verifier.
 - Evidence-grounded interactive Stage 2 lesson with guided probability, failure, and replay views.
+- Teaching and publication workflow that requires future stage fixtures, evidence schemas,
+  visuals, captions, alt text, and blog handoffs to be designed together before implementation.
+- Stage 2 publication brief preserving the verified fixture and mapping it to three final-article
+  figures.
 
 ## Verified
 
