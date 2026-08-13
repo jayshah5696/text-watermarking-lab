@@ -9,11 +9,11 @@
 
 ## One learning question
 
-- Question: At which step does this GPT-2 loop change candidate scores?
+- Question: At which step does this MLX loop change candidate scores?
 - Project role: it connects the toy selector to actual model scores without hiding the loop inside
   `generate()`.
-- Plain answer: in the pinned Transformers 5.14.1 flow, the program filters candidate scores, adds 2
-  to available green candidates, converts the final scores to chances, and samples one token.
+- Plain answer: in the pinned MLX loop, the program adds 2 to green candidate scores, applies the
+  sampling filters, converts the remaining scores to chances, and samples one token.
 
 ## Learning outcome
 
@@ -29,7 +29,7 @@ After the page, the learner should be able to explain:
   increase enabled.
 - Smallest full round trip: the first two recorded tokens. Token 1 supplies checker context, and
   token 2 is the first token the checker can count.
-- Starting inputs: pinned GPT-2 revision, prompt token IDs, prompt seed, sampling settings, and the
+- Starting inputs: pinned LFM2 revision, prompt token IDs, prompt seed, sampling settings, and the
   same key used during generation.
 - Observable result: one sampled token, its candidate score path, its probability, and its green
   membership.
@@ -55,7 +55,7 @@ fixed.
 | Page claim or value | Type | Source | Verification |
 | --- | --- | --- | --- |
 | Model and tokenizer revision | external configuration | `configs/lab_03.toml` and Hugging Face model API | exact revision in artifact |
-| Transformers applies watermarking after sampling processors in 5.14.1 | external | pinned Transformers `generation/utils.py` | sampling-order regression test |
+| MLX-LM loads and runs the pinned 4-bit LFM2 checkpoint | external configuration | pinned model card and MLX-LM source | revision and versions in artifact |
 | Prompt tokens and first-step candidate values | measured | `artifacts/lab-03/trace.json` | `just verify-lab-03` |
 | Six paired continuations | measured | `artifacts/lab-03/trace.json` | `just verify-lab-03` |
 | Copied-text token match results | measured | `artifacts/lab-03/trace.json` | tokenizer replay in verifier |
@@ -73,17 +73,18 @@ write values into the lesson before the artifact exists.
   key security, or model-family generalization.
 - Stage 4 library adapter, Stage 5 GPU model, Stage 6 dataset, later attacks, deployment, and
   publishing remain unimplemented.
-- Dataset, GPU, Modal, secrets, new remotes, pull requests, deployment, and publishing remain gated.
+- Dataset, Modal, secrets, new remotes, pull requests, deployment, and publishing remain gated.
+  Local Apple GPU use is approved only for this Stage 3 fixture.
 
 ## Continuity rules
 
-- Begin with the Stage 2 running sentence and show the same words becoming GPT-2 tokens.
+- Begin with the Stage 2 running sentence and show the same words becoming LFM2 tokens.
 - Show the complete loop first: token IDs, model scores, filters, score increase, probability,
   sample, append, and repeat. Then zoom into the first generated token.
 - Keep Stage 1 `G`, `T`, and z labels when the checker returns.
 - Preserve green hatching for selected tokens, orange for seeded sampling, and rust for ordinary
   red results.
-- State the changed upstream 5.14.1 processor order beside the first loop. Do not bury it in an appendix.
+- State the locked MLX loop order beside the first loop. Do not bury it in an appendix.
 - Name the formal terms only after the page shows the concrete score operation.
 - Use the recorded first prompt as the single spine. The other two prompts support the result
   pattern and limitations rather than starting new stories.

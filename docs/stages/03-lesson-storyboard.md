@@ -15,16 +15,16 @@ checking.
 
 1. Recall the Stage 2 operation. The toy program started with chosen scores, added 2 to selected
    token IDs, and sampled one result.
-2. Show the whole loop before opening it. The loop receives token IDs, gets model scores, filters
-   scores, applies the configured increase, samples one token, appends it, and repeats.
+2. Show the whole loop before opening it. The loop receives token IDs, gets model scores, applies
+   the configured increase, filters scores, samples one token, appends it, and repeats.
 3. State the Stage 3 question. The reader must locate the score increase inside that loop.
-4. Keep the continuity prompt fixed and reveal its recorded GPT-2 token pieces and IDs.
+4. Keep the continuity prompt fixed and reveal its recorded LFM2 token pieces and IDs.
 5. Define the model as code that receives the token history and returns one score for every
    possible next token. Show only the final-position scores.
-6. Show temperature, top-k, and top-p in order. Each view keeps the same candidates aligned.
-7. Show the pinned Transformers 5.14.1 order. The program applies the watermark after those
-   filters. A removed token stays removed.
-8. Reveal which available candidates are green and add 2 only to their scores.
+6. Reveal which candidates are green and add 2 only to their scores.
+7. Show temperature, top-p, and top-k in order. Each view keeps the same candidates aligned.
+8. Show the locked MLX order. A green token can receive the increase and still be removed by a
+   later filter.
 9. Convert the final scores to probabilities. Use the recorded seeded sample and append the chosen
    token.
 10. Show why the next model call receives a different history after the paired paths diverge.
@@ -67,7 +67,7 @@ their final probabilities, and the sampled result.
 Instruction: check the next copied token. The copied text, tokenizer, and checker settings stay
 fixed. The observed token and running count change. Watch `G`, `T`, and z update.
 
-### Wrong-key comparison
+### Comparison-key check
 
 Instruction: use the comparison key on the same copied text. The token IDs, green fraction, and formula
 stay fixed. Green membership changes. Watch which observed tokens count as hits and read the new

@@ -8,9 +8,9 @@ The reader may already understand that Stage 1 counts green hits and Stage 2 sel
 IDs from recent history. Stage 3 must define tokenizer, model logits, temperature, top-k, top-p,
 and a paired continuation. It must show each idea only when the reader needs it.
 
-The narrow answer is one sentence. In the pinned Transformers 5.14.1 flow, the program filters the
-model's candidate scores, adds 2 to available green candidates, converts the final scores to
-chances, and samples one token.
+The narrow answer is one sentence. In the pinned MLX loop, the program adds 2 to green candidate
+scores, applies the sampling filters, converts the remaining scores to chances, and samples one
+token.
 
 ## Teaching spine
 
@@ -22,18 +22,18 @@ at the first position.
 
 The main figure must show:
 
-1. the prompt text and its actual GPT-2 token pieces;
+1. the prompt text and its actual LFM2 token pieces;
 2. the final-position model scores;
-3. the survivors after temperature, top-k, and top-p;
-4. which survivors receive a score increase;
+3. which candidates receive a score increase;
+4. the survivors after temperature, top-p, and top-k;
 5. the sampled token and its final probability;
 6. the token appended to the history;
 7. the copied continuation re-tokenized for checking;
 8. the same-key and comparison-key counts.
 
-The challenge case is the sampling-order boundary. A token removed by top-k or top-p remains
-removed even when the watermark key would mark it green. This prevents the reader from assuming
-that the score increase can revive every green token.
+The challenge case is the sampling-order boundary. A token can be green and receive the score
+increase, then still be removed by top-p or top-k. This prevents the reader from assuming that the
+score increase forces a green result.
 
 ## Fixture selection
 
@@ -55,29 +55,29 @@ than one token.
 
 Caption draft:
 
-> GPT-2 turns the fixed prompt into token IDs before the model calculates the next-token scores.
+> The LFM2 tokenizer turns the fixed prompt into token IDs before the model calculates the next-token scores.
 > Stage 3 records both the readable text and those IDs.
 
 Alt text draft:
 
-> The continuity prompt appears above a row of GPT-2 token pieces. Each piece has one token ID. A
+> The continuity prompt appears above a row of LFM2 token pieces. Each piece has one token ID. A
 > note says that the model receives IDs rather than whole words.
 
 ### Figure 2: one token through the loop
 
-Use one horizontal sequence with six named stops. Show model scores, temperature and filters,
+Use one horizontal sequence with six named stops. Show model scores, the score increase, filters,
 watermark membership, final chances, the random draw, and the appended token. Use aligned candidate
 rows so a learner can follow the same token across the intervention.
 
 Caption draft:
 
-> The program applies the score increase after temperature and filtering. It then samples one
+> The program applies the score increase before temperature and filtering. It then samples one
 > token and appends that token to the history used for the next model call.
 
 Alt text draft:
 
 > Six connected panels follow one generation position. Candidate tokens receive model scores,
-> pass through temperature and two filters, receive an optional watermark increase, become
+> receive an optional watermark increase, pass through temperature and two filters, become
 > probabilities, and produce one sampled token.
 
 ### Figure 3: paired paths and copied-text check
@@ -126,15 +126,15 @@ figure captions and alt texts, allowed claims, prohibited claims, and the transi
 
 Allowed claims:
 
-- the pinned GPT-2 fixture supplied real next-token scores and token IDs;
+- the pinned LFM2 MLX fixture supplied real next-token scores and token IDs;
 - the manual loop used the recorded processor order and seeded sampling settings;
-- the recorded paired continuations and checker counts occurred in this local CPU run;
+- the recorded paired continuations and checker counts occurred in this local Apple GPU run;
 - copied-text checking used the pinned tokenizer and key profile.
 
 Prohibited claims:
 
 - three prompts measure detection accuracy, language quality, or a useful cutoff;
 - a positive score proves AI origin, authorship, or use of a private vendor system;
-- the GPT-2 fixture represents current model quality;
-- the Stage 3 manual checker is already equivalent to the full Transformers adapter;
-- CPU results automatically match CUDA or another device's watermark membership.
+- the LFM2 fixture represents current model quality;
+- the Stage 3 manual checker is already equivalent to a library watermark adapter;
+- local Apple GPU results automatically match another device or runtime.
