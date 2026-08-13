@@ -4,438 +4,368 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Stage 3: a watermark score change inside an MLX generation loop</title>
+  <title>Stage 3: follow one watermark through generation and checking</title>
   <style>
     :root {
-      --paper: #f3eee2;
-      --paper-deep: #e6ddcc;
-      --ink: #17231f;
-      --muted: #59645f;
-      --line: rgba(23, 35, 31, 0.18);
-      --panel: rgba(255, 255, 255, 0.45);
-      --green: #16684d;
-      --green-soft: #d6e9de;
-      --orange: #b85e2d;
-      --orange-soft: #f2dccd;
-      --blue: #315f83;
-      --blue-soft: #dae7f0;
-      --rust: #98473c;
-      --rust-soft: #efd9d5;
-      --shadow: 0 22px 54px rgba(55, 45, 30, 0.12);
-      --serif: Georgia, "Times New Roman", serif;
-      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
-      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --paper:#f6f0e4; --ink:#15201d; --muted:#5b6661; --surface:#fffaf0;
+      --line:rgba(21,32,29,.2); --green:#176b4b; --green-soft:#d6eadf;
+      --blue:#2d6d8e; --blue-soft:#d8e8f0; --orange:#c55b28; --orange-soft:#f4ddce;
+      --rust:#99443c; --rust-soft:#f1dbd5; --shadow:0 18px 50px rgba(45,35,20,.09);
+      --serif:Iowan Old Style,Palatino Linotype,Book Antiqua,Georgia,serif;
+      --sans:Avenir Next,Avenir,Gill Sans,Segoe UI,sans-serif;
+      --mono:SFMono-Regular,Menlo,Consolas,monospace;
     }
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme:dark) {
       :root {
-        --paper: #101a17;
-        --paper-deep: #17231f;
-        --ink: #f2eee4;
-        --muted: #b8c0bc;
-        --line: rgba(238, 242, 239, 0.16);
-        --panel: rgba(255, 255, 255, 0.05);
-        --green: #75d4a9;
-        --green-soft: #173e31;
-        --orange: #ff9960;
-        --orange-soft: #492a1c;
-        --blue: #9bc9ed;
-        --blue-soft: #20384b;
-        --rust: #ee998a;
-        --rust-soft: #492824;
-        --shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+        --paper:#0f1815; --ink:#f3ecdf; --muted:#b9c3be; --surface:#16211d;
+        --line:rgba(243,236,223,.18); --green:#7bd4a6; --green-soft:#163b2d;
+        --blue:#8bc7e7; --blue-soft:#1b3948; --orange:#ff9a61; --orange-soft:#47291d;
+        --rust:#ef998d; --rust-soft:#452622; --shadow:0 18px 50px rgba(0,0,0,.25);
       }
     }
-    html:has(#light-preview:target) {
-      --paper: #f3eee2; --paper-deep: #e6ddcc; --ink: #17231f; --muted: #59645f;
-      --line: rgba(23, 35, 31, 0.18); --panel: rgba(255, 255, 255, 0.45);
-      --green: #16684d; --green-soft: #d6e9de; --orange: #b85e2d;
-      --orange-soft: #f2dccd; --blue: #315f83; --blue-soft: #dae7f0;
-      --rust: #98473c; --rust-soft: #efd9d5;
-    }
-    html:has(#dark-preview:target) {
-      --paper: #101a17; --paper-deep: #17231f; --ink: #f2eee4; --muted: #b8c0bc;
-      --line: rgba(238, 242, 239, 0.16); --panel: rgba(255, 255, 255, 0.05);
-      --green: #75d4a9; --green-soft: #173e31; --orange: #ff9960;
-      --orange-soft: #492a1c; --blue: #9bc9ed; --blue-soft: #20384b;
-      --rust: #ee998a; --rust-soft: #492824;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    * { box-sizing:border-box; }
+    [hidden] { display:none!important; }
+    html { scroll-behavior:smooth; }
     body {
-      margin: 0;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 12% 6%, color-mix(in srgb, var(--green) 10%, transparent), transparent 32rem),
-        linear-gradient(180deg, var(--paper), var(--paper-deep));
-      font: 18px/1.62 var(--sans);
+      margin:0; color:var(--ink); background:
+        linear-gradient(var(--line) 1px,transparent 1px),
+        linear-gradient(90deg,var(--line) 1px,transparent 1px),var(--paper);
+      background-size:34px 34px; font:18px/1.58 var(--sans);
     }
-    button, summary { font: inherit; }
-    button { color: inherit; }
-    a { color: var(--blue); }
-    code { font: 0.9em/1.45 var(--mono); }
-    h1, h2, h3, p { margin-top: 0; }
-    h1, h2, h3 { font-family: var(--serif); letter-spacing: -0.025em; }
-    h1 { max-width: 920px; margin-bottom: 22px; font-size: clamp(3rem, 7vw, 6rem); line-height: 0.98; }
-    h2 { margin-bottom: 14px; font-size: clamp(2rem, 4vw, 3.3rem); line-height: 1.06; }
-    h3 { font-size: 1.42rem; line-height: 1.2; }
-    p { max-width: 76ch; }
-    .hero, main, .footer-inner { width: min(1140px, calc(100% - 40px)); margin-inline: auto; }
-    .hero { padding: 84px 0 56px; }
-    .tag { margin-bottom: 18px; color: var(--green); font: 700 0.75rem/1 var(--mono); letter-spacing: .15em; text-transform: uppercase; }
-    .lede { max-width: 800px; color: var(--muted); font-size: 1.24rem; }
-    .boundary { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin-top: 36px; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--line); box-shadow: var(--shadow); }
-    .boundary p { height: 100%; margin: 0; padding: 24px; background: var(--paper); }
-    main { padding-bottom: 80px; }
-    section { padding: 68px 0; border-top: 1px solid var(--line); }
-    .section-head { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 20px; margin-bottom: 32px; }
-    .number { padding-top: 9px; color: var(--green); font: 700 .8rem/1 var(--mono); }
-    .section-head p { color: var(--muted); }
-    .card { overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
-    .card-head, .card-body { padding: 27px; }
-    .card-head { border-bottom: 1px solid var(--line); }
-    .plain-box { padding: 22px 24px; border-left: 5px solid var(--blue); background: var(--blue-soft); }
-    .plain-box p:last-child, .card-body p:last-child { margin-bottom: 0; }
-    .loop-map { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--line); box-shadow: var(--shadow); }
-    .loop-stop { min-width: 0; padding: 20px 15px; background: var(--paper); }
-    .loop-stop span { display: block; margin-bottom: 8px; color: var(--green); font: 700 .7rem/1 var(--mono); }
-    .loop-stop strong { display: block; font-size: .96rem; line-height: 1.25; }
-    .loop-stop.changed { background: var(--green-soft); }
-    .loop-note { margin: 22px 0 0; padding: 20px 22px; border-left: 5px solid var(--orange); background: var(--orange-soft); }
-    .prompt { margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); font: 1.2rem/1.6 var(--serif); }
-    .fixed-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
-    .fixed { min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); }
-    .fixed span { display: block; color: var(--muted); font-size: .75rem; }
-    .fixed strong { display: block; overflow-wrap: anywhere; font: 700 .86rem/1.4 var(--mono); }
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-    .primary, .secondary { min-height: 48px; padding: 11px 18px; border-radius: 999px; cursor: pointer; transition: transform 160ms ease; }
-    .primary { border: 1px solid var(--green); color: white; background: var(--green); box-shadow: 0 8px 20px color-mix(in srgb, var(--green) 24%, transparent); }
-    .secondary { border: 1px solid var(--line); background: var(--paper); }
-    .primary:hover, .secondary:hover { transform: translateY(-2px); }
-    .primary:focus-visible, .secondary:focus-visible, summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
-    .token-grid { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
-    .token { min-width: 86px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); }
-    .token strong { display: block; white-space: pre-wrap; font: 700 .85rem/1.25 var(--mono); }
-    .token small { color: var(--muted); font: .68rem/1 var(--mono); }
-    .token.special { border-color: var(--blue); background: var(--blue-soft); }
-    .token.hidden-token { display: none; }
-    .leading-space { color: var(--orange); }
-    details { margin-top: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
-    summary { padding: 15px 18px; cursor: pointer; font-weight: 700; }
-    .detail-body { padding: 0 18px 18px; }
-    .detail-body code { overflow-wrap: anywhere; }
-    .loop-lab { display: grid; grid-template-columns: 230px minmax(0, 1fr); min-height: 460px; }
-    .step-list { margin: 0; padding: 22px; list-style: none; border-right: 1px solid var(--line); }
-    .step-list li { padding: 11px 12px; border-left: 3px solid var(--line); color: var(--muted); font-size: .88rem; }
-    .step-list li.active { border-color: var(--green); color: var(--ink); background: var(--green-soft); }
-    .loop-stage { padding: 27px; }
-    .stage-kicker { color: var(--green); font: 700 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-    .candidate-table { width: 100%; margin-top: 22px; border-collapse: collapse; font-size: .88rem; }
-    .candidate-table th, .candidate-table td { padding: 11px 9px; border-bottom: 1px solid var(--line); text-align: right; }
-    .candidate-table th:first-child, .candidate-table td:first-child { text-align: left; }
-    .candidate-table th { color: var(--muted); font-size: .72rem; text-transform: uppercase; }
-    .candidate-table tr.green { background: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--green) 11%, transparent) 8px 10px), var(--green-soft); }
-    .candidate-table tr.selected td:first-child { color: var(--orange); font-weight: 800; }
-    .watch { margin: 22px 0 0; padding: 17px 19px; border-left: 5px solid var(--green); background: var(--green-soft); }
-    .failure { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: center; margin-top: 24px; padding: 22px; border: 1px solid var(--rust); border-radius: 18px; background: var(--rust-soft); }
-    .failure div { min-width: 0; }
-    .failure strong, .failure span { display: block; }
-    .failure span { color: var(--muted); font-size: .8rem; }
-    .failure .join { color: var(--rust); font-weight: 800; }
-    .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .continuation { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
-    .continuation.on { border-color: var(--green); background: var(--green-soft); }
-    .continuation p { margin-bottom: 0; }
-    .pair-label { color: var(--muted); font: 700 .72rem/1 var(--mono); text-transform: uppercase; }
-    .checker-tokens { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
-    .check-token { padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); font: 700 .82rem/1.2 var(--mono); }
-    .check-token.context { border-color: var(--blue); background: var(--blue-soft); }
-    .check-token.hit { border-color: var(--green); background: var(--green-soft); }
-    .check-token.miss { border-color: var(--rust); background: var(--rust-soft); }
-    .check-token.pending { opacity: .5; }
-    .score-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; }
-    .score-card { padding: 17px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
-    .score-card span { display: block; min-height: 40px; color: var(--muted); font-size: .75rem; }
-    .score-card strong { display: block; font: 800 1.42rem/1.2 var(--mono); }
-    .result-sentence { margin: 20px 0 0; padding: 20px 22px; border-left: 5px solid var(--blue); background: var(--blue-soft); }
-    .results { width: 100%; border-collapse: collapse; font-size: .86rem; }
-    .results th, .results td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: right; }
-    .results th:first-child, .results td:first-child { text-align: left; }
-    .results th { color: var(--muted); font-size: .7rem; text-transform: uppercase; }
-    .results tr.on { background: var(--green-soft); }
-    .limits { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .limit { padding: 22px; border-top: 5px solid var(--green); background: var(--panel); }
-    .limit.no { border-color: var(--rust); }
-    .limit p:last-child { margin-bottom: 0; }
-    .static-fallback { margin-top: 24px; padding: 22px; border: 1px dashed var(--line); border-radius: 16px; background: var(--paper); }
-    .static-fallback ol { margin-bottom: 0; }
-    .js .static-fallback { display: none; }
-    footer { border-top: 1px solid var(--line); }
-    .footer-inner { padding: 36px 0 50px; color: var(--muted); }
-    .theme-links { display: flex; gap: 12px; margin-top: 16px; }
-    @media (max-width: 900px) {
-      .loop-map { grid-template-columns: repeat(2, 1fr); }
-      .loop-lab { grid-template-columns: 1fr; }
-      .step-list { display: grid; grid-template-columns: repeat(4, 1fr); border-right: 0; border-bottom: 1px solid var(--line); }
-      .score-cards { grid-template-columns: 1fr 1fr; }
+    button,summary { font:inherit; color:inherit; }
+    button { min-height:50px; padding:12px 20px; border:1px solid var(--line); border-radius:999px; cursor:pointer; }
+    button.primary { border-color:var(--green); color:white; background:var(--green); }
+    button.secondary { background:var(--surface); }
+    button:focus-visible,summary:focus-visible { outline:3px solid var(--orange); outline-offset:3px; }
+    h1,h2,h3,p { margin-top:0; }
+    h1,h2,h3 { font-family:var(--serif); letter-spacing:-.025em; }
+    h1 { max-width:900px; margin-bottom:20px; font-size:clamp(3rem,7vw,6.2rem); line-height:.96; }
+    h2 { margin-bottom:12px; font-size:clamp(2rem,4.5vw,3.6rem); line-height:1.04; }
+    h3 { font-size:1.35rem; line-height:1.2; }
+    p { max-width:75ch; }
+    code { font: .9em/1.4 var(--mono); }
+    a { color:var(--blue); text-underline-offset:3px; }
+    .wrap { width:min(1160px,calc(100% - 40px)); margin-inline:auto; }
+    .hero { padding:82px 0 48px; }
+    .eyebrow,.tag,.step-label { color:var(--green); font:750 .72rem/1.2 var(--mono); letter-spacing:.12em; text-transform:uppercase; }
+    .lede { max-width:820px; color:var(--muted); font-size:1.22rem; }
+    .answer { display:grid; grid-template-columns:repeat(3,1fr); margin-top:30px; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:var(--shadow); }
+    .answer div { min-width:0; padding:20px; background:var(--surface); border-right:1px solid var(--line); }
+    .answer div:last-child { border-right:0; }
+    .answer span { display:block; color:var(--muted); font-size:.75rem; }
+    .answer strong { display:block; margin-top:5px; }
+    section { padding:64px 0; border-top:1px solid var(--line); }
+    .section-head { display:grid; grid-template-columns:52px minmax(0,1fr); gap:26px; margin-bottom:32px; }
+    .section-num { padding-top:9px; color:var(--green); font:750 .72rem/1 var(--mono); }
+    .section-head p { margin:0; color:var(--muted); }
+    .prompt { padding:24px 28px; border-left:5px solid var(--orange); background:var(--surface); box-shadow:var(--shadow); font:1.25rem/1.5 var(--serif); }
+    .prompt .cursor { display:inline-block; width:12px; height:1.1em; margin-left:6px; vertical-align:-2px; background:var(--orange); }
+    .compact-loop { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+    .compact-loop span { padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); font-size:.82rem; }
+    .compact-loop .changed { border-color:var(--green); background:var(--green-soft); font-weight:750; }
+    .instruction { margin:24px 0 14px; padding:16px 18px; border-left:4px solid var(--blue); background:var(--blue-soft); }
+    .token-input { display:flex; flex-wrap:wrap; gap:7px; margin-top:16px; }
+    .input-token { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); font:700 .78rem/1.3 var(--mono); }
+    .input-token small { display:block; color:var(--muted); font-size:.62rem; font-weight:400; }
+    .controls { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+
+    .story-stage { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:24px; background:color-mix(in srgb,var(--surface) 92%,transparent); box-shadow:var(--shadow); }
+    .story-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:24px; padding:24px 26px; border-bottom:1px solid var(--line); }
+    .story-head h3 { margin:6px 0 8px; }
+    .story-head p { margin:0; color:var(--muted); }
+    .progress { display:flex; gap:7px; align-items:start; padding-top:5px; }
+    .progress i { width:10px; height:10px; border:1px solid var(--line); border-radius:50%; }
+    .progress i.active { border-color:var(--green); background:var(--green); }
+    .story-body { padding:26px; }
+    .history { position:sticky; top:0; z-index:4; margin:-26px -26px 24px; padding:16px 26px; border-bottom:1px solid var(--line); background:color-mix(in srgb,var(--paper) 94%,transparent); backdrop-filter:blur(12px); font:1.08rem/1.45 var(--serif); }
+    .history .generated { color:var(--green); font-weight:750; }
+
+    .token-chart { display:grid; grid-template-columns:repeat(10,minmax(0,1fr)); gap:10px; min-height:350px; align-items:end; }
+    .token-col { position:relative; display:grid; grid-template-rows:20px 175px minmax(62px,auto); min-width:0; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:hidden; transition:border-color .2s,box-shadow .2s; }
+    .token-col .pos { padding:7px 8px 0; color:var(--muted); font:700 .62rem/1 var(--mono); }
+    .rail { position:relative; margin:8px 10px; border-bottom:2px solid var(--line); background:linear-gradient(to top,var(--line) 1px,transparent 1px); background-size:100% 50%; }
+    .bar { position:absolute; right:16%; bottom:0; left:16%; height:4px; background:var(--muted); border-radius:5px 5px 0 0; transition:height .5s ease,background .25s; }
+    .token-col.member { border-color:color-mix(in srgb,var(--green) 65%,var(--line)); }
+    .token-col.member .bar { background:repeating-linear-gradient(135deg,var(--green),var(--green) 6px,color-mix(in srgb,var(--green) 65%,white) 6px,color-mix(in srgb,var(--green) 65%,white) 10px); }
+    .token-chart.boosted .token-col.member .bar { height:100%; }
+    .token-col.focus { border-color:var(--orange); box-shadow:0 0 0 3px var(--orange-soft); }
+    .piece { min-width:0; padding:10px 7px; border-top:1px solid var(--line); text-align:center; }
+    .piece strong { display:block; overflow-wrap:anywhere; font:750 .76rem/1.2 var(--mono); }
+    .piece small { display:block; margin-top:5px; color:var(--muted); font-size:.58rem; }
+    .axis-note { display:flex; justify-content:space-between; margin:8px 2px 18px; color:var(--muted); font:.7rem/1.3 var(--mono); }
+    .legend { display:flex; flex-wrap:wrap; gap:16px; margin:16px 0; color:var(--muted); font-size:.78rem; }
+    .legend span::before { content:""; display:inline-block; width:18px; height:10px; margin-right:7px; border:1px solid var(--line); vertical-align:-1px; background:var(--surface); }
+    .legend .green::before { border-color:var(--green); background:repeating-linear-gradient(135deg,var(--green),var(--green) 4px,var(--green-soft) 4px,var(--green-soft) 7px); }
+    .reading { margin:18px 0 0; padding:16px 18px; border-left:4px solid var(--green); background:var(--green-soft); }
+
+    .microscope { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:22px; }
+    .score-table,.chance-card,.fork-card,.count-card,.quality-card,.paper-card { min-width:0; padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }
+    .score-table table { width:100%; border-collapse:collapse; font-size:.78rem; }
+    th,td { padding:8px; border-bottom:1px solid var(--line); text-align:right; }
+    th:first-child,td:first-child { text-align:left; }
+    .chance-row { display:grid; grid-template-columns:55px minmax(0,1fr) 70px; gap:9px; align-items:center; margin:9px 0; font:.72rem/1.2 var(--mono); }
+    .chance-legend { display:flex; gap:14px; margin:8px 0 14px; color:var(--muted); font-size:.68rem; }
+    .chance-legend span:first-child { color:var(--blue); }
+    .chance-legend span:last-child { color:var(--green); }
+    .chance-track { position:relative; height:12px; border-radius:999px; background:color-mix(in srgb,var(--line) 60%,transparent); overflow:hidden; }
+    .chance-track i { display:block; height:100%; width:var(--w); background:var(--blue); }
+    .chance-row.green .chance-track i { background:repeating-linear-gradient(135deg,var(--green),var(--green) 5px,var(--green-soft) 5px,var(--green-soft) 8px); }
+    .chance-row.jack { color:var(--orange); font-weight:750; }
+    .chance-row.jack .chance-track { outline:2px solid var(--orange); outline-offset:2px; }
+    .chance-scale { display:flex; justify-content:space-between; color:var(--muted); font:.62rem/1 var(--mono); }
+    .jack-chain { display:flex; flex-wrap:wrap; gap:7px; margin-top:18px; }
+    .jack-chain span { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); font:.72rem/1.2 var(--mono); }
+    .jack-chain .change { border-color:var(--green); background:var(--green-soft); }
+    .jack-chain .chosen { border-color:var(--orange); background:var(--orange-soft); }
+    .fork { display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin-top:22px; }
+    .fork-card strong { display:block; margin:6px 0; font:750 1.3rem/1.2 var(--mono); }
+    .fork-mid { color:var(--rust); font:750 .7rem/1.3 var(--mono); text-align:center; }
+
+    .checker-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; margin-top:22px; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--line); }
+    .count-card { border:0; border-radius:0; }
+    .count-card span { display:block; color:var(--muted); font-size:.7rem; }
+    .count-card strong { display:block; margin-top:6px; font:750 2rem/1 var(--mono); }
+    .token-chart.checking .token-col:first-child { border-color:var(--blue); background:var(--blue-soft); }
+    .token-chart.checking .token-col:first-child .bar { height:0; }
+    .token-chart.checking .token-col:not(:first-child).member { box-shadow:inset 0 0 0 2px var(--green); }
+    .tail { display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center; margin-top:18px; padding:18px; border:1px dashed var(--line); border-radius:14px; }
+    .tail p { margin:0; }
+    .tail strong { font:750 1.4rem/1 var(--mono); }
+
+    .result-pairs { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:22px; }
+    .pair { padding:18px; border-top:5px solid var(--blue); background:var(--surface); }
+    .pair strong { display:block; margin:5px 0; font:750 1.35rem/1 var(--mono); }
+    .pair .on { color:var(--green); }
+    .quality-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .quality-card strong,.paper-card strong { display:block; margin:5px 0 10px; font-family:var(--serif); font-size:1.3rem; }
+    .quality-card p,.paper-card p { margin-bottom:0; }
+    .boundary { margin-top:18px; padding:18px; border-left:5px solid var(--rust); background:var(--rust-soft); }
+    details { margin-top:16px; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
+    summary { padding:16px 18px; cursor:pointer; font-weight:750; }
+    .details-body { padding:0 18px 18px; }
+    .table-wrap { overflow-x:auto; }
+    .table-wrap table { width:100%; min-width:720px; border-collapse:collapse; font-size:.78rem; }
+    .static-fallback { margin-top:20px; padding:20px; border:1px dashed var(--line); border-radius:14px; background:var(--surface); }
+    .js .static-fallback { display:none; }
+    footer { padding:44px 0 70px; border-top:1px solid var(--line); color:var(--muted); }
+
+    @media (max-width:900px) {
+      .answer,.checker-summary { grid-template-columns:1fr 1fr; }
+      .answer div:nth-child(2) { border-right:0; }
+      .token-chart { grid-template-columns:repeat(5,minmax(0,1fr)); }
+      .microscope,.quality-grid { grid-template-columns:1fr; }
     }
-    @media (max-width: 650px) {
-      body { font-size: 16px; }
-      .hero, main, .footer-inner { width: min(100% - 24px, 1140px); }
-      .hero { padding-top: 58px; }
-      section { padding: 52px 0; }
-      .boundary, .fixed-row, .pair-grid, .limits { grid-template-columns: 1fr; }
-      .section-head { grid-template-columns: 38px minmax(0, 1fr); gap: 10px; }
-      .loop-map, .step-list { grid-template-columns: 1fr; }
-      .card-head, .card-body, .loop-stage { padding: 20px; }
-      .candidate-table { font-size: .76rem; }
-      .candidate-table th, .candidate-table td { padding: 9px 5px; }
-      .failure { grid-template-columns: 1fr; }
-      .failure .join { display: none; }
-      .score-cards { grid-template-columns: 1fr; }
-      .results { font-size: .72rem; }
-      .results th, .results td { padding: 9px 4px; }
+    @media (max-width:620px) {
+      body { font-size:16px; }
+      .wrap { width:calc(100% - 24px); }
+      .hero { padding-top:54px; }
+      .answer,.checker-summary,.result-pairs { grid-template-columns:1fr; }
+      .answer div { border-right:0; border-bottom:1px solid var(--line); }
+      .answer div:last-child { border-bottom:0; }
+      section { padding:48px 0; }
+      .section-head { grid-template-columns:30px minmax(0,1fr); gap:16px; }
+      .story-head { grid-template-columns:1fr; }
+      .progress { padding:0; }
+      .story-body { padding:16px; }
+      .history { margin:-16px -16px 20px; padding:14px 16px; }
+      .token-chart { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+      .token-col { grid-template-rows:18px 116px minmax(58px,auto); }
+      .piece { padding:8px 3px; }
+      .piece strong { font-size:.66rem; }
+      .fork { grid-template-columns:1fr; }
+      .fork-mid { text-align:left; }
+      .chance-row { grid-template-columns:45px minmax(0,1fr) 65px; }
+      .tail { grid-template-columns:1fr; }
     }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    @media (prefers-reduced-motion:reduce) {
+      html { scroll-behavior:auto; }
+      *,*::before,*::after { animation:none!important; transition:none!important; }
     }
   </style>
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
-  <span id="light-preview" hidden></span><span id="dark-preview" hidden></span>
-  <header class="hero">
-    <p class="tag">Text watermarking lab / Stage 3</p>
-    <h1>Where does the score change happen?</h1>
-    <p class="lede">Stage 2 changed scores that we wrote by hand. Stage 3 uses a real LFM2 model on MLX and leaves the generation loop open so we can inspect every step.</p>
-    <div class="boundary">
-      <p><strong>This page shows</strong><br>A pinned local model run, one explicit score change, seeded sampling, and copied-text checking.</p>
-      <p><strong>This page does not show</strong><br>A tested detector cutoff, AI authorship, a private vendor system, or model quality.</p>
+  <header class="hero wrap">
+    <p class="eyebrow">Text watermarking lab / Stage 3</p>
+    <h1>Follow one watermark through one continuation.</h1>
+    <p class="lede">LFM2 gives every possible next token a raw score. This lab copies those scores, adds 2 to a group selected by a teaching key, and samples from the new chances.</p>
+    <div class="answer" aria-label="What stays fixed and what changes">
+      <div><span>Stays fixed</span><strong>Saved LFM2 weights</strong></div>
+      <div><span>Starts the same at a shared position</span><strong>Raw scores from LFM2</strong></div>
+      <div><span>Changes during generation</span><strong>Temporary scores and token chances</strong></div>
     </div>
   </header>
 
-  <main>
-    <section id="bridge">
-      <div class="section-head"><div class="number">01</div><div><h2>Keep the old question. Replace the fake scores.</h2><p>Stage 1 gave us the count. Stage 2 gave us keyed token groups. Stage 3 supplies real next-token scores.</p></div></div>
-      <div class="loop-map" aria-label="Stages 1 through 3 teaching bridge">
-        <div class="loop-stop"><span>Stage 1</span><strong>Count green hits</strong></div>
-        <div class="loop-stop"><span>Stage 2</span><strong>Select green IDs</strong></div>
-        <div class="loop-stop"><span>Stage 2</span><strong>Add 2 to scores</strong></div>
-        <div class="loop-stop changed"><span>Stage 3</span><strong>Get model scores</strong></div>
-        <div class="loop-stop"><span>Stage 3</span><strong>Filter and sample</strong></div>
-        <div class="loop-stop"><span>Stage 3</span><strong>Append and repeat</strong></div>
-        <div class="loop-stop"><span>Stage 3</span><strong>Copy and check</strong></div>
+  <main class="wrap">
+    <section id="start">
+      <div class="section-head"><div class="section-num">01</div><div><h2>Start with one prompt.</h2><p>The tokenizer turns the complete instruction and passage into 36 tokens for the model. LFM2 uses those token IDs to score 65,536 possible next tokens.</p></div></div>
+      <div class="prompt">Early one morning Jack went up the hill. At the top he<span class="cursor" aria-hidden="true"></span></div>
+      <div class="compact-loop" aria-label="Generation steps">
+        <span>get raw scores</span><span class="changed">add 2 to green scores</span><span>apply temperature and filters</span><span>make chances</span><span>sample one token</span><span>append and repeat</span>
       </div>
-      <p class="loop-note"><strong>The one new idea:</strong> LFM2 now supplies 65,536 next-token scores. The lab changes some of those scores before the sampler chooses a token.</p>
+      <p class="instruction">Reveal how the tokenizer split the passage. A dot marks a space stored inside a token piece.</p>
+      <div class="controls"><button class="primary" id="revealTokens" type="button">Reveal passage token pieces</button><button class="secondary" id="hideTokens" type="button" hidden>Hide token pieces</button></div>
+      <div class="token-input" id="inputTokens" hidden></div>
+      <details><summary>Show the complete 36-token input</summary><div class="details-body"><p>The fixed instruction is <code>Continue the passage with one short paragraph. Return only the continuation.</code> The tokenizer adds chat control tokens around the instruction and passage. An earlier diagnostic omitted this documented chat framing, so the saved Stage 3 record uses the regenerated complete input.</p></div></details>
     </section>
 
-    <section id="input">
-      <div class="section-head"><div class="number">02</div><div><h2>First, show the model its complete input.</h2><p>The passage is familiar. The tokenizer pieces are not.</p></div></div>
-      <div class="card">
-        <div class="card-head"><h3>The continuity passage</h3><p class="prompt">Early one morning Jack went up the hill. At the top he</p></div>
-        <div class="card-body">
-          <div class="fixed-row">
-            <div class="fixed"><span>Model</span><strong>LFM2 350M, 4-bit MLX</strong></div>
-            <div class="fixed"><span>Revision</span><strong>18dc72abf3b2...</strong></div>
-            <div class="fixed"><span>Model-input tokens</span><strong>36</strong></div>
+    <section id="story">
+      <div class="section-head"><div class="section-num">02</div><div><h2>Watch the same 20 token pieces through every step.</h2><p>Each column is one token that the recorded score increase run selected. The column stays in place as the page reveals its green membership, added score, sampling detail, and checker count.</p></div></div>
+      <div class="story-stage">
+        <div class="story-head">
+          <div><p class="step-label" id="stepLabel">Step 1 of 6</p><h3 id="storyTitle">Read the 20 recorded token pieces.</h3><p id="storyInstruction">The model appended these pieces one at a time. Notice that snow-covered uses three token pieces.</p></div>
+          <div class="progress" id="progress" aria-label="Six story steps"><i class="active"></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="story-body">
+          <div class="history">Early one morning Jack went up the hill. At the top he <span class="generated" id="historyText"></span></div>
+          <div class="token-chart" id="tokenChart" aria-label="First 20 selected token pieces and score added by this lab"></div>
+          <div class="axis-note"><span>0 added</span><span>score added by this lab</span><span>+2 added</span></div>
+          <div class="legend"><span class="green">green at that position</span><span>outside the green group</span></div>
+
+          <div class="microscope" id="microscope" hidden>
+            <article class="score-table"><p class="tag">Shared first position</p><h3>Both runs start with the same raw scores.</h3><table><thead><tr><th>Token</th><th>Raw</th><th>Off</th><th>On</th></tr></thead><tbody><tr><td>As</td><td>15.1875</td><td>15.1875</td><td>17.1875</td></tr><tr><td>he</td><td>14.8125</td><td>14.8125</td><td>16.8125</td></tr><tr><td>Jack</td><td>14.6875</td><td>14.6875</td><td>16.6875</td></tr><tr><td>The</td><td>13.5000</td><td>13.5000</td><td>15.5000</td></tr><tr><td>He</td><td>15.3125</td><td>15.3125</td><td>15.3125</td></tr></tbody></table></article>
+            <article class="chance-card"><p class="tag">One shared scale</p><h3>Final chances at position 1</h3><div class="chance-legend"><span>top bar: increase off</span><span>bottom bar: increase on</span></div><div id="chanceRows"></div><div class="chance-scale"><span>0%</span><span>17.5%</span><span>35%</span></div><p>Five named candidates are shown. The other 35 candidates kept by top-k hold the remaining chance.</p></article>
           </div>
-          <p><strong>Try this:</strong> Decide whether every written word will stay one token. Then reveal the recorded pieces. The passage, instruction, template, and model revision stay fixed.</p>
-          <div class="controls"><button class="primary" id="revealTokens" type="button">Reveal token pieces</button><button class="secondary" id="hideTokens" type="button">Start again</button></div>
-          <div class="token-grid" id="tokenGrid" aria-live="polite"></div>
-          <p class="watch" id="tokenReading">Watch for leading spaces and control tokens. LFM2 receives token IDs, not the word labels from Stage 2.</p>
-          <details><summary>What else did the post-trained model receive?</summary><div class="detail-body"><p>The fixed user instruction was: <code>Continue the passage with one short paragraph. Return only the continuation.</code></p><p>The tokenizer added chat control tokens such as <code>&lt;|startoftext|&gt;</code>, user and assistant boundaries, and line breaks. An earlier diagnostic omitted this documented chat framing and produced repetitive text. That run was discarded before evidence selection. No passage, seed, key, bias, or sampling setting changed.</p></div></details>
-        </div>
-      </div>
-    </section>
-
-    <section id="loop">
-      <div class="section-head"><div class="number">03</div><div><h2>Follow one token through the open loop.</h2><p>Press one button. Only the visible operation changes. The model, passage, first-step scores, seed, key, and sampling settings stay fixed.</p></div></div>
-      <div class="card loop-lab">
-        <ol class="step-list" id="stepList">
-          <li class="active">1. Model scores</li><li>2. Green group</li><li>3. Add 2</li><li>4. Temperature</li><li>5. Top-p, then top-k</li><li>6. Chances</li><li>7. Sample and append</li>
-        </ol>
-        <div class="loop-stage">
-          <p class="stage-kicker" id="stageKicker">Step 1 of 7</p>
-          <h3 id="stageTitle">LFM2 returns one score per possible next token.</h3>
-          <p id="stageText">The table keeps five leading recorded candidates. Higher raw scores start with more influence on the next choice.</p>
-          <div class="controls"><button class="primary" id="nextLoop" type="button">Show next loop step</button><button class="secondary" id="restartLoop" type="button">Restart token</button></div>
-          <table class="candidate-table"><thead><tr><th>Piece</th><th>ID</th><th id="valueHead">Raw score</th><th id="chanceHead">Status</th></tr></thead><tbody id="candidateBody"></tbody></table>
-          <p class="watch" id="loopReading">Watch the row for <code>Jack</code>, token ID 30604. It is the seeded choice in this recorded step.</p>
-        </div>
-      </div>
-      <div class="failure" aria-label="Derived filtered-green failure case">
-        <div><span>Derived test vector</span><strong>Green score: -5</strong></div><div class="join">then</div>
-        <div><span>Configured increase</span><strong>-5 + 2 = -3</strong></div><div class="join">then</div>
-        <div><span>Top-k result</span><strong>Removed</strong></div>
-      </div>
-      <p class="loop-note">Being green does not force a token. A token can receive the score increase and still be removed by a later filter.</p>
-    </section>
-
-    <section id="pair">
-      <div class="section-head"><div class="number">04</div><div><h2>Compare one variable at a time.</h2><p>Both paths start from the same complete model input and prompt-specific random seed. Only the score increase changes at the first position.</p></div></div>
-      <div class="pair-grid">
-        <article class="continuation"><p class="pair-label">Score increase off / seed 568285428</p><h3><code>Jack</code> chance: 11.6422%</h3><p>Jack paused and looked back at the world below. The sun had just risen, casting a warm orange glow...</p></article>
-        <article class="continuation on"><p class="pair-label">Score increase on / same seed</p><h3><code>Jack</code> chance: 18.5816%</h3><p>Jack climbed slowly, his boots sinking slightly into the soft snow-covered earth. The forest overhead...</p></article>
-      </div>
-      <p class="loop-note">The first seeded draw chooses <code>Jack</code> in both paths. The distributions are still different, and later token histories diverge.</p>
-    </section>
-
-    <section id="checker">
-      <div class="section-head"><div class="number">05</div><div><h2>Now copy the text and rebuild the green groups.</h2><p>The checker never sees the model scores or random draws. It needs the copied token IDs, matching tokenizer, selector profile, and key.</p></div></div>
-      <div class="card">
-        <div class="card-head"><h3>The same 40 copied tokens</h3><p><strong>Try this:</strong> Check one position at a time. The copied text and settings stay fixed. Then use the comparison key on exactly the same IDs.</p></div>
-        <div class="card-body">
-          <div class="checker-tokens" id="checkerTokens" aria-live="polite"></div>
-          <div class="controls"><button class="primary" id="nextCheck" type="button">Check next copied token</button><button class="secondary" id="comparisonKey" type="button">Use comparison key</button><button class="secondary" id="restartCheck" type="button">Restart check</button></div>
-          <div class="score-cards">
-            <div class="score-card"><span>Green tokens counted (G)</span><strong id="greenCount">0</strong></div>
-            <div class="score-card"><span>Token positions checked (T)</span><strong id="tokenCount">0</strong></div>
-            <div class="score-card"><span>Average green hits under the 25% random baseline</span><strong id="expectedCount">0.00</strong></div>
-            <div class="score-card"><span>Difference from the 25% baseline (z)</span><strong id="zCount">0.0000</strong></div>
+          <div class="jack-chain" id="jackChain" hidden><span>raw 14.6875</span><span class="change">add 2</span><span>16.6875</span><span>divide by 0.8</span><span>20.8594</span><span>top-p keeps 105</span><span>top-k keeps 40</span><span>chance 18.5816%</span><span class="chosen">sample Jack</span></div>
+          <div class="fork" id="fork" hidden>
+            <article class="fork-card"><p class="tag">Increase off</p><strong>1 Jack</strong><strong>2 paused</strong><p>Paused was selected with a 4.0225% chance.</p></article>
+            <div class="fork-mid">same history through Jack<br>different token 2</div>
+            <article class="fork-card"><p class="tag">Increase on</p><strong>1 Jack</strong><strong>2 climbed</strong><p>Climbed was selected with a 28.5079% chance.</p></article>
           </div>
-          <p class="result-sentence" id="resultSentence">The first copied token supplies context and is not counted. Check the next token to begin.</p>
+          <div class="checker-summary" id="checkerSummary" hidden>
+            <div class="count-card"><span>Green positions, G</span><strong>11</strong></div>
+            <div class="count-card"><span>Positions checked, T</span><strong>19</strong></div>
+            <div class="count-card"><span>25% baseline average</span><strong>4.75</strong></div>
+            <div class="count-card"><span>What Jack does</span><strong style="font-size:1rem">context only</strong></div>
+          </div>
+          <div class="tail" id="tail" hidden><p>Finish the other 20 recorded token positions from the same continuation.</p><strong>11/19 becomes 21/39</strong></div>
+
+          <div class="controls"><button class="primary" id="nextStory" type="button">Reveal key-selected positions</button><button class="secondary" id="backStory" type="button" hidden>Go back</button><button class="secondary" id="replayStory" type="button" hidden>Replay the story</button></div>
+          <p class="reading" id="storyReading">Bar height will show only the score added by this lab. It will not show token probability.</p>
         </div>
       </div>
+      <div class="static-fallback"><h3>The complete story without animation</h3><p>The recorded score increase run selects 20 token pieces. Twelve selected pieces receive 2 and eight receive 0. Jack receives 2 at position 1. Its chance rises from 11.6422% to 18.5816%, but both runs still choose Jack. At position 2, the control chooses paused and the score increase run chooses climbed. For the score increase continuation, positions 2 to 20 contain 11 green tokens among 19 checked positions. The full result is 21/39 with z 4.1603.</p></div>
+      <details><summary>Show how the program calculates Jack's chance</summary><div class="details-body"><p>The program adds 2, divides every adjusted score by temperature 0.8, applies top-p 0.95, keeps at most 40 candidates with top-k, and converts the remaining scores into chances that add to 100%.</p><p>Before filtering, the relative green odds multiplier is <code>exp(2 / 0.8) = 12.1825</code>. This is a calculation from the fixed settings, not a quality measurement. Being green does not force a token. A token can receive the score increase and still be removed by a later filter.</p></div></details>
     </section>
 
-    <section id="results">
-      <div class="section-head"><div class="number">06</div><div><h2>Read the six rows without inventing a verdict.</h2><p>These are measured values from one pinned local run. The 25% baseline averages 9.75 hits across 39 eligible positions.</p></div></div>
-      <div class="card"><div class="card-body">
-        <table class="results"><thead><tr><th>Passage</th><th>Increase</th><th>Same-key G/T</th><th>Same-key z</th><th>Comparison G/T</th><th>Comparison z</th></tr></thead><tbody>
-          <tr><td>continuity</td><td>off</td><td>8/39</td><td>-0.6472</td><td>6/39</td><td>-1.3868</td></tr>
-          <tr class="on"><td>continuity</td><td>on</td><td>21/39</td><td>4.1603</td><td>7/39</td><td>-1.0170</td></tr>
-          <tr><td>notebook</td><td>off</td><td>10/39</td><td>0.0925</td><td>14/39</td><td>1.5717</td></tr>
-          <tr class="on"><td>notebook</td><td>on</td><td>26/39</td><td>6.0093</td><td>10/39</td><td>0.0925</td></tr>
-          <tr><td>library</td><td>off</td><td>11/39</td><td>0.4623</td><td>10/39</td><td>0.0925</td></tr>
-          <tr class="on"><td>library</td><td>on</td><td>17/39</td><td>2.6811</td><td>13/39</td><td>1.2019</td></tr>
-        </tbody></table>
-      </div></div>
-      <div class="limits">
-        <article class="limit"><h3>What the run supports</h3><p>In all three fixed pairs, the score-increase continuation has more same-key green hits than its control in this replayable local run.</p></article>
-        <article class="limit no"><h3>What it cannot support</h3><p>Three passages do not measure accuracy, a false-positive rate, prose quality, or a cutoff. No row proves AI origin or authorship.</p></article>
+    <section id="result">
+      <div class="section-head"><div class="section-num">03</div><div><h2>Finish the same recorded check.</h2><p>The first 20 columns already showed 11 green positions among 19 eligible positions. The checker continues through the remaining copied token IDs.</p></div></div>
+      <div class="checker-summary">
+        <div class="count-card"><span>Green tokens counted (G)</span><strong>21</strong></div>
+        <div class="count-card"><span>Token positions checked (T)</span><strong>39</strong></div>
+        <div class="count-card"><span>Average under the 25% baseline</span><strong>9.75</strong></div>
+        <div class="count-card"><span>Difference from baseline (z)</span><strong>4.1603</strong></div>
       </div>
-      <div class="static-fallback"><h3>The complete lesson without animation</h3><ol><li>The chat tokenizer turns the instruction and passage into 36 model-input tokens.</li><li>LFM2 returns 65,536 raw next-token scores.</li><li>The generation key marks exactly 25% of token IDs green.</li><li>The score-increase path adds 2 before temperature, top-p, and top-k.</li><li>The seeded sampler chooses <code>Jack</code> and the loop appends it.</li><li>The copied continuation has 21 green hits in 39 eligible positions with the generation key and 7 with the comparison key.</li></ol></div>
-      <details><summary>Evidence and runtime details</summary><div class="detail-body"><p>Model: <code>mlx-community/LFM2-350M-4bit@18dc72abf3b2337f9123cfd6eeeb58dfa7947066</code></p><p>Source: <code>2f082b7f63853811881c0f23c2d7022e8e5dbc3b</code><br>Config SHA-256: <code>694a3d09ea341165cef5061360800e43957d2055993f7140b514ebf07ff3117f</code><br>Runtime: Python 3.12.7, MLX 0.32.0, MLX-LM 0.31.3, local Apple GPU.</p><p>Run <code>just verify-lab-03</code> to regenerate the six traces from the local model cache and compare the selected files byte for byte.</p></div></details>
+      <p class="reading">With the same key used during generation, 21 of 39 checked positions are green. A 25% random baseline averages 9.75 green positions across repeated 39-position checks. Stage 3 has no tested cutoff, so this number does not produce a yes or no result.</p>
+      <div class="controls"><button class="secondary" id="comparisonKey" type="button">Check the same IDs with the comparison key</button><button class="secondary" id="generationKey" type="button" hidden>Return to the generation key</button></div>
+      <p class="boundary" id="keyResult">The copied token IDs match the generation record. The first token supplies context, so the checker counts the other 39 positions.</p>
+
+      <h3 style="margin-top:34px">The three saved +2 runs have higher same-key counts.</h3>
+      <div class="result-pairs">
+        <div class="pair"><span>continuity</span><strong>8 to <span class="on">21</span></strong><small>increase off to on</small></div>
+        <div class="pair"><span>notebook</span><strong>10 to <span class="on">26</span></strong><small>increase off to on</small></div>
+        <div class="pair"><span>library</span><strong>11 to <span class="on">17</span></strong><small>increase off to on</small></div>
+      </div>
+      <p>These six continuations show what happened in the fixed local run. They do not estimate detector accuracy.</p>
+      <details><summary>Show all six results</summary><div class="details-body table-wrap"><table><thead><tr><th>Passage</th><th>Increase</th><th>Same-key G/T</th><th>Same-key z</th><th>Comparison G/T</th><th>Comparison z</th></tr></thead><tbody><tr><td>continuity</td><td>off</td><td>8/39</td><td>-0.6472</td><td>6/39</td><td>-1.3868</td></tr><tr><td>continuity</td><td>on</td><td>21/39</td><td>4.1603</td><td>7/39</td><td>-1.0170</td></tr><tr><td>notebook</td><td>off</td><td>10/39</td><td>0.0925</td><td>14/39</td><td>1.5717</td></tr><tr><td>notebook</td><td>on</td><td>26/39</td><td>6.0093</td><td>10/39</td><td>0.0925</td></tr><tr><td>library</td><td>off</td><td>11/39</td><td>0.4623</td><td>10/39</td><td>0.0925</td></tr><tr><td>library</td><td>on</td><td>17/39</td><td>2.6811</td><td>13/39</td><td>1.2019</td></tr></tbody></table></div></details>
+    </section>
+
+    <section id="quality">
+      <div class="section-head"><div class="section-num">04</div><div><h2>Stage 3 measured token chances, not writing quality.</h2><p>The key does not evaluate meaning. Raising green scores can reduce the chance of an unchanged candidate.</p></div></div>
+      <div class="quality-grid">
+        <article class="quality-card"><p class="tag">Measured here</p><strong>The chance for He falls from 25.4290% to 3.3315%.</strong><p>This proves that the first-position sampling chances changed. Stage 3 did not measure whether the change helped or harmed the sentence.</p></article>
+        <article class="quality-card"><p class="tag">Not measured here</p><strong>No quality test was run.</strong><p>The lab collected no blind ratings or task scores. Reading one pair of short continuations cannot tell us whether writing quality rose, fell, or stayed the same.</p></article>
+      </div>
+      <p class="boundary">No row proves AI origin or authorship. The checker compares copied text with this lab profile and key. It does not identify a private vendor watermark.</p>
+      <details><summary>Outside comparison: SynthID-Text</summary><div class="details-body"><p>This lab uses its own KGW-style teaching rule. It does not reproduce the upstream KGW implementation, SynthID-Text, or Claude's private method.</p><p><a href="https://www.nature.com/articles/s41586-024-08025-4">Dathathri et al.</a> describe a different method called Tournament sampling. Their non-distortion statement averages over watermark randomness and depends on the tested configuration. The paper reports no statistically significant difference in user feedback across about 20 million Gemini responses. That result belongs to SynthID and its Gemini test. It is not a quality result for Stage 3.</p><p>Related primary sources: <a href="https://arxiv.org/abs/2301.10226">KGW</a>, <a href="https://arxiv.org/abs/2308.00113">Three Bricks</a>, and <a href="https://arxiv.org/abs/2307.15593">Robust Distortion-free Watermarks</a>.</p></div></details>
+      <details><summary>Evidence and runtime details</summary><div class="details-body"><p>Model: <code>mlx-community/LFM2-350M-4bit@18dc72abf3b2337f9123cfd6eeeb58dfa7947066</code></p><p>Source: <code>2f082b7f63853811881c0f23c2d7022e8e5dbc3b</code><br>Config SHA-256: <code>694a3d09ea341165cef5061360800e43957d2055993f7140b514ebf07ff3117f</code><br>Runtime: Python 3.12.7, MLX 0.32.0, MLX-LM 0.31.3, local Apple GPU.</p><p><code>just verify-lab-03</code> reloads the pinned local model and checks the selected JSON and annotated trace against the saved records.</p></div></details>
     </section>
   </main>
 
-  <footer><div class="footer-inner"><p>Next question: can a separately defined library adapter reproduce this manual profile? Stage 4 must test that rather than assume it.</p><div class="theme-links"><a href="#light-preview">Light preview</a><a href="#dark-preview">Dark preview</a></div></div></footer>
+  <footer><div class="wrap"><p>A separate experiment must measure the quality and detectability tradeoff on a larger paired prompt set.</p></div></footer>
 
   <script>
     (() => {
-      const pieces = [
-        ['<|startoftext|>',1,1],['<|im_start|>',6,1],['user',6423,1],['↵',708,1],
-        ['Continue',48687,0],[' the',779,0],[' passage',12543,0],[' with',916,0],
-        [' one',1235,0],[' short',3290,0],[' paragraph',18569,0],['.',523,0],
-        [' Return',20586,0],[' only',1550,0],[' the',779,0],[' continuation',46344,0],
-        ['.',523,0],['↵↵',509,1],['Early',16248,0],[' one',1235,0],[' morning',8532,0],
-        [' Jack',6927,0],[' went',4925,0],[' up',1287,0],[' the',779,0],[' hill',20527,0],
-        ['.',523,0],[' At',2805,0],[' the',779,0],[' top',2684,0],[' he',950,0],
-        ['<|im_end|>',7,1],['↵',708,1],['<|im_start|>',6,1],['assistant',64015,1],['↵',708,1]
+      const inputPieces = [['Early',16248],[' one',1235],[' morning',8532],[' Jack',6927],[' went',4925],[' up',1287],[' the',779],[' hill',20527],['.',523],[' At',2805],[' the',779],[' top',2684],[' he',950]];
+      const tokens = [
+        {text:'Jack',id:30604,green:true},{text:' climbed',id:47977,green:true},{text:' slowly',id:12098,green:true},{text:',',id:521,green:true},
+        {text:' his',id:1210,green:false},{text:' boots',id:42344,green:false},{text:' sinking',id:53058,green:false},{text:' slightly',id:9532,green:false},
+        {text:' into',id:1419,green:false},{text:' the',id:779,green:true},{text:' soft',id:4224,green:true},{text:' snow',id:10910,green:true},
+        {text:'-c',id:2981,green:true},{text:'overed',id:18559,green:false},{text:' earth',id:6003,green:true},{text:'.',id:523,green:false},
+        {text:' The',id:941,green:true},{text:' forest',id:7922,green:true},{text:' overhead',id:32264,green:true},{text:' was',id:953,green:false}
       ];
       const escapeHtml = value => value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-      const tokenGrid = document.querySelector('#tokenGrid');
-      pieces.forEach(([text,id,special], index) => {
-        const node = document.createElement('div');
-        node.className = 'token hidden-token' + (special ? ' special' : '');
-        node.dataset.index = String(index);
-        const shown = text.startsWith(' ') ? `<span class="leading-space">·</span>${escapeHtml(text.slice(1))}` : escapeHtml(text);
-        node.innerHTML = `<strong>${shown}</strong><small>ID ${id}</small>`;
-        tokenGrid.append(node);
-      });
-      let revealed = 0;
-      const reveal = () => {
-        const amount = revealed === 0 ? 8 : pieces.length;
-        document.querySelectorAll('.hidden-token').forEach((node, index) => { if (index < amount) node.classList.remove('hidden-token'); });
-        revealed = amount;
-        document.querySelector('#revealTokens').textContent = revealed < pieces.length ? 'Reveal remaining pieces' : 'All 36 pieces shown';
-        document.querySelector('#tokenReading').textContent = revealed < pieces.length ? 'The first pieces include chat control IDs and the fixed instruction. Reveal the rest to find the passage.' : 'The middle pieces hold the passage. A dot marks a leading space inside an ordinary token piece.';
-      };
-      document.querySelector('#revealTokens').addEventListener('click', reveal);
-      document.querySelector('#hideTokens').addEventListener('click', () => {
-        revealed = 0; document.querySelectorAll('.token').forEach(node => node.classList.add('hidden-token'));
-        document.querySelector('#revealTokens').textContent = 'Reveal token pieces';
-        document.querySelector('#tokenReading').textContent = 'Watch for leading spaces and control tokens. LFM2 receives token IDs, not the word labels from Stage 2.';
-      });
+      const showPiece = text => text.startsWith(' ') ? `<span aria-label="leading space">.</span>${escapeHtml(text.slice(1))}` : escapeHtml(text);
 
-      const candidates = [
-        {text:'As',id:2777,raw:15.1875,green:true,after:17.1875,temp:21.484375,chance:34.7150},
-        {text:'he',id:773,raw:14.8125,green:true,after:16.8125,temp:21.015625,chance:21.7241},
-        {text:'Jack',id:30604,raw:14.6875,green:true,after:16.6875,temp:20.859375,chance:18.5816,selected:true},
-        {text:'The',id:1098,raw:13.5,green:true,after:15.5,temp:19.375,chance:4.2114},
-        {text:'He',id:3259,raw:15.3125,green:false,after:15.3125,temp:19.140625,chance:3.3315}
-      ];
-      const stages = [
-        ['Step 1 of 7','LFM2 returns one score per possible next token.','The table keeps five leading recorded candidates. Higher raw scores start with more influence on the next choice.','raw','Raw score','Candidate'],
-        ['Step 2 of 7','The key and previous token ID define the green group.','Exactly 16,384 of 65,536 candidate IDs are green. The model did not choose the key or the group.','raw','Raw score','Membership'],
-        ['Step 3 of 7','Add 2 to every green candidate score.','The model scores stay fixed. Green membership stays fixed. Only green scores receive the configured increase.','after','After increase','Increase'],
-        ['Step 4 of 7','Divide the changed scores by temperature 0.8.','Temperature rescales every candidate. It does not change which IDs belong to the green group.','temp','After temperature','Green'],
-        ['Step 5 of 7','Top-p keeps 105 candidates. Top-k then keeps 40.','The displayed candidates survive both filters. A green candidate can still be removed if it falls outside the retained set.','temp','Filtered score','Survives'],
-        ['Step 6 of 7','Normalize the 40 remaining scores into chances.','Every final chance is a share of one total. Raising green scores also lowers the shares of unchanged candidates.','chance','Final chance','Green'],
-        ['Step 7 of 7','The seeded sampler chooses Jack and appends ID 30604.','The next model call receives one more token through the cache. Its history, scores, and green group can now change.','chance','Final chance','Chosen']
-      ];
-      let loopStage = 0;
-      const renderLoop = () => {
-        const [kicker,title,text,key,head,status] = stages[loopStage];
-        document.querySelector('#stageKicker').textContent = kicker;
-        document.querySelector('#stageTitle').textContent = title;
-        document.querySelector('#stageText').textContent = text;
-        document.querySelector('#valueHead').textContent = head;
-        document.querySelector('#chanceHead').textContent = status;
-        document.querySelectorAll('#stepList li').forEach((node,index) => node.classList.toggle('active',index === loopStage));
-        document.querySelector('#candidateBody').innerHTML = candidates.map(c => {
-          const row = loopStage >= 1 && c.green ? 'green ' : '';
-          const selected = loopStage === 6 && c.selected ? 'selected' : '';
-          let value = c.raw.toFixed(4); let final = 'recorded';
-          if (key === 'after') { value = c.after.toFixed(4); final = c.green ? '+2.0' : '+0.0'; }
-          if (key === 'temp') { value = c.temp.toFixed(6); final = loopStage === 4 ? 'yes' : (c.green ? 'green' : 'red'); }
-          if (key === 'chance') { value = c.chance.toFixed(4) + '%'; final = loopStage === 6 ? (c.selected ? 'chosen' : 'not chosen') : (c.green ? 'green' : 'red'); }
-          if (loopStage === 1) final = c.green ? 'green' : 'red';
-          return `<tr class="${row}${selected}"><td><code>${c.text}</code></td><td>${c.id}</td><td>${value}</td><td>${final}</td></tr>`;
-        }).join('');
-        document.querySelector('#nextLoop').textContent = loopStage === stages.length - 1 ? 'Replay loop' : 'Show next loop step';
-        document.querySelector('#loopReading').innerHTML = loopStage === 6 ? 'The sampled token becomes context for the next step. One token demonstrates generation; two copied tokens are needed before the checker can count one.' : 'Watch the row for <code>Jack</code>, token ID 30604. The row label and ID persist through every operation.';
-      };
-      document.querySelector('#nextLoop').addEventListener('click', () => { loopStage = loopStage === stages.length - 1 ? 0 : loopStage + 1; renderLoop(); });
-      document.querySelector('#restartLoop').addEventListener('click', () => { loopStage = 0; renderLoop(); });
-      renderLoop();
+      const input = document.querySelector('#inputTokens');
+      input.innerHTML = inputPieces.map(([text,id]) => `<span class="input-token">${showPiece(text)}<small>ID ${id}</small></span>`).join('');
+      const reveal = document.querySelector('#revealTokens');
+      const hide = document.querySelector('#hideTokens');
+      reveal.addEventListener('click', () => { input.hidden=false; reveal.hidden=true; hide.hidden=false; });
+      hide.addEventListener('click', () => { input.hidden=true; reveal.hidden=false; hide.hidden=true; });
 
-      const checkPieces = [
-        {text:'Jack',gen:null,comp:null},{text:' climbed',gen:true,comp:true},{text:' slowly',gen:true,comp:true},
-        {text:',',gen:true,comp:false},{text:' his',gen:false,comp:true},{text:' boots',gen:false,comp:false},
-        {text:' sinking',gen:false,comp:true},{text:' slightly',gen:false,comp:false},{text:' into',gen:false,comp:false},
-        {text:' the',gen:true,comp:false},{text:' soft',gen:true,comp:true},{text:' snow',gen:true,comp:false}
+      const chart = document.querySelector('#tokenChart');
+      chart.innerHTML = tokens.map((token,index) => `<div class="token-col" data-index="${index}"><span class="pos">${index+1}</span><div class="rail"><i class="bar"></i></div><div class="piece"><strong>${showPiece(token.text)}</strong><small>token piece</small></div></div>`).join('');
+      const chanceData = [
+        {name:'He',green:false,off:25.4290,on:3.3315},{name:'As',green:true,off:21.7505,on:34.7150},
+        {name:'he',green:true,off:13.6111,on:21.7241},{name:'Jack',green:true,off:11.6422,on:18.5816},
+        {name:'The',green:true,off:2.6386,on:4.2114},{name:'35 others',green:false,off:24.9285,on:17.4365}
       ];
-      let checked = 0; let keyRole = 'gen';
-      const totals = {gen:{g:21,t:39,z:4.160251471689218},comp:{g:7,t:39,z:-1.0169503597462533}};
-      const zScore = (g,t) => t ? (g - .25*t) / Math.sqrt(t*.25*.75) : 0;
-      const renderCheck = () => {
-        const visible = checked >= 4 ? checkPieces.length - 1 : checked;
-        document.querySelector('#checkerTokens').innerHTML = checkPieces.map((piece,index) => {
-          let cls = index === 0 ? 'context' : 'pending'; let label = index === 0 ? 'context' : 'not checked';
-          if (index > 0 && index <= visible) { const hit = piece[keyRole]; cls = hit ? 'hit' : 'miss'; label = hit ? 'green hit' : 'red result'; }
-          return `<span class="check-token ${cls}">${piece.text}<small> ${label}</small></span>`;
-        }).join('');
-        let g = 0, t = visible;
-        for (let i=1;i<=visible;i++) if (checkPieces[i][keyRole]) g++;
-        const complete = checked >= 4;
-        if (complete) { g = totals[keyRole].g; t = totals[keyRole].t; }
-        const expected = .25*t; const z = complete ? totals[keyRole].z : zScore(g,t);
-        document.querySelector('#greenCount').textContent = String(g);
-        document.querySelector('#tokenCount').textContent = String(t);
-        document.querySelector('#expectedCount').textContent = expected.toFixed(2);
-        document.querySelector('#zCount').textContent = z.toFixed(4);
-        const keyName = keyRole === 'gen' ? 'same key used during generation' : 'comparison key';
-        document.querySelector('#comparisonKey').textContent = keyRole === 'gen' ? 'Use comparison key' : 'Use generation key';
-        if (!t) document.querySelector('#resultSentence').textContent = 'The first copied token supplies context and is not counted. Check the next token to begin.';
-        else if (!complete) document.querySelector('#resultSentence').textContent = `With the ${keyName}, the running check has ${g} green hits in ${t} eligible copied tokens. Keep checking to reach the recorded result.`;
-        else document.querySelector('#resultSentence').textContent = `With the ${keyName}, the checker counted ${g} of ${t} eligible copied tokens as green. The first copied token supplies context and is not counted. A 25% random baseline averages ${expected.toFixed(2)} green hits here. z = ${z.toFixed(4)} measures the difference in units of the usual random spread. Stage 3 has no tested cutoff, so this number does not produce a yes or no result.`;
-        document.querySelector('#nextCheck').textContent = complete ? 'Replay copied-text check' : 'Check next copied token';
+      document.querySelector('#chanceRows').innerHTML = chanceData.map(row => `<div class="chance-row ${row.green?'green':''} ${row.name==='Jack'?'jack':''}"><code>${row.name}</code><div><div class="chance-track"><i style="--w:${(row.off/35*100).toFixed(4)}%"></i></div><div class="chance-track" style="margin-top:4px"><i style="--w:${(row.on/35*100).toFixed(4)}%"></i></div></div><strong>${row.off.toFixed(4)}%<br>${row.on.toFixed(4)}%</strong></div>`).join('');
+
+      const states = [
+        {title:'Read the 20 recorded token pieces.',instruction:'The model appended these pieces one at a time. Notice that snow-covered uses three token pieces.',button:'Reveal key-selected positions',reading:'Bar height will show only the score added by this lab. It will not show token probability.'},
+        {title:'The key selects 12 of the sampled tokens.',instruction:'The token pieces stay fixed. Green hatching now shows which sampled token belonged to the green group at its position.',button:'Add 2 to green scores',reading:'Green is a label chosen from the previous token and teaching key. It does not mean good, correct, or guaranteed.'},
+        {title:'Twelve recorded bars jump from 0 to +2.',instruction:'The program adds 2 to the temporary score of each green sampled token. Eight bars stay at 0.',button:'Follow Jack through sampling',reading:'The saved model weights do not change. The program changes temporary scores used for sampling.'},
+        {title:'Jack receives 2, but sampling still makes the choice.',instruction:'The 20 bars keep the same unit. The detail below shows how the recorded scores at the first position became chances.',button:'Use the saved random draw',reading:'Jack moves from 11.6422% to 18.5816% on one shared 0% to 35% scale. Both runs still sample Jack.'},
+        {title:'The two runs separate at token 2.',instruction:'Both histories end in Jack before the second model call. The saved draw then selects paused with the increase off and climbed with it on.',button:'Use the +2 tokens as copied text',reading:'Starting at token 3, the runs use different histories. Later choices are observed outcomes, not matched probability comparisons.'},
+        {title:'The checker counts the same token pieces.',instruction:'Jack supplies context and is not counted. Among positions 2 to 20, 11 of 19 tokens are green for the generation key.',button:'Replay the story',reading:'The same key-selected pattern used during generation becomes the pattern counted in copied text.'}
+      ];
+      let state = 0;
+      const render = () => {
+        const item = states[state];
+        document.querySelector('#stepLabel').textContent = `Step ${state+1} of ${states.length}`;
+        document.querySelector('#storyTitle').textContent = item.title;
+        document.querySelector('#storyInstruction').textContent = item.instruction;
+        document.querySelector('#storyReading').textContent = item.reading;
+        document.querySelectorAll('#progress i').forEach((dot,index) => dot.classList.toggle('active',index<=state));
+        document.querySelectorAll('.token-col').forEach((node,index) => {
+          node.classList.toggle('member',state>=1 && tokens[index].green);
+          node.classList.toggle('focus',state===3 && index===0);
+          node.querySelector('small').textContent = state>=5 ? (index===0?'context only':tokens[index].green?'counts as green':'does not count') : state>=1 ? (tokens[index].green?'green at this position':'outside green group') : 'token piece';
+        });
+        chart.classList.toggle('boosted',state>=2 && state<5);
+        chart.classList.toggle('checking',state>=5);
+        document.querySelector('#microscope').hidden = state<3;
+        document.querySelector('#jackChain').hidden = state<3;
+        document.querySelector('#fork').hidden = state<4;
+        document.querySelector('#checkerSummary').hidden = state<5;
+        document.querySelector('#tail').hidden = state<5;
+        document.querySelector('#historyText').textContent = state>=4 ? tokens.map(token=>token.text).join('') : state>=3 ? 'Jack' : '';
+        const next = document.querySelector('#nextStory');
+        const back = document.querySelector('#backStory');
+        const replay = document.querySelector('#replayStory');
+        next.hidden = state===states.length-1;
+        back.hidden = state===0 || state===states.length-1;
+        replay.hidden = state!==states.length-1;
+        next.textContent = item.button;
       };
-      document.querySelector('#nextCheck').addEventListener('click', () => { checked = checked >= 4 ? 0 : checked + 1; renderCheck(); });
-      document.querySelector('#comparisonKey').addEventListener('click', () => { keyRole = keyRole === 'gen' ? 'comp' : 'gen'; renderCheck(); });
-      document.querySelector('#restartCheck').addEventListener('click', () => { checked = 0; keyRole = 'gen'; renderCheck(); });
-      renderCheck();
+      document.querySelector('#nextStory').addEventListener('click',()=>{state=Math.min(states.length-1,state+1);render();});
+      document.querySelector('#backStory').addEventListener('click',()=>{state=Math.max(0,state-1);render();});
+      document.querySelector('#replayStory').addEventListener('click',()=>{state=0;render();});
+      render();
+
+      const comparison = document.querySelector('#comparisonKey');
+      const generation = document.querySelector('#generationKey');
+      const keyResult = document.querySelector('#keyResult');
+      comparison.addEventListener('click',()=>{
+        keyResult.textContent='With the comparison key, 7 of the same 39 positions are green and z = -1.0170. Changing the key changes group membership. This one comparison does not measure a false-alarm rate.';
+        comparison.hidden=true; generation.hidden=false;
+      });
+      generation.addEventListener('click',()=>{
+        keyResult.textContent='With the same key used during generation, 21 of 39 positions are green and z = 4.1603. Stage 3 has no tested cutoff.';
+        generation.hidden=true; comparison.hidden=false;
+      });
     })();
   </script>
 </body>

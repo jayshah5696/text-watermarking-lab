@@ -45,7 +45,7 @@ def test_lesson_uses_stage_2_continuity_and_complete_model_input() -> None:
     )
     assert record["prompt_text"] in lesson
     assert trace["config"]["instruction_prefix"].strip() in lesson  # type: ignore[index]
-    assert "36 model-input tokens" in lesson
+    assert "36 tokens for the model" in lesson
     assert "chat control tokens" in lesson
     assert "An earlier diagnostic omitted this documented chat framing" in lesson
 
@@ -84,19 +84,20 @@ def test_lesson_has_guided_controls_static_fallback_and_no_remote_runtime() -> N
     lesson = LESSON.read_text(encoding="utf-8")
     parser = _Structure()
     parser.feed(lesson)
-    assert parser.details == parser.summaries == 2
+    assert parser.details == parser.summaries == 5
     assert parser.scripts == 2
     assert parser.external_scripts == 0
     assert parser.disabled_controls == 0
     for expected in (
         'id="revealTokens"',
-        'id="nextLoop"',
-        'id="restartLoop"',
-        'id="nextCheck"',
+        'id="nextStory"',
+        'id="backStory"',
+        'id="replayStory"',
         'id="comparisonKey"',
-        'id="restartCheck"',
+        'id="generationKey"',
         'class="static-fallback"',
-        "The complete lesson without animation",
+        "[hidden] { display:none!important; }",
+        "The complete story without animation",
         "Green tokens counted (G)",
         "Stage 3 has no tested cutoff",
     ):
@@ -120,6 +121,12 @@ def test_visible_copy_passes_plain_language_and_claim_boundary_gate() -> None:
         "AI detection",
         "membership oracle",
         "intervention",
+        "downstream of that fork",
+        "design space",
+        "First define the watermark",
+        "Try this",
+        "scientifically useful",
+        "meaning-blind",
     ):
         assert forbidden not in lesson
     for required in (
@@ -128,5 +135,50 @@ def test_visible_copy_passes_plain_language_and_claim_boundary_gate() -> None:
         "No row proves AI origin or authorship",
         "Being green does not force a token",
         "A token can receive the score increase and still be removed",
+        "whether writing quality rose, fell, or stayed the same",
+        "https://www.nature.com/articles/s41586-024-08025-4",
+        "This lab uses its own KGW-style teaching rule",
+        "It does not reproduce the upstream KGW implementation, SynthID-Text",
+    ):
+        assert required in lesson
+
+
+def test_lesson_separates_local_quality_evidence_from_external_research() -> None:
+    lesson = LESSON.read_text(encoding="utf-8")
+    for required in (
+        "Measured here",
+        "Not measured here",
+        "The lab collected no blind ratings or task scores",
+        "That result belongs to SynthID and its Gemini test",
+        "11.6422%",
+        "18.5816%",
+        "2 paused",
+        "2 climbed",
+    ):
+        assert required in lesson
+
+
+def test_lesson_reuses_twenty_recorded_tokens_from_generation_in_checking() -> None:
+    lesson = LESSON.read_text(encoding="utf-8")
+    trace = _trace()
+    record = next(
+        item
+        for item in trace["records"]  # type: ignore[union-attr]
+        if item["prompt_id"] == "stage-02-continuity" and item["condition"] == "score_increase"
+    )
+    first_twenty = record["steps"][:20]
+    assert len(first_twenty) == 20
+    assert sum(bool(step["selected_token_in_green_group"]) for step in first_twenty) == 12
+    assert sum(bool(step["selected_token_in_green_group"]) for step in first_twenty[1:]) == 11
+    for step in first_twenty:
+        assert str(step["selected_token_id"]) in lesson
+        assert str(step["selected_token_text"]).strip() in lesson
+    for required in (
+        "Twelve recorded bars jump from 0 to +2",
+        "Bar height will show only the score added by this lab",
+        "Starting at token 3, the runs use different histories",
+        "11/19 becomes 21/39",
+        "top bar: increase off",
+        "bottom bar: increase on",
     ):
         assert required in lesson
