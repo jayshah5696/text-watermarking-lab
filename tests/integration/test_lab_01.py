@@ -129,12 +129,17 @@ def test_lab_refuses_dirty_git_worktree(tmp_path: Path) -> None:
 
 def test_stage_1_source_has_no_model_dataset_or_cloud_imports() -> None:
     imported_roots: set[str] = set()
-    for directory in (ROOT / "src", ROOT / "labs", ROOT / "scripts"):
-        for path in directory.rglob("*.py"):
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    imported_roots.update(alias.name.split(".", 1)[0] for alias in node.names)
-                elif isinstance(node, ast.ImportFrom) and node.module:
-                    imported_roots.add(node.module.split(".", 1)[0])
+    stage_1_paths = (
+        ROOT / "src/watermark_lab/records.py",
+        ROOT / "src/watermark_lab/stats.py",
+        ROOT / "labs/01_biased_coin.py",
+        ROOT / "scripts/verify_lab_01.py",
+    )
+    for path in stage_1_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_roots.update(alias.name.split(".", 1)[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_roots.add(node.module.split(".", 1)[0])
     assert imported_roots.isdisjoint(FORBIDDEN_IMPORT_ROOTS)

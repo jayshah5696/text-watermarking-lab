@@ -25,7 +25,7 @@ lint:
 typecheck:
     uv run pyright
 
-# Run the full CPU-only test suite.
+# Run the full local test suite. Stage 3 tests use only small MLX arrays.
 test:
     uv run pytest
 
@@ -51,3 +51,11 @@ lab-02:
 # Recompute and validate the selected Stage 2 trace.
 verify-lab-02:
     uv run python scripts/verify_lab_02.py
+
+# Generate paired Stage 3 traces with the pinned MLX model fixture.
+lab-03:
+    uv run python labs/03_manual_generation.py
+
+# Recompute and validate Stage 3 evidence from the local model cache.
+verify-lab-03:
+    uv run python scripts/verify_lab_03.py
