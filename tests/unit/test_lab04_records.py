@@ -169,6 +169,7 @@ def test_trace_round_trip_is_stable_and_markdown_contains_boundaries() -> None:
     assert "first eligible decision" in markdown
     assert "no prompt or padding tokens" in markdown
     assert "consistent with this configured watermark and key" in markdown
+    assert all(line == line.rstrip() for line in markdown.splitlines())
 
 
 def test_trace_json_rejects_unknown_keys_and_nonfinite_numbers() -> None:

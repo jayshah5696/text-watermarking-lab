@@ -348,7 +348,7 @@ def trace_to_markdown_bytes(trace: Lab04Trace) -> bytes:
             "",
         ]
     )
-    return "\n".join(lines).encode()
+    return "\n".join(line.rstrip() for line in lines).encode()
 
 
 def _mapping(value: object, name: str) -> Mapping[str, object]:
