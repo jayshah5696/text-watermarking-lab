@@ -69,7 +69,7 @@ Alt text draft:
 
 Use one horizontal sequence with six named stops. Show model scores, the score increase, filters,
 watermark membership, final chances, the random draw, and the appended token. Use aligned candidate
-rows so a learner can follow the same token across the intervention.
+rows so a learner can follow the same token across the score change.
 
 Caption draft:
 
@@ -90,7 +90,7 @@ comparison-key `G`, `T`, and z scores. Put the no-cutoff statement beside the sc
 
 Caption draft:
 
-> Both paths start with the same prompt and random seed. The intervention changes token chances,
+> Both paths start with the same prompt and random seed. The score increase changes token chances,
 > so later token histories can diverge. The checker scores copied text against one configured key.
 
 Alt text draft:
@@ -106,7 +106,7 @@ the same steps but must keep their numbered order and repeated token labels.
 ## Evidence contract
 
 The lesson and blog note may use only values from `artifacts/lab-03/trace.json` or values derived
-and tested from that artifact. The selected artifact must record every input, intervention,
+and tested from that artifact. The selected artifact must record every input, configured increase,
 sampling result, copied-text tokenization result, and checker score needed by the three figures.
 
 The source commit and configuration hash identify the code and fixed inputs. Package versions and

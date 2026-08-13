@@ -176,5 +176,5 @@ numbers, and a newline at EOF. They must not contain timestamps or cache paths.
 ## Exit gate
 
 Stage 3 is complete when the manual loop produces and independently verifies paired traces for all
-three prompts, a reader can locate the intervention in one token step, and the lesson passes the
+three prompts, a reader can locate the score change in one token step, and the lesson passes the
 Stage Visual Lesson browser checks. Stop before the Stage 4 reference adapter.

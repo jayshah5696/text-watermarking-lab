@@ -2,7 +2,7 @@
 
 ## Current stage
 
-Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user review.
+Stages 0–3 complete locally on `jay/lab-03-manual-generation`; awaiting user review.
 
 ## Implemented
 
@@ -26,6 +26,15 @@ Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user revi
   visuals, captions, alt text, and blog handoffs to be designed together before implementation.
 - Stage 2 publication brief preserving the verified fixture and mapping it to three final-article
   figures.
+- Pinned `mlx-community/LFM2-350M-4bit` fixture at revision
+  `18dc72abf3b2337f9123cfd6eeeb58dfa7947066`, loaded with MLX-LM on the local Apple GPU.
+- Explicit cached next-token loop with a vectorized full-vocabulary selector, float32 score change,
+  temperature, top-p, top-k, seeded sampling, append, and repeat.
+- Six paired continuations across three fixed passages, copied-text re-tokenization, same-key and
+  comparison-key checker results, and deterministic local-cache verification.
+- Evidence-grounded Stage 3 blog handoff and interactive lesson that continues the Stage 2 sentence,
+  reveals the complete chat-framed model input, follows one token through the loop, and returns to
+  the Stage 1 count.
 
 ## Verified
 
@@ -58,21 +67,33 @@ Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user revi
 - The exact `file://` lesson passed full generation, replay, restart during motion, rapid-click,
   reduced-motion, and scripts-off fallback checks. The inline script has no imports, network calls,
   or storage. No console errors or horizontal overflow were found.
+- `just check` passes locally with 260 tests.
+- `just test-cov` passes with 97.83% branch-aware package coverage.
+- `just lab-03` generated six 40-token continuations from source commit
+  `2f082b7f63853811881c0f23c2d7022e8e5dbc3b` using config SHA-256
+  `694a3d09ea341165cef5061360800e43957d2055993f7140b514ebf07ff3117f`.
+- `just verify-lab-03` reloads the pinned model from the local cache, regenerates all six records,
+  and compares `trace.json` and `annotated_trace.md` byte for byte.
+- Same-key counts in the control rows were `8/39`, `10/39`, and `11/39`. The paired score-increase
+  rows were `21/39`, `26/39`, and `17/39`. Comparison-key rows ranged from `6/39` to `14/39`.
+- All six decoded continuations re-tokenized to the generated token IDs exactly.
+- The self-contained `file://` Stage 3 lesson passed desktop light, mobile light, desktop dark,
+  reduced-motion, keyboard, and scripts-off fallback checks. Every control and disclosure worked;
+  no console errors or horizontal overflow were found.
 
 ## Not implemented
 
-- Model/tokenizer integration.
 - Dataset access or manifests.
 - Modal or other hosted compute setup.
 - Hosted detector or public playground.
+- Stage 4 library-adapter equivalence.
 
-No model- or tokenizer-backed detector experiment has run.
+No dataset-backed calibration or tested detector cutoff exists.
 
 ## Approval required next
 
-Stage 3 manual generation-loop planning or implementation. Any model or tokenizer access,
-including a download, requires separate explicit approval. Dataset, cloud, GPU, GitHub remote,
-publishing, and public deployment remain separate gates.
+Stage 4 planning or implementation. Any new model, tokenizer, dataset, cloud resource, GPU scope,
+GitHub remote, publishing, or public deployment requires separate explicit approval.
 
 ## Known limitations
 
@@ -86,3 +107,9 @@ publishing, and public deployment remain separate gates.
   implementation and is not a production pseudorandom function or key-management design.
 - Four generated positions demonstrate mechanics. They do not measure detection rates, text
   quality, or model behavior.
+- The Stage 3 `mlx-mix-v1` selector is a portable teaching profile. It is not cryptographic,
+  upstream-compatible, or a production key-management design.
+- Three passages and 39 eligible tokens per continuation do not measure detection accuracy,
+  false-positive rates, language quality, device portability, or a useful cutoff.
+- The selected run uses one pinned 4-bit LFM2 checkpoint and local Apple GPU. Results do not
+  automatically transfer to another model, tokenizer, checkpoint, device, or MLX version.

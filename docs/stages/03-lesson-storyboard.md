@@ -81,7 +81,8 @@ revision, token pieces, IDs, and the statement that Stage 2's word labels have b
 output.
 
 The loop screenshot must show the numbered order, one aligned candidate, the score before and after
-the intervention, the final probability, the sampled token, and the filtered-token failure case.
+the configured increase, the final probability, the sampled token, and the filtered-token failure
+case.
 
 The checker screenshot must show copied text, re-tokenized IDs, same-key and comparison-key `G`, `T`,
 and z, plus the statement that Stage 3 has no calibrated cutoff.
@@ -90,4 +91,4 @@ and z, plus the statement that Stage 3 has no calibrated cutoff.
 
 Put the full six-sequence table, model cache command, source commit, configuration hash, package
 versions, prompt IDs, seeds, complete candidate snapshots, and repository paths in disclosures.
-The reader must not need the appendix to find the intervention or interpret the score.
+The reader must not need the appendix to find the score change or interpret the score.

@@ -63,12 +63,22 @@ fixed.
 | A filtered token stays unavailable after watermarking | derived | fixed tensor test | sampling-order regression test |
 | Three prompts do not establish accuracy or quality | limitation | Stage 3 contract | scope review |
 
-Replace the measured artifact rows with their exact recorded values after the approved run. Do not
-write values into the lesson before the artifact exists.
+Selected measured values from source `2f082b7f63853811881c0f23c2d7022e8e5dbc3b`:
+
+- continuity, increase off: same-key `8/39`, z `-0.6472`; comparison-key `6/39`, z `-1.3868`;
+- continuity, increase on: same-key `21/39`, z `4.1603`; comparison-key `7/39`, z `-1.0170`;
+- notebook, increase off: same-key `10/39`, z `0.0925`; comparison-key `14/39`, z `1.5717`;
+- notebook, increase on: same-key `26/39`, z `6.0093`; comparison-key `10/39`, z `0.0925`;
+- library, increase off: same-key `11/39`, z `0.4623`; comparison-key `10/39`, z `0.0925`;
+- library, increase on: same-key `17/39`, z `2.6811`; comparison-key `13/39`, z `1.2019`.
+
+All six copied continuations matched their generated token IDs after re-tokenization. These values
+remain descriptive evidence for the pinned local fixture and do not establish a cutoff.
 
 ## Boundaries
 
-- This stage establishes the location and replay of the intervention in one pinned manual loop.
+- This stage establishes the location and replay of the configured score change in one pinned
+  manual loop.
 - It does not establish a detector cutoff, accuracy, prose quality, device portability, production
   key security, or model-family generalization.
 - Stage 4 library adapter, Stage 5 GPU model, Stage 6 dataset, later attacks, deployment, and
