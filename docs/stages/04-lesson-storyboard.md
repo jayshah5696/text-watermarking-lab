@@ -50,8 +50,9 @@ follow the first two reference-selected tokens into the saved continuation and c
 14. Keep the original copied IDs and counting rule fixed. Change to the comparison key and update
     green marks and counts.
 15. Move to the separate constructed sequence. Alternate the first two copied IDs three times.
-    Count every pair, then each distinct pair once. Keep the six token objects fixed while only count
-    markers change.
+    Run both documented library modes, then list distinct pair values explicitly. Keep the six token
+    objects fixed. If the library flag does not collapse repeats, show that failed expectation before
+    the explicit count.
 16. Return to the original passage. End with repository evidence, external implementation facts,
     and untested boundaries. Stage 5 remains gated.
 
@@ -96,17 +97,16 @@ follow the first two reference-selected tokens into the saved continuation and c
 - Watch: green marks and counts. The eligible count must stay fixed.
 - Result: state both key results and that one comparison key cannot measure a false-alarm rate.
 
-### Count repeated pairs once
+### Test the repeated-pair option
 
-- Instruction: on the separate six-token constructed sequence, switch from counting every pair
-  occurrence to counting each distinct pair once.
+- Instruction: on the separate six-token constructed sequence, compare both library modes with an
+  explicit list of distinct adjacent pair values.
 - Fixed: six alternating token pieces, their order, key, complete recipe, and evidence formula.
-- Changed: repeated-pair rule.
-- Watch: five occurrence markers reduce to the number of distinct pair patterns. The text stays
-  still while the eligible count and green count update.
-- Result: use this form. "Same six token pieces, different counting rule. Counting every occurrence
-  checks [T] pairs and marks [G] green. Counting each distinct pair once checks [T] pairs and marks
-  [G] green. GPT-2 did not generate this constructed sequence."
+- Changed: counting implementation.
+- Watch: whether the library flag changes five occurrence markers, then compare it with the two
+  distinct value pairs listed below the unchanged tokens.
+- Result: use the verified result. State both library outputs, the explicit distinct-pair output,
+  and that GPT-2 did not generate this constructed sequence.
 
 ## Evidence rules
 

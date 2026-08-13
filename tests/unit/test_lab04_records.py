@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from watermark_lab.hf_adapter import DetectorEvidence, OrderCandidate, ProcessorOrderProbe
+from watermark_lab.hf_adapter import (
+    DetectorEvidence,
+    DistinctPairEvidence,
+    OrderCandidate,
+    ProcessorOrderProbe,
+)
 from watermark_lab.lab04_config import config_from_toml_bytes
 from watermark_lab.lab04_records import (
     ContinuationRecord,
@@ -53,6 +58,7 @@ def _probe() -> ProcessorOrderProbe:
     candidate = OrderCandidate(
         token_id=2,
         token_text=" b",
+        witness_role="selected",
         raw_score=1.0,
         in_green_group=True,
         reference_temperature_score=1.25,
@@ -116,6 +122,12 @@ def _trace() -> Lab04Trace:
         token_ids=(1, 2, 1, 2, 1, 2),
         token_pieces=("a", " b", "a", " b", "a", " b"),
         detector_results=(_evidence("generation", "all"), _evidence("generation", "unique")),
+        explicit_distinct_result=DistinctPairEvidence(
+            num_distinct_pairs=2,
+            num_green_pairs=1,
+            green_fraction=0.5,
+            z_score=0.8164965809277261,
+        ),
     )
     padding = PaddingValidation(
         pad_token_id=50_256,
@@ -209,6 +221,7 @@ def test_padding_and_repetition_contracts_reject_bad_shapes() -> None:
         ("repetition", "construction", "bad", ValueError),
         ("repetition", "token_pieces", (), ValueError),
         ("repetition", "detector_results", (), ValueError),
+        ("repetition", "explicit_distinct_result", "bad", TypeError),
     ],
 )
 def test_nested_record_contracts_reject_invalid_values(

@@ -24,6 +24,7 @@ from watermark_lab.hf_adapter import (
     build_watermark_config,
     derive_reference_seed,
     detector_evidence,
+    distinct_pair_evidence,
     make_detector,
 )
 from watermark_lab.lab04_config import Lab04Config, ReferencePrompt, config_from_toml_bytes
@@ -277,6 +278,11 @@ def _repetition_fixture(
         token_ids=token_ids,
         token_pieces=tuple(_token_piece(tokenizer, token_id) for token_id in token_ids),
         detector_results=(all_results[0], all_results[1]),
+        explicit_distinct_result=distinct_pair_evidence(
+            detector=detectors[("generation", "all")],
+            token_ids=torch.tensor([token_ids], dtype=torch.long, device=config.device),
+            green_fraction=config.green_fraction,
+        ),
     )
 
 

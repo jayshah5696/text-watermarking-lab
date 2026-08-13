@@ -10,6 +10,7 @@ from typing import Any, Literal, cast
 
 from watermark_lab.hf_adapter import (
     DetectorEvidence,
+    DistinctPairEvidence,
     OrderCandidate,
     ProcessorOrderProbe,
 )
@@ -152,6 +153,7 @@ class RepetitionFixture:
     token_ids: tuple[int, ...]
     token_pieces: tuple[str, ...]
     detector_results: tuple[DetectorEvidence, ...]
+    explicit_distinct_result: DistinctPairEvidence
 
     def __post_init__(self) -> None:
         _text("source_prompt_id", self.source_prompt_id)
@@ -171,6 +173,8 @@ class RepetitionFixture:
             result.key_role != "generation" for result in self.detector_results
         ):
             raise ValueError("repetition results must use the generation key in policy order")
+        if not isinstance(self.explicit_distinct_result, DistinctPairEvidence):
+            raise TypeError("explicit_distinct_result must be a DistinctPairEvidence")
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,13 +278,14 @@ def trace_to_markdown_bytes(trace: Lab04Trace) -> bytes:
         f"`{probe.reference_selected_probability:.6%}` under the Transformers order and",
         f"`{probe.stage_03_selected_probability:.6%}` under the earlier order.",
         "",
-        "| Token piece | ID | Green | Raw preference | Reference chance | "
+        "| Witness | Token piece | ID | Green | Raw preference | Reference chance | "
         "Earlier-order chance | Saved choice |",
-        "| --- | ---: | --- | ---: | ---: | ---: | --- |",
+        "| --- | --- | ---: | --- | ---: | ---: | ---: | --- |",
     ]
     for candidate in probe.candidates:
         lines.append(
-            f"| `{candidate.token_text}` | {candidate.token_id} | "
+            f"| {candidate.witness_role.replace('_', ' ')} | `{candidate.token_text}` | "
+            f"{candidate.token_id} | "
             f"{'yes' if candidate.in_green_group else 'no'} | {candidate.raw_score:.6f} | "
             f"{candidate.reference_probability:.6%} | {candidate.stage_03_probability:.6%} | "
             f"{'yes' if candidate.selected_by_reference else 'no'} |"
@@ -313,6 +318,7 @@ def trace_to_markdown_bytes(trace: Lab04Trace) -> bytes:
         )
     first_piece = trace.repetition_fixture.token_pieces[0]
     second_piece = trace.repetition_fixture.token_pieces[1]
+    explicit = trace.repetition_fixture.explicit_distinct_result
     lines.extend(
         [
             "",
@@ -324,8 +330,10 @@ def trace_to_markdown_bytes(trace: Lab04Trace) -> bytes:
             f"{_format_evidence(comparison)}.",
             "",
             "The derived alternating sequence has six tokens and five adjacent occurrences. ",
-            f"Every occurrence gives {_format_evidence(repeat_all)}. Each distinct pair gives ",
-            f"{_format_evidence(repeat_unique)}. GPT-2 did not generate this ",
+            f"The library's all-pairs mode gives {_format_evidence(repeat_all)}. Its documented ",
+            f"unique-pair option also gives {_format_evidence(repeat_unique)} in this pinned run. ",
+            f"Listing the two distinct value pairs explicitly gives {explicit.num_green_pairs}/",
+            f"{explicit.num_distinct_pairs} | {explicit.z_score:.6f}. GPT-2 did not generate this ",
             "constructed sequence.",
             "",
             "The primary checker received no prompt or padding tokens.",
@@ -370,6 +378,12 @@ def _candidate(value: object) -> OrderCandidate:
     mapping = _mapping(value, "order candidate")
     _keys(mapping, set(OrderCandidate.__dataclass_fields__), "order candidate")
     return OrderCandidate(**cast(dict[str, Any], dict(mapping)))
+
+
+def _distinct(value: object) -> DistinctPairEvidence:
+    mapping = _mapping(value, "distinct pair result")
+    _keys(mapping, set(DistinctPairEvidence.__dataclass_fields__), "distinct pair result")
+    return DistinctPairEvidence(**cast(dict[str, Any], dict(mapping)))
 
 
 def trace_from_json_bytes(payload: bytes) -> Lab04Trace:
@@ -435,6 +449,9 @@ def trace_from_json_bytes(payload: bytes) -> Lab04Trace:
     repetition_values["detector_results"] = tuple(
         _evidence(item)
         for item in _array(repetition_values["detector_results"], "detector_results")
+    )
+    repetition_values["explicit_distinct_result"] = _distinct(
+        repetition_values["explicit_distinct_result"]
     )
     repetition = RepetitionFixture(**cast(dict[str, Any], repetition_values))
 

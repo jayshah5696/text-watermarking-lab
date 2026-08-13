@@ -101,13 +101,15 @@ Alt text draft:
 ### Figure 3: one repeated pair, two counting policies
 
 Alternate the first two copied continuation token IDs three times. Keep all pieces fixed. Number
-all five adjacent pair occurrences. Then keep only the first instance of each distinct pair pattern.
-State that the constructed sequence is a calculated checker example, not model output.
+all five adjacent pair occurrences. Run both documented library modes, then list the distinct pair
+values explicitly and score each once. State that the constructed sequence is a calculated checker
+example, not model output. If the library flag and explicit value count disagree, show the mismatch
+as the Stage 4 failure case.
 
 Caption draft:
 
-> Counting every occurrence can treat the same pair pattern as fresh evidence several times. The
-> Transformers checker also supports counting each distinct pair once.
+> The pinned Transformers option did not collapse the repeated value-equal pairs in this fixture.
+> Explicitly listing the distinct pair values changed the count from five checks to two.
 
 Alt text draft:
 
@@ -150,7 +152,8 @@ Allowed claims:
 - the local CPU adapter generated the recorded continuations and detector counts;
 - primary detection excluded prompt and padding tokens;
 - the Stage 1 z formula reproduced the library z-score from the same counts;
-- repeated-context policy changed only how repeated evidence was counted.
+- the pinned library's repeated-pair flag did or did not match an explicit value-based distinct-pair
+  count in the fixed fixture.
 
 Prohibited claims:
 

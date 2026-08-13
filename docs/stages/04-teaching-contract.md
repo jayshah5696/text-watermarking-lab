@@ -42,8 +42,9 @@ After the page, the learner should be able to explain:
 - Hand-worked reasoning: show how many token choices remain and one candidate chance first. Name the
   formal operations only after the learner sees what each one does.
 - Failure or ambiguity: identical visible settings do not imply identical token chances when the
-  model, tokenizer, green-set rule, device, prompt formatting, or order differs. Counting every
-  occurrence can treat one repeated pair pattern as fresh evidence several times.
+  model, tokenizer, green-set rule, device, prompt formatting, or order differs. The pinned
+  library's documented repeated-pair option must be tested against an explicit value-based count,
+  not assumed to work from its name.
 
 ## Controlled exploration
 
@@ -116,8 +117,9 @@ Measured page copy must remain pending until the selected artifact exists.
    pieces. Token 1 is context only. Token 2 is the first eligible decision.
 6. `Check the same text with a different key` keeps the original copied IDs and all-pairs counting
    rule fixed and changes only the published key.
-7. `Count each distinct pair once` moves to the separate six-token constructed sequence and changes
-   only the repeated-pair counting rule.
+7. `Test the repeated-pair option` moves to the separate six-token constructed sequence. It compares
+   the library's two modes with an explicit list of distinct value pairs. The text and key stay
+   fixed.
 
 Each action must state what stays fixed, what changes, what to watch, and a full-sentence result.
 

@@ -7,6 +7,7 @@ import hashlib
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import Any, Literal, cast
 
 import torch
@@ -22,6 +23,13 @@ from watermark_lab.stats import green_hit_z_score
 
 KeyRole = Literal["generation", "comparison"]
 RepetitionPolicy = Literal["all", "unique"]
+WitnessRole = Literal[
+    "selected",
+    "green_survivor",
+    "red_survivor",
+    "green_filtered",
+    "red_filtered",
+]
 
 
 def _checked_int(name: str, value: object, *, minimum: int = 0) -> int:
@@ -83,11 +91,32 @@ class DetectorEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class DistinctPairEvidence:
+    """Value-based cross-check for the library's repeated-pair option."""
+
+    num_distinct_pairs: int
+    num_green_pairs: int
+    green_fraction: float
+    z_score: float
+
+    def __post_init__(self) -> None:
+        pairs = _checked_int("num_distinct_pairs", self.num_distinct_pairs, minimum=1)
+        green = _checked_int("num_green_pairs", self.num_green_pairs)
+        if green > pairs:
+            raise ValueError("num_green_pairs must not exceed num_distinct_pairs")
+        fraction = _checked_finite("green_fraction", self.green_fraction)
+        if not 0.0 <= fraction <= 1.0:
+            raise ValueError("green_fraction must be between zero and one")
+        _checked_finite("z_score", self.z_score)
+
+
+@dataclass(frozen=True, slots=True)
 class OrderCandidate:
     """One visible candidate processed through both fixed operation orders."""
 
     token_id: int
     token_text: str
+    witness_role: WitnessRole
     raw_score: float
     in_green_group: bool
     reference_temperature_score: float
@@ -107,6 +136,14 @@ class OrderCandidate:
         _checked_int("candidate token_id", self.token_id)
         if not isinstance(self.token_text, str):
             raise TypeError("candidate token_text must be text")
+        if self.witness_role not in (
+            "selected",
+            "green_survivor",
+            "red_survivor",
+            "green_filtered",
+            "red_filtered",
+        ):
+            raise ValueError("unexpected candidate witness_role")
         for name in (
             "raw_score",
             "reference_temperature_score",
@@ -253,6 +290,33 @@ def detector_evidence(
     )
 
 
+def distinct_pair_evidence(
+    *, detector: WatermarkDetector, token_ids: torch.Tensor, green_fraction: float
+) -> DistinctPairEvidence:
+    """Score each distinct adjacent value pair once with the same library detector."""
+
+    if token_ids.ndim != 2 or token_ids.shape[0] != 1 or token_ids.shape[1] < 2:
+        raise ValueError("token_ids must contain one sequence with at least two tokens")
+    values = [int(token_id) for token_id in token_ids[0].tolist()]
+    distinct_pairs = tuple(dict.fromkeys(pairwise(values)))
+    pair_tensor = torch.tensor(distinct_pairs, dtype=torch.long, device=token_ids.device)
+    result = cast(Any, detector(pair_tensor, return_dict=True))
+    scored = int(result.num_tokens_scored.sum())
+    green = int(result.num_green_tokens.sum())
+    if scored != len(distinct_pairs):
+        raise ValueError("each explicit distinct pair must contribute exactly one score")
+    return DistinctPairEvidence(
+        num_distinct_pairs=scored,
+        num_green_pairs=green,
+        green_fraction=green / scored,
+        z_score=green_hit_z_score(
+            hits=green,
+            trials=scored,
+            null_probability=green_fraction,
+        ),
+    )
+
+
 def _finite_count(values: torch.Tensor) -> int:
     return int(torch.isfinite(values).sum().item())
 
@@ -318,20 +382,41 @@ def build_order_probe(
     if not score_match:
         raise ValueError("recorded generate scores do not match the reference order probe")
 
-    leading = torch.topk(
-        reference_probabilities[0], k=config.trace_candidates, largest=True, sorted=True
-    ).indices.tolist()
-    candidate_ids = [int(token_id) for token_id in leading]
-    if selected_token_id not in candidate_ids:
-        candidate_ids[-1] = selected_token_id
-        candidate_ids.sort(
-            key=lambda token_id: float(reference_probabilities[0, token_id].item()), reverse=True
-        )
+    available = torch.isfinite(reference_final[0])
+    roles_and_masks: tuple[tuple[WitnessRole, torch.Tensor, torch.Tensor], ...] = (
+        (
+            "green_survivor",
+            available & green_mask,
+            reference_probabilities[0],
+        ),
+        (
+            "red_survivor",
+            available & ~green_mask,
+            reference_probabilities[0],
+        ),
+        ("green_filtered", ~available & green_mask, raw_scores[0]),
+        ("red_filtered", ~available & ~green_mask, raw_scores[0]),
+    )
+    selected_ids = {selected_token_id}
+    witness_ids: list[tuple[WitnessRole, int]] = [("selected", selected_token_id)]
+    for role, mask, ranking in roles_and_masks:
+        eligible = mask.clone()
+        for token_id in selected_ids:
+            eligible[token_id] = False
+        if not bool(eligible.any().item()):
+            raise ValueError(f"no candidate is available for witness role {role}")
+        ranked = torch.where(eligible, ranking, torch.tensor(-torch.inf, device=ranking.device))
+        token_id = int(torch.argmax(ranked).item())
+        selected_ids.add(token_id)
+        witness_ids.append((role, token_id))
+    if len(witness_ids) != config.trace_candidates:
+        raise ValueError("trace_candidates must match the five locked witness roles")
 
     candidates = tuple(
         OrderCandidate(
             token_id=token_id,
             token_text=token_text(token_id),
+            witness_role=role,
             raw_score=float(raw_scores[0, token_id].item()),
             in_green_group=bool(green_mask[token_id].item()),
             reference_temperature_score=float(reference_temperature[0, token_id].item()),
@@ -347,7 +432,7 @@ def build_order_probe(
             stage_03_probability=float(stage_03_probabilities[0, token_id].item()),
             selected_by_reference=token_id == selected_token_id,
         )
-        for token_id in candidate_ids
+        for role, token_id in witness_ids
     )
     return ProcessorOrderProbe(
         previous_token_id=int(input_ids[0, -1].item()),

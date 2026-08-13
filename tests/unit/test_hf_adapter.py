@@ -21,6 +21,7 @@ from watermark_lab.hf_adapter import (
     build_watermark_config,
     derive_reference_seed,
     detector_evidence,
+    distinct_pair_evidence,
     make_detector,
 )
 from watermark_lab.lab04_config import config_from_toml_bytes
@@ -85,7 +86,7 @@ def test_order_probe_matches_reference_processors_and_keeps_selected_candidate()
     raw = torch.linspace(-3.0, 3.0, 50, dtype=torch.float32)[None]
     input_ids = torch.tensor([[4, 9]], dtype=torch.long)
     generated = _reference_scores(raw, input_ids)
-    selected = 0
+    selected = int(torch.argmax(generated[0]).item())
     probe = build_order_probe(
         raw_scores=raw,
         generated_scores=generated,
@@ -101,6 +102,13 @@ def test_order_probe_matches_reference_processors_and_keeps_selected_candidate()
     assert probe.green_token_count == 12
     assert any(candidate.token_id == selected for candidate in probe.candidates)
     assert sum(candidate.selected_by_reference for candidate in probe.candidates) == 1
+    assert {candidate.witness_role for candidate in probe.candidates} == {
+        "selected",
+        "green_survivor",
+        "red_survivor",
+        "green_filtered",
+        "red_filtered",
+    }
 
 
 @pytest.mark.parametrize(
@@ -174,6 +182,19 @@ def test_detector_records_counts_scores_and_stage_01_recomputation() -> None:
             green_fraction=config.green_fraction,
             z_threshold=config.z_threshold,
         )
+    distinct = distinct_pair_evidence(
+        detector=detector,
+        token_ids=torch.tensor([[1, 2, 1, 2, 1, 2]], dtype=torch.long),
+        green_fraction=config.green_fraction,
+    )
+    assert distinct.num_distinct_pairs == 2
+    assert distinct.num_green_pairs <= 2
+    with pytest.raises(ValueError, match="at least two"):
+        distinct_pair_evidence(
+            detector=detector,
+            token_ids=torch.tensor([[1]], dtype=torch.long),
+            green_fraction=config.green_fraction,
+        )
 
 
 def test_detector_evidence_validates_strict_threshold_and_finite_fields() -> None:
@@ -234,6 +255,7 @@ def _candidate() -> OrderCandidate:
     return OrderCandidate(
         token_id=2,
         token_text=" b",
+        witness_role="selected",
         raw_score=1.0,
         in_green_group=True,
         reference_temperature_score=1.25,
@@ -275,6 +297,7 @@ def _probe() -> ProcessorOrderProbe:
     [
         ("token_id", True, TypeError),
         ("token_text", 7, TypeError),
+        ("witness_role", "other", ValueError),
         ("raw_score", "bad", TypeError),
         ("reference_probability", 1.1, ValueError),
         ("reference_final_score", float("nan"), ValueError),

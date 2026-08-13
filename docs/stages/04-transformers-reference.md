@@ -117,6 +117,11 @@ only processor order. It records candidate survival counts and the final chance 
 reference token. Values from the alternate order are derived diagnostics, not generated output.
 Only the reference order produces the saved continuation.
 
+The five visible witness rows are fixed by role, not by visual appeal: the selected token, the
+highest-chance other green survivor, the highest-chance red survivor, the highest raw-score green
+token removed by the reference filters, and the highest raw-score red token removed by the
+reference filters. The artifact must label each role.
+
 ## Copied-text detection
 
 Decode each generated continuation, then tokenize that copied text again with the pinned GPT-2
@@ -148,8 +153,11 @@ comparison-key scores are limitation checks.
 The artifact must include two fixed validations.
 
 1. Build a repeated-history fixture by alternating the first two copied token IDs from the
-   continuity reference output three times. Record the visible pieces, all-context result, and
-   unique-context result. This construction rule is fixed before the output exists.
+   continuity reference output three times. Record the visible pieces, all-context result, and the
+   library result with `ignore_repeated_ngrams=True`. Independently list distinct adjacent token-ID
+   pairs by value and score each pair once with the same library detector. Do not assume the library
+   flag deduplicates until the fixed comparison proves it. This construction rule is fixed before
+   the output exists.
 2. Left-pad the three prompt encodings with the GPT-2 end token as the pad token. Record the padded
    width, attention-mask token count, and continuation slice boundary. Assert that no pad or prompt
    token enters the primary detector input.
@@ -197,6 +205,8 @@ the six fixed continuations.
 - prompt tokens and left padding do not enter primary detection;
 - copied text is re-tokenized before detection;
 - all-context and unique-context policies can return different eligible counts;
+- the constructed repeated history checks whether the library unique-context flag actually changes
+  counts and compares it with explicit value-based distinct pairs;
 - generation and primary detector configurations match exactly;
 - comparison-key results are stored as counts and scores;
 - Stage 1 z-score recomputation matches the reference detector;
