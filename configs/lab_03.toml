@@ -1,6 +1,7 @@
 schema_version = 1
 model_id = "mlx-community/LFM2-350M-4bit"
 model_revision = "18dc72abf3b2337f9123cfd6eeeb58dfa7947066"
+instruction_prefix = "Continue the passage with one short paragraph. Return only the continuation.\n\n"
 base_seed = 20260812
 max_new_tokens = 40
 temperature = 0.8

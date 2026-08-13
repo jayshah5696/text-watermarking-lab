@@ -73,6 +73,7 @@ def _record(prompt_id: str, prompt_text: str, condition: str) -> ContinuationRec
         seed=123,
         stop_reason="token_limit",
         prompt_token_ids=(1, 2),
+        prompt_token_pieces=("one", " two"),
         generated_token_ids=(2, 2),
         decoded_text=" token token",
         copied_token_ids=(2, 2),

@@ -142,6 +142,7 @@ class ContinuationRecord:
     seed: int
     stop_reason: StopReason
     prompt_token_ids: tuple[int, ...]
+    prompt_token_pieces: tuple[str, ...]
     generated_token_ids: tuple[int, ...]
     decoded_text: str
     copied_token_ids: tuple[int, ...]
@@ -158,7 +159,13 @@ class ContinuationRecord:
         _int("seed", self.seed, minimum=0)
         if self.stop_reason not in ("end_token", "token_limit"):
             raise ValueError("stop_reason must be end_token or token_limit")
-        _token_ids("prompt_token_ids", self.prompt_token_ids)
+        prompt_ids = _token_ids("prompt_token_ids", self.prompt_token_ids)
+        if not isinstance(self.prompt_token_pieces, tuple) or len(self.prompt_token_pieces) != len(
+            prompt_ids
+        ):
+            raise ValueError("prompt_token_pieces must match prompt_token_ids")
+        for piece in self.prompt_token_pieces:
+            _text("prompt token piece", piece, allow_empty=True)
         generated = _token_ids("generated_token_ids", self.generated_token_ids)
         _text("decoded_text", self.decoded_text, allow_empty=True)
         copied = _token_ids("copied_token_ids", self.copied_token_ids)
@@ -416,6 +423,7 @@ def _config_from_mapping(value: object) -> Lab03Config:
     return Lab03Config(
         model_id=_text("model_id", mapping["model_id"]),
         model_revision=_text("model_revision", mapping["model_revision"]),
+        instruction_prefix=_text("instruction_prefix", mapping["instruction_prefix"]),
         base_seed=_int("base_seed", mapping["base_seed"], minimum=0),
         max_new_tokens=_int("max_new_tokens", mapping["max_new_tokens"], minimum=2),
         temperature=_finite("temperature", mapping["temperature"]),
@@ -444,6 +452,10 @@ def _record_from_mapping(value: object) -> ContinuationRecord:
         seed=_int("seed", mapping["seed"], minimum=0),
         stop_reason=cast(StopReason, stop_reason),
         prompt_token_ids=_token_ids("prompt_token_ids", mapping["prompt_token_ids"]),
+        prompt_token_pieces=tuple(
+            _text("prompt token piece", item, allow_empty=True)
+            for item in _array(mapping["prompt_token_pieces"], "prompt_token_pieces")
+        ),
         generated_token_ids=_token_ids("generated_token_ids", mapping["generated_token_ids"]),
         decoded_text=_text("decoded_text", mapping["decoded_text"], allow_empty=True),
         copied_token_ids=_token_ids("copied_token_ids", mapping["copied_token_ids"]),

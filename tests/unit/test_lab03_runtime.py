@@ -17,6 +17,18 @@ ROOT = Path(__file__).resolve().parents[2]
 class FakeTokenizer:
     eos_token_id = 99
 
+    def apply_chat_template(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        tokenize: bool,
+        add_generation_prompt: bool,
+    ) -> list[int]:
+        assert messages[0]["role"] == "user"
+        assert tokenize is True
+        assert add_generation_prompt is True
+        return [1, 2]
+
     def encode(self, text: str, *, add_special_tokens: bool) -> list[int]:
         assert add_special_tokens is False
         if text.startswith("ids:"):
@@ -45,7 +57,13 @@ class FakeModel:
 
 
 class EmptyPromptTokenizer(FakeTokenizer):
-    def encode(self, text: str, *, add_special_tokens: bool) -> list[int]:
+    def apply_chat_template(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        tokenize: bool,
+        add_generation_prompt: bool,
+    ) -> list[int]:
         return []
 
 

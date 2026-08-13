@@ -13,6 +13,7 @@ ROOT_KEYS = {
     "schema_version",
     "model_id",
     "model_revision",
+    "instruction_prefix",
     "base_seed",
     "max_new_tokens",
     "temperature",
@@ -74,6 +75,7 @@ class Lab03Config:
 
     model_id: str
     model_revision: str
+    instruction_prefix: str
     base_seed: int
     max_new_tokens: int
     temperature: float
@@ -95,6 +97,11 @@ class Lab03Config:
             character not in "0123456789abcdef" for character in revision
         ):
             raise ValueError("model_revision must be a 40-character lowercase Git SHA")
+        expected_instruction = (
+            "Continue the passage with one short paragraph. Return only the continuation.\n\n"
+        )
+        if self.instruction_prefix != expected_instruction:
+            raise ValueError("Stage 3 locks the instruction_prefix")
         _require_int("base_seed", self.base_seed, minimum=0)
         _require_int("max_new_tokens", self.max_new_tokens, minimum=2)
         temperature = _require_float("temperature", self.temperature)
@@ -159,6 +166,9 @@ def config_from_toml_bytes(payload: bytes) -> Lab03Config:
     return Lab03Config(
         model_id=_require_text("model_id", mapping["model_id"], ascii_only=True),
         model_revision=_require_text("model_revision", mapping["model_revision"], ascii_only=True),
+        instruction_prefix=_require_text(
+            "instruction_prefix", mapping["instruction_prefix"], ascii_only=True
+        ),
         base_seed=_require_int("base_seed", mapping["base_seed"], minimum=0),
         max_new_tokens=_require_int("max_new_tokens", mapping["max_new_tokens"], minimum=2),
         temperature=_require_float("temperature", mapping["temperature"]),

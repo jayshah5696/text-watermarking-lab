@@ -22,6 +22,7 @@ def test_locked_stage_03_config_loads() -> None:
     config = config_from_toml_bytes(_payload())
     assert config.model_id == "mlx-community/LFM2-350M-4bit"
     assert config.model_revision == "18dc72abf3b2337f9123cfd6eeeb58dfa7947066"
+    assert config.instruction_prefix.endswith("\n\n")
     assert config.temperature == 0.8
     assert config.top_k == 40
     assert config.top_p == 0.95
@@ -51,6 +52,7 @@ def test_config_loader_rejects_bad_documents(payload: bytes, error: type[Excepti
     ("old", "new", "error"),
     [
         ("base_seed = 20260812", "base_seed = true", TypeError),
+        ("Continue the passage", "Keep writing", ValueError),
         ("max_new_tokens = 40", "max_new_tokens = 1", ValueError),
         ("temperature = 0.8", "temperature = 0.0", ValueError),
         ("top_k = 40", "top_k = 0", ValueError),

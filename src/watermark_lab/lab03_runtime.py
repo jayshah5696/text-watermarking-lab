@@ -45,6 +45,17 @@ def _encode(tokenizer: Any, text: str) -> tuple[int, ...]:
     return tuple(int(token_id) for token_id in encoded)
 
 
+def _encode_model_input(
+    tokenizer: Any, *, passage: str, instruction_prefix: str
+) -> tuple[int, ...]:
+    encoded = tokenizer.apply_chat_template(
+        [{"role": "user", "content": f"{instruction_prefix}{passage}"}],
+        tokenize=True,
+        add_generation_prompt=True,
+    )
+    return tuple(int(token_id) for token_id in encoded)
+
+
 def _value(values: mx.array, token_id: int) -> float:
     return float(values[token_id].item())
 
@@ -93,7 +104,11 @@ def _generate_record(
     prompt: PromptFixture,
     condition: Condition,
 ) -> ContinuationRecord:
-    prompt_ids = _encode(tokenizer, prompt.text)
+    prompt_ids = _encode_model_input(
+        tokenizer,
+        passage=prompt.text,
+        instruction_prefix=config.instruction_prefix,
+    )
     if not prompt_ids:
         raise ValueError(f"prompt {prompt.id!r} produced no token IDs")
     seed = derive_prompt_seed(base_seed=config.base_seed, prompt_id=prompt.id)
@@ -186,6 +201,7 @@ def _generate_record(
         seed=seed,
         stop_reason=stop_reason,
         prompt_token_ids=prompt_ids,
+        prompt_token_pieces=tuple(_token_piece(tokenizer, token_id) for token_id in prompt_ids),
         generated_token_ids=tuple(generated),
         decoded_text=decoded_text,
         copied_token_ids=copied_ids,
