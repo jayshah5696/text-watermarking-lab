@@ -1,97 +1,164 @@
-# Color a toy vocabulary
+# Use a key to change the chances in one sentence
 
-## Article handoff
+Stage 2 shows how the program can raise the chance of selected words during generation. It also
+shows how a checker can find those selections in finished text.
 
-This note supports the final article section “The secret green-list coin.” The publication brief
-in `docs/stages/02-publication-brief.md` defines the sentence illustration plus three evidence
-figures, their captions and alt text, the position 4 teaching spine, the position 2 failure panel,
-and the claims this trace can support.
+The lesson uses this sentence.
 
-## Question
+> Early one morning Jack went up the hill.
 
-How can a key change the chance of picking a token without forcing one fixed output?
+We wrote the example and chose its scores and random numbers. A model did not generate it. The
+repository tests use a separate fixed trace.
 
-## Intuition before code
+Each displayed word is one token in the lesson vocabulary. A real tokenizer can split one word
+into several tokens. Stage 3 has not tested that part yet.
 
-Start with a familiar sentence frame:
+## Connect this step to Stage 1
 
-> Jack went up the ___.
+Stage 1 treated each position as a coin flip. A green hit was one result and a red result was the
+other. With a 25 percent baseline, Stage 1 counted `G` hits in `T` trials and calculated a z score.
 
-Words such as `hill`, `road`, `stairs`, and `path` could all fit. In a real generator, a language
-model would score those possibilities. The watermark step would temporarily raise the scores of a
-key-selected subset, then the sampler would still choose from the complete list.
+Stage 2 defines how one observed token becomes a hit or miss. Before each checked token, the
+selector uses the key and four recent tokens to mark five of 20 candidates green. The checker then
+uses the same Stage 1 count and formula.
 
-This sentence is a hand-authored concept illustration. It is not model output and it is not Stage 2
-run data. Stage 2 starts with synthetic scores so the watermark operation can be inspected by
-itself. The recorded experiment below uses IDs as its primary labels because the optional word tags
-do not affect any score or choice.
+The key and a decision cutoff do different work. The key affects which tokens count as hits. A
+cutoff can turn a completed score into a decision after calibration. Stage 2 does not set a cutoff.
 
-The sampler starts with 20 possible token IDs. Each ID already has a score called a logit. A
-higher logit gives that token a larger chance after the scores are normalized.
+Stage 1 used a 40 percent biased coin as a teaching comparison. The Stage 2 score increase does not
+promise a 40 percent hit rate. Its effect depends on all 20 starting scores.
 
-The toy selector uses the public development key and the four most recent token IDs to choose
-five green IDs. It adds 2.0 to those five logits. The other 15 logits stay unchanged. The sampler
-still draws from all 20 choices, so a red token can still win.
+## Start with scores
 
-## The smallest implementation
+The first four words are `Early one morning Jack`. The program needs to choose the next word.
 
-The selector hashes one exact ASCII string for every candidate ID. It sorts the SHA-256 results
-and colors the five lowest IDs green. This rule gives us stable vectors that tests can freeze.
+A language model would usually give every possible token a score. A higher score gives a word a
+higher chance. The code calls this score a logit. Stage 2 uses scores that we chose by hand because
+it does not run a model.
 
-The rule belongs only to this teaching stage. Later model work must use a pinned upstream
-implementation instead of treating this selector as KGW compatibility.
+For the first choice, `ran` starts at 1.9. `Went` starts at 1.7, and `walked` starts at 1.4.
 
-## Expected result before running
+## The author chose the key
 
-Adding 2.0 to a green logit should multiply its odds against an unchanged red logit by
-`exp(2)`, about 7.389, before normalization. It should raise green probability without making a
-green sample certain.
+The repository author chose `stage-02-public-demo-key-v1`. The model and prompt did not choose it.
 
-Changing the context should also change the green set. A detector with the same key should be
-able to rebuild each set from the generated history.
+The generator and checker use a key as part of a repeatable selection rule. The operator stores it
+outside the model and can replace it without retraining the model.
 
-## Observed result
+SHA-256 turns the key, context, and candidate number into a fixed-length result. The selector sorts
+those results. A small change to the input usually gives a different order.
 
-The trace recorded chosen IDs `[0, 1, 1, 2]`. At each of those four recorded contexts, reusing
-the same draw without the boost would have selected `[0, 0, 0, 1]`. These are four one-step
-comparisons. They are not a separately generated no-boost sequence.
+The selector combines the key with the previous four token numbers and one candidate number. It
+runs this SHA-256 calculation for all 20 candidates, sorts the results, and selects the first five
+words.
 
-The sampled token was green at positions 1 and 4. Two of the four toy choices therefore belonged
-to their step's boosted set. Under the 25% toy expectation, that gives a running z-score of
-about 1.155. Stage 2 defines no threshold, so this is not a detection decision and does not
-estimate a detection rate.
+For `Early one morning Jack`, the selector chooses `Early`, `went`, `walked`, `snow`, and `trail`.
+Some of those words sound wrong after `Jack`. The selector does not read the sentence or judge
+grammar. The low starting scores keep the odd words unlikely.
 
-## Follow one position
+The word `went` has token number 4. Under the lesson key and first context, its hash begins with
+`01d63f53`, so it ranks first. The program uses the full 32-byte hash for ranking.
 
-At position 4, the recent context was `[15, 0, 1, 1]`. The toy rule selected IDs
-`[2, 5, 6, 10, 11]` as green. Token 2 started with logit 1.5. The bias raised it to 3.5, and its
-probability rose from about 0.124 to 0.319 after normalization.
+Changing the key changes every SHA-256 input. The comparison key selects `the`, `hill`, `path`,
+`snow`, and `home` for the same context. Eight words move between the green and red groups. The
+green group still has five words because the 25 percent setting did not change.
 
-The recorded draw was about 0.3073. The unadjusted probability list mapped that draw to ID 1. The
-adjusted list mapped the same draw to ID 2. The checker rebuilt the green set from the context and
-counted ID 2 as a hit.
+The key does not change SHA-256, the starting scores, the score increase, or the Stage 1 formula.
 
-## What surprised us
+We print the key in the lesson so anyone can repeat the calculation. A production operator would
+normally generate an unpredictable secret, keep it in protected server storage, and use a separate
+public name to identify it. The final key size and format depend on the chosen watermark method and
+need a security review.
 
-In this four-step trace, the boost changed three one-step comparison choices. Two of the
-resulting choices were still outside the boosted set. Raising green odds changes the full list
-of probabilities. It does not force every draw into the green set.
+## The first choice
 
-## What this establishes
+The program adds 2 to every selected score. `Went` changes from 1.7 to 3.7. Its chance rises from
+22.85% to 46.51%.
 
-The trace shows the complete Stage 2 toy mechanism. A context and public key select five IDs. The sampler
-raises only those logits, normalizes all 20 choices, and records a draw. The detector can replay
-the same context rule and count the chosen token.
+`Ran` stays at 1.9 because the selector did not choose it. Its chance still falls from 27.91% to
+7.69%. The program converts all 20 scores into shares of one total, so five changed scores affect
+every final chance.
 
-## What this does not establish
+The saved random number is 0.30. Before the score increase, 0.30 falls inside the range for
+`walked`. After the increase, the same number falls inside the range for `went`. The program adds
+`went` to the sentence.
 
-The lab contains no tokenizer or language model. It does not measure language quality, false
-positive rates, detector power, or model behavior. Its public key and SHA-256 rule provide
-reproducibility for teaching. They do not provide production security.
+## Finish the sentence
 
-## Next stage
+The program removes the oldest context word after each choice. It adds the chosen word at the
+other end. The program uses the same key while the four recent words change.
 
-Stage 3 would place the same conceptual step between real model logits and token sampling. That
-stage needs separate approval because it introduces a model and tokenizer. Its prompt fixture,
-paired trace, visual diagram, and blog evidence should be designed together before any prompt,
-seed, model revision, or trace schema is locked.
+For `one morning Jack went`, the selector chooses `Jack`, `up`, `hill`, `stairs`, and `saw`. The
+program adds 2 to their scores. The sampler uses the saved number 0.35 and picks `up`.
+
+For `morning Jack went up`, the selector does not choose `the`. Its starting score is high enough
+for the sampler to pick it with the saved number 0.13.
+
+For `Jack went up the`, the selector does not choose `hill`. The sampler still picks it with the saved number 0.06.
+
+The first two words are green hits because they belonged to their selected sets. The last two are
+red results because they did not. The score increase makes selected words more likely. Every word
+still keeps some chance.
+
+## Check the finished text
+
+The checker reads the finished tokens in order. Before `went`, it reads `Early one morning Jack`
+and rebuilds the five selected words. It counts a hit because `went` belongs to that set.
+
+The checker then repeats the same work for `up`, `the`, and `hill`. It needs the observed tokens,
+the lesson key, and the matching token numbering and selection settings. It does not need the
+generation scores or random numbers.
+
+The selector chooses 5 of 20 words. Under random selection, the expected hit rate is 25%. Four checked positions have
+an expected count of 1. The sentence has 2 hits. The usual spread is 0.8660, which gives a z score
+of 1.1547.
+
+The key does not appear in that formula. It affects the result earlier by changing which observed
+tokens count as green hits.
+
+Stage 2 has no cutoff and makes no detection decision. Later tests would need more text and would
+need to set a useful cutoff. A result above that cutoff could show that text matches this watermark
+setup and key. It could not identify the writer or prove that AI wrote the text.
+
+## A different key
+
+The selector chooses another set of words when it uses the comparison key `wrong-public-key`. The
+checker finds zero hits in these four checked positions. Another key can still match some words by chance, so zero is
+only the result of this fixed comparison.
+
+The key is separate from the model weights. The operator can change it without retraining the model.
+Changing the model or tokenizer can change token numbers, starting scores, text quality, and hit
+rates. Tests and useful cutoffs do not automatically transfer to the new setup.
+
+To rebuild the marked sets and count hits, a checker must match the key, token numbering,
+selection rule, number of recent words, fraction of words that the selector marks, and counting
+rule. It does not need the score increase or the random numbers used during generation. The
+operator should still record the score increase because it affects the strength of the pattern and
+the cutoff that later tests may support.
+
+## Production key handling
+
+A production system should keep the secret outside model files, prompts, browser code, generated
+text, logs, and public repositories. It should give each secret a public name and record that name
+with the other settings.
+
+Only the generator and an approved checker should use the secret. If the operator puts the secret
+in public browser code, every user can read it. Public checking therefore needs a service that verifies who may
+submit text, or a different
+method designed for public verification. Stage 2 builds neither system.
+
+Stage 2 also leaves out secret storage, access control, key rotation, and security testing.
+
+## Repository evidence
+
+We use the ordinary sentence to explain the operation. Repository tests use the separate trace to
+check the implementation with fixed token numbers, source information, and configuration
+information. The command
+`just verify-lab-02` recalculates that trace.
+
+The labels in the test trace do not form a sentence. We wrote the sentence example separately.
+The SHA-256 selector belongs to this lesson and does not implement an upstream KGW system or any
+private vendor method.
+
+Stage 3 would replace the scores that we chose by hand with scores from an approved model and tokenizer.
+That work still needs separate approval.

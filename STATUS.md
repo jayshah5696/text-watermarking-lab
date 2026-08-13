@@ -17,8 +17,11 @@ Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user revi
 - Locked Stage 2 toy-vocabulary contract with a separate SHA-256 teaching selector.
 - Typed green-set selection, logit bias, stable softmax, visible sampling, and detector replay.
 - Deterministic JSON and annotated Markdown trace with an independent verifier.
-- Evidence-grounded interactive Stage 2 lesson with a clearly labelled ordinary-sentence concept
-  illustration, a separate recorded ID trace, and guided probability, failure, and replay views.
+- Evidence-grounded interactive Stage 2 lesson that follows one declared sentence fixture through
+  keyed selection, probability change, sampling, context movement, checker replay, and key
+  practice, with the separate recorded ID trace kept in a verification appendix.
+- The lesson links Stage 2 to the Stage 1 hit count and z score. A 20-word comparison shows how a
+  key changes green membership, while the toy checker accepts a teaching key and lesson text.
 - Teaching and publication workflow that requires future stage fixtures, evidence schemas,
   visuals, captions, alt text, and blog handoffs to be designed together before implementation.
 - Stage 2 publication brief preserving the verified fixture and mapping it to three final-article
@@ -38,7 +41,7 @@ Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user revi
   `artifacts/lab-01/detection_by_length.svg`.
 - The PNG is 1920 by 928 pixels; the SVG omits creation-date metadata.
 - No target GitHub remote exists.
-- `just check` passes locally with 182 CPU-only tests.
+- `just check` passes locally with 186 CPU-only tests.
 - `just test-cov` passes with 96.48% branch-aware package coverage.
 - `just lab-02` generated a four-position trace from source commit
   `f7a1690d28cfb48fc825017891b5d3e82eebdd07` using config SHA-256
@@ -46,9 +49,15 @@ Stages 0–2 complete locally on `jay/lab-02-toy-vocabulary`; awaiting user revi
 - `just verify-lab-02` recomputes the trace and annotated table exactly and passes.
 - Selected Stage 2 evidence is in `artifacts/lab-02/trace.json` and
   `artifacts/lab-02/annotated_trace.md`.
-- The interactive lesson passed 1440×1000 light, 390×844 light, and 1200×900 dark browser checks.
-  Every control was exercised, keyboard activation and reduced motion were checked, and no console
-  errors or horizontal overflow were found.
+- The revised lesson uses one repeatable `Choose next token` control. Its fixed four-word window
+  moves left after each sampled word, then supports replay and restart without changing the key or
+  window width.
+- The lesson-key and comparison-key controls reproduce the exact SHA-256 teaching selector for the
+  first sentence context. The browser checker reproduces `G=2, T=4, z=1.1547` with the lesson key
+  and `G=0, T=4, z=-1.1547` with the fixed comparison key.
+- The exact `file://` lesson passed full generation, replay, restart during motion, rapid-click,
+  reduced-motion, and scripts-off fallback checks. The inline script has no imports, network calls,
+  or storage. No console errors or horizontal overflow were found.
 
 ## Not implemented
 

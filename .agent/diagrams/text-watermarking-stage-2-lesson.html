@@ -4,302 +4,1090 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Stage 2: follow one watermarked token choice</title>
+  <title>Stage 2 lesson on keys, token choices, and checking</title>
   <style>
     :root {
-      --page:#f2efe8; --surface:#fffdf8; --surface-2:#e9e5dc; --ink:#14201f;
-      --muted:#5c6865; --line:#c9cec8; --blue:#315b89; --blue-soft:#dce8f3;
-      --green:#08765a; --green-soft:#d8eee4; --orange:#c55321; --orange-soft:#f8dfd2;
-      --rust:#9b4936; --rust-soft:#f0ddd7; --yellow:#f1c75b; --shadow:0 20px 55px #1c29251a;
-      --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-      --sans:"Avenir Next",Avenir,"Gill Sans",system-ui,sans-serif;
-      --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+      --paper: #f4efe3;
+      --paper-deep: #e9e0cf;
+      --ink: #17231f;
+      --muted: #5f6964;
+      --line: rgba(23, 35, 31, 0.18);
+      --panel: rgba(255, 255, 255, 0.42);
+      --green: #176b50;
+      --green-soft: #d8eadf;
+      --orange: #bf642e;
+      --orange-soft: #f4dfd0;
+      --blue: #315e83;
+      --blue-soft: #dbe8f1;
+      --red: #9f493c;
+      --red-soft: #f1dbd7;
+      --shadow: 0 24px 60px rgba(50, 43, 30, 0.12);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     }
-    @media (prefers-color-scheme:dark) {
+
+    @media (prefers-color-scheme: dark) {
       :root {
-        --page:#111817; --surface:#192321; --surface-2:#25302d; --ink:#f4f0e6;
-        --muted:#b8c1bd; --line:#42504b; --blue:#8db9e7; --blue-soft:#22394c;
-        --green:#70d4ae; --green-soft:#183c30; --orange:#ff9a66; --orange-soft:#4b2a20;
-        --rust:#efa18d; --rust-soft:#442923; --yellow:#f0ca70; --shadow:0 20px 60px #0006;
+        --paper: #101a17;
+        --paper-deep: #17241f;
+        --ink: #f3efe5;
+        --muted: #b7c0bb;
+        --line: rgba(236, 241, 237, 0.16);
+        --panel: rgba(255, 255, 255, 0.045);
+        --green: #78d8ae;
+        --green-soft: #173f31;
+        --orange: #ff9a61;
+        --orange-soft: #4a2a1b;
+        --blue: #9ccbf0;
+        --blue-soft: #20384c;
+        --red: #ef9a8b;
+        --red-soft: #492824;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
       }
     }
-    *{box-sizing:border-box} html{scroll-behavior:auto;scroll-padding-top:94px} body{margin:0;background:var(--page);color:var(--ink);font:17px/1.62 var(--sans)}
-    button,summary{font:inherit;color:inherit} button{min-height:46px;scroll-margin-top:110px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 16px;font-weight:750;cursor:pointer}
-    button:hover{border-color:var(--green);background:color-mix(in srgb,var(--surface) 82%,var(--green-soft))} button:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
-    button.active,button.primary{background:var(--green);border-color:var(--green);color:#fff} button.secondary{background:var(--blue-soft);border-color:var(--blue)}
-    code,.mono{font-family:var(--mono)} code{padding:.12em .36em;border-radius:5px;background:var(--surface-2);font-size:.9em;overflow-wrap:anywhere}
-    .shell{width:min(1180px,calc(100% - 40px));margin:auto}.narrow{width:min(860px,100%)}
-    .topbar{border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 92%,transparent)}
-    .topbar .shell{display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:48px;font:700 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase}
-    .status{display:flex;align-items:center;gap:8px}.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
-    header{padding:56px 0 42px}.hero{display:grid;grid-template-columns:1fr 1fr;gap:42px;align-items:center}
-    .kicker{font:800 .72rem/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
-    h1,h2,h3,p{margin-top:0} h1,h2{font-family:var(--serif);font-weight:650;letter-spacing:-.035em;line-height:1.04}
-    h1{margin:15px 0 24px;font-size:clamp(3.2rem,7.4vw,7rem)} h2{margin:10px 0 20px;font-size:clamp(2.35rem,5vw,4.7rem)} h3{line-height:1.2}
-    .lede{max-width:760px;font-size:1.22rem}.answer{padding:24px;border-left:6px solid var(--green);background:var(--green-soft);border-radius:0 14px 14px 0}
-    .hero-note{padding:25px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow);border-radius:18px}
-    .hero-note strong{display:block;font:650 1.65rem/1.2 var(--serif);margin-bottom:9px}.hero-note p:last-child{margin-bottom:0;color:var(--muted)}
-    .concept-card{position:relative;overflow:hidden;border-top:6px solid var(--blue)}.concept-label{display:inline-block;margin-bottom:18px;padding:6px 9px;border-radius:6px;background:var(--blue-soft);color:var(--blue);font:800 .62rem var(--mono);letter-spacing:.08em;text-transform:uppercase}.sentence-frame{display:flex;flex-wrap:wrap;align-items:baseline;gap:.18em;margin:0 0 20px;font:650 clamp(1.9rem,4vw,3.25rem)/1.15 var(--serif);letter-spacing:-.025em}.sentence-blank{display:inline-grid;min-width:3.7em;place-items:center;border-bottom:4px solid var(--orange);color:var(--orange)}.concept-candidates{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 18px}.concept-word{position:relative;padding:10px 8px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);text-align:center;font-weight:750;transition:.18s}.concept-word[data-boost="true"]::after{content:"+2";position:absolute;top:-9px;right:-6px;padding:2px 5px;border-radius:5px;background:var(--green);color:#fff;font:800 .58rem var(--mono);opacity:0;transform:translateY(4px)}.concept-card.revealed .concept-word[data-boost="true"]{border:2px solid var(--green);background:repeating-linear-gradient(135deg,var(--green-soft) 0 6px,var(--surface) 6px 12px)}.concept-card.revealed .concept-word[data-boost="true"]::after{opacity:1;transform:none}.concept-caption{margin:16px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:.86rem;color:var(--muted)}.concept-caption strong{display:inline;font:inherit}.evidence-gate{padding:28px;border:1px solid var(--line);border-left:7px solid var(--blue);border-radius:0 16px 16px 0;background:var(--blue-soft)}.evidence-gate .kicker{color:var(--blue)}.evidence-gate h2{font-size:clamp(2rem,4vw,3.8rem)}.evidence-gate p:last-child{margin-bottom:0}
-    .process-shell{position:sticky;top:0;z-index:20;border-block:1px solid var(--line);background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px)}
-    .process{display:grid;grid-template-columns:repeat(8,1fr);min-height:74px}.process a{position:relative;display:grid;place-items:center;padding:12px 8px;color:var(--muted);font:750 .67rem/1.25 var(--mono);text-align:center;text-decoration:none;text-transform:uppercase}
-    .process a:not(:last-child)::after{content:"›";position:absolute;right:-4px;color:var(--line);font-size:1.5rem}.process a:hover{color:var(--green)}
-    .process b{display:block;color:var(--ink);font-size:.9rem;margin-bottom:3px}
-    section{padding:86px 0;border-bottom:1px solid var(--line)}.section-head{max-width:900px;margin-bottom:34px}.section-head p{max-width:790px;color:var(--muted);font-size:1.08rem}
-    .figure{border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}.figure-head{display:flex;justify-content:space-between;gap:22px;align-items:start;padding:22px 26px;border-bottom:1px solid var(--line);background:var(--surface-2)}
-    .figure-head h3{margin:0}.figure-head p{margin:5px 0 0;color:var(--muted);font-size:.9rem}.figure-label{font:800 .68rem var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--green)}
-    .figure-body{padding:clamp(20px,4vw,38px)}.instruction{margin:0 0 22px;padding:15px 18px;border:1px solid color-mix(in srgb,var(--orange) 35%,var(--line));border-radius:12px;background:var(--orange-soft)}
-    .legend{display:flex;flex-wrap:wrap;gap:12px 20px;color:var(--muted);font-size:.82rem}.legend span{display:flex;align-items:center;gap:7px}.swatch{width:18px;height:12px;border-radius:3px;background:var(--blue)}
-    .swatch.green{border:2px solid var(--green);background:repeating-linear-gradient(135deg,var(--green-soft) 0 4px,transparent 4px 8px)}.swatch.orange{width:3px;background:var(--orange)}.swatch.rust{background:var(--rust)}
-    .history-track{display:grid;grid-template-columns:auto repeat(7,1fr);gap:8px;align-items:center}.history-label{font:750 .72rem var(--mono);color:var(--muted);text-transform:uppercase}
-    .history-token{position:relative;min-width:0;padding:13px 7px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);text-align:center}.history-token .id{display:block;font:800 1rem var(--mono)}.history-token small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
-    .history-token.initial::after{content:"initial";position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:1px 5px;border-radius:4px;background:var(--surface);color:var(--muted);font:650 .55rem var(--mono)}
-    .history-token.generated{border-color:var(--green);background:var(--green-soft)}.history-token.focus{outline:3px solid var(--orange);outline-offset:2px}
-    .window-brace{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0 calc(4.7rem + 8px);padding-top:10px;border-top:3px solid var(--blue);text-align:center;color:var(--blue);font:750 .7rem var(--mono)}
-    .context-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}.context-step{padding:16px;border:1px solid var(--line);border-radius:14px}.context-step.active{border-color:var(--orange);box-shadow:inset 0 0 0 2px var(--orange-soft)}.context-step code{display:block;margin:8px 0}.context-step .transition{color:var(--muted);font-size:.82rem}
-    .flow-note{margin:24px 0 0;padding:18px;border-left:4px solid var(--blue);background:var(--blue-soft)}
-    .candidate-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.candidate{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
-    .candidate .cid{display:grid;place-items:center;width:30px;height:30px;border-radius:7px;background:var(--surface);font:800 .72rem var(--mono)}.candidate strong{display:block;font-size:.86rem}.candidate small{display:block;color:var(--muted);font:.7rem var(--mono)}
-    .definition-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}.definition{padding:17px;border-top:3px solid var(--blue);background:var(--blue-soft)}.definition strong{display:block;margin-bottom:5px}.definition span{font-size:.88rem;color:var(--muted)}
-    .selector-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:24px}.selector-inputs{padding:22px;border-radius:16px;background:var(--blue-soft)}
-    .context-ribbon{display:flex;gap:7px;margin:10px 0 20px}.context-ribbon span{padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:800 .85rem var(--mono)}
-    .equation{padding:17px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-family:var(--mono);overflow-wrap:anywhere}.equation .result{color:var(--green);font-weight:800}
-    .selector-method{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.method-step{position:relative;padding:12px 9px;border-radius:10px;background:var(--surface);text-align:center;font-size:.78rem}.method-step:not(:last-child)::after{content:"→";position:absolute;right:-10px;color:var(--green);font-weight:900;z-index:2}
-    .rank-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.rank-item{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font:.74rem var(--mono);transition:.2s}
-    .rank-item .rank{color:var(--muted)}.rank-item .hash{color:var(--muted)}.rank-item.selected{border-color:var(--green);background:var(--green-soft)}.rank-item.selected .hash{color:var(--green)}.rank-item.cutoff{margin-bottom:8px;box-shadow:0 5px 0 -2px var(--yellow)}
-    .rank-item.pulse{animation:pulse .55s ease-out}.selector-result{margin-top:18px;padding:16px;border-left:5px solid var(--green);background:var(--green-soft)}
-    .fixed-changed{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}.fixed-changed div{padding:14px 16px;border-radius:12px;background:var(--surface-2);font-size:.88rem}.fixed-changed strong{display:block;color:var(--green);font:800 .68rem var(--mono);text-transform:uppercase;letter-spacing:.08em}
-    .prediction{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;margin-bottom:24px;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}.button-row{display:flex;flex-wrap:wrap;gap:9px}.feedback{margin:12px 0 0;color:var(--muted);min-height:1.7em}
-    .score-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}.score-ledger{display:grid;gap:8px}.score-row{display:grid;grid-template-columns:1.25fr .55fr .4fr .55fr;gap:8px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
-    .score-row.head{border:0;background:transparent;color:var(--muted);font:700 .66rem var(--mono);text-transform:uppercase}.score-row.green{border-color:var(--green);background:var(--green-soft)}.score-row .plus{color:var(--green);font-weight:850}.score-row .total{font-weight:850}.score-row .token-name{font-weight:750}.score-row .token-name small{display:block;color:var(--muted);font:600 .68rem var(--mono)}
-    .math-panel{padding:22px;border-radius:16px;background:var(--blue-soft)}.math-panel h3{margin-bottom:10px}.math-step{padding:13px 0;border-bottom:1px solid var(--line)}.math-step:last-child{border:0}.math-step strong{display:block}.math-step code{display:block;margin-top:6px;background:var(--surface)}
-    .prob-shift{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-top:18px}.prob-number{padding:14px;border-radius:11px;background:var(--surface);text-align:center}.prob-number strong{display:block;font:800 1.45rem var(--mono)}.prob-arrow{font-size:1.6rem;color:var(--green)}
-    .mass-bars{margin-top:22px}.mass-title{display:flex;justify-content:space-between;gap:12px;margin:10px 0 5px;font-size:.82rem}.mass-bar{display:flex;height:32px;overflow:hidden;border:1px solid var(--line);border-radius:8px}.mass-green{display:grid;place-items:center;background:repeating-linear-gradient(135deg,var(--green) 0 7px,color-mix(in srgb,var(--green) 75%,var(--surface)) 7px 14px);color:#fff;font:800 .7rem var(--mono)}.mass-red{display:grid;place-items:center;background:var(--surface-2);font:800 .7rem var(--mono)}
-    .ruler-stack{position:relative;display:grid;gap:42px;margin:48px 0 22px}.ruler-block{position:relative}.ruler-title{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.ruler-title strong{font-size:.9rem}.ruler-title span{color:var(--muted);font:.75rem var(--mono)}
-    .prob-ruler{display:flex;height:86px;overflow:hidden;border:2px solid var(--ink);border-radius:10px;background:var(--surface-2)}.segment{position:relative;min-width:1px;border-right:1px solid color-mix(in srgb,var(--surface) 75%,transparent);background:var(--blue);color:#fff}.segment.green{background:repeating-linear-gradient(135deg,var(--green) 0 6px,color-mix(in srgb,var(--green) 78%,#fff) 6px 12px)}.segment.winner{outline:5px solid var(--yellow);outline-offset:-5px}.segment .seg-id{position:absolute;inset:28px 2px auto;text-align:center;font:800 .72rem var(--mono)}
-    .draw-line{position:absolute;z-index:6;top:-12px;bottom:-13px;width:4px;background:var(--orange);box-shadow:0 0 0 1px color-mix(in srgb,var(--surface) 70%,transparent)}.draw-line::before{content:"draw 0.307311";position:absolute;top:-26px;left:8px;width:max-content;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff;font:800 .67rem var(--mono)}
-    .boundary-row{position:relative;height:28px;color:var(--muted);font:.68rem var(--mono)}.boundary{position:absolute;transform:translateX(-50%);top:4px}.boundary::before{content:"";position:absolute;left:50%;bottom:100%;height:7px;border-left:1px solid var(--muted)}
-    .sampling-result{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;padding:20px;border-radius:14px;background:var(--green-soft)}.sampling-result .choice{font:700 1.2rem var(--serif)}.sampling-result .arrow{color:var(--green);font-size:2rem}.sampling-result small{display:block;color:var(--muted);font-family:var(--sans)}
-    .failure-layout{display:grid;grid-template-columns:.75fr 1.25fr;gap:26px}.mass-donut{display:grid;place-items:center;aspect-ratio:1;max-width:300px;margin:auto;border-radius:50%;background:conic-gradient(var(--green) 0 72.6%,var(--rust) 72.6% 100%);position:relative}.mass-donut::after{content:"";position:absolute;inset:24%;border-radius:50%;background:var(--surface)}.mass-donut .inside{position:relative;z-index:1;text-align:center}.mass-donut strong{display:block;font:800 2.4rem var(--mono)}
-    .mini-ruler{position:relative;margin:45px 0 16px}.mini-ruler .prob-ruler{height:72px}.mini-ruler .draw-line::before{content:"draw 0.112284"}.failure-answer{padding:16px;border-left:5px solid var(--rust);background:var(--rust-soft)}
-    .generation-flow{display:grid;gap:12px}.generation-row{display:grid;grid-template-columns:1.25fr auto .6fr auto 1.25fr;gap:12px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.generation-row code{display:block;text-align:center}.drop{color:var(--rust);text-decoration:line-through}.append{color:var(--green);font-weight:800}.flow-arrow{color:var(--muted);font-size:1.3rem}
-    .checker-intro{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}.checker-intro>div{padding:18px;border-radius:14px;background:var(--surface-2)}.checker-intro .uses{border-top:4px solid var(--green)}.checker-intro .omits{border-top:4px solid var(--muted)}
-    .checker-layout{display:grid;grid-template-columns:.7fr 1.3fr;gap:24px}.checker-summary{padding:22px;border-radius:16px;background:var(--blue-soft);align-self:start;position:sticky;top:95px}.count{font:650 3.8rem/1 var(--serif);margin:10px 0}.count-def{display:grid;grid-template-columns:1fr 1fr;gap:8px}.count-def div{padding:10px;background:var(--surface);border-radius:8px;font-size:.78rem}.count-def strong{display:block;font:800 1.2rem var(--mono)}
-    .checker-steps{display:grid;gap:10px}.check-step{display:grid;grid-template-columns:54px 1fr auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer}.check-step.active{border-color:var(--orange);box-shadow:inset 5px 0 var(--orange)}.position-badge{display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:var(--surface-2);font:800 .8rem var(--mono)}.check-step h3{margin:0 0 5px;font-size:1rem}.check-step p{margin:0;color:var(--muted);font-size:.82rem}.hit-badge{padding:7px 9px;border-radius:8px;background:var(--green-soft);color:var(--green);font:800 .7rem var(--mono)}.hit-badge.miss{background:var(--rust-soft);color:var(--rust)}
-    .checker-detail{margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}.checker-chain{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center}.checker-chain div{padding:12px;border-radius:10px;background:var(--surface);text-align:center;font-size:.8rem}.checker-chain strong{display:block}.score-derivation{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:24px}.derive-step{padding:16px;border-top:4px solid var(--blue);background:var(--blue-soft)}.derive-step strong{display:block;font:800 1.25rem var(--mono)}.no-verdict{margin-top:14px;padding:16px;border-left:5px solid var(--orange);background:var(--orange-soft)}
-    .boundary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.boundary-card{padding:21px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}.boundary-card.measured{border-top:5px solid var(--blue)}.boundary-card.derived{border-top:5px solid var(--green)}.boundary-card.limit{border-top:5px solid var(--rust)}.boundary-card h3{margin-bottom:8px}.boundary-card p:last-child{margin-bottom:0;color:var(--muted)}
-    .later-map{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;margin-top:22px}.later-card{padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}.later-arrow{display:grid;place-items:center;color:var(--green);font-size:2rem}
-    details{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}summary{min-height:48px;padding:14px 18px;cursor:pointer;font-weight:800}.details-body{padding:0 18px 20px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.8rem}th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:nth-child(2),td:nth-child(2){text-align:left}th{color:var(--muted);font:.66rem var(--mono);text-transform:uppercase}pre{overflow-x:auto;padding:16px;border-radius:10px;background:var(--ink);color:var(--surface);font:.75rem/1.55 var(--mono)}
-    footer{padding:44px 0 70px;color:var(--muted)}
-    @keyframes pulse{50%{transform:translateX(5px);box-shadow:0 0 0 3px var(--green-soft)}}
-    @media (max-width:900px){.hero,.selector-layout,.score-layout,.failure-layout,.checker-layout{grid-template-columns:1fr}.hero-note{max-width:650px}.candidate-grid{grid-template-columns:repeat(4,1fr)}.definition-row{grid-template-columns:repeat(2,1fr)}.context-steps{grid-template-columns:repeat(2,1fr)}.checker-summary{position:static}.boundary-grid{grid-template-columns:1fr}.generation-row{grid-template-columns:1fr auto .7fr}.generation-row .next-context{grid-column:1/-1}.generation-row .arrow-last{display:none}}
-    @media (max-width:620px){body{font-size:16px}.shell{width:min(100% - 22px,1180px)}header{padding:30px 0 28px}.concept-card{grid-row:1}.hero>div{grid-row:2}h1{font-size:clamp(2.8rem,14vw,4rem)}section{padding:62px 0}.topbar .shell{font-size:.6rem}.process{overflow-x:auto;grid-template-columns:repeat(8,92px);justify-content:start}.process a{min-height:66px}.concept-candidates{grid-template-columns:repeat(2,1fr)}.figure-head{display:block;padding:18px}.figure-label{margin-bottom:8px}.figure-body{padding:17px}.history-track{grid-template-columns:repeat(4,1fr)}.history-label{grid-column:1/-1}.history-token:nth-of-type(n+5){margin-top:14px}.window-brace{display:none}.candidate-grid{grid-template-columns:repeat(2,1fr)}.definition-row,.context-steps,.fixed-changed,.prediction,.checker-intro,.score-derivation{grid-template-columns:1fr}.selector-method{grid-template-columns:1fr 1fr}.rank-list{grid-template-columns:1fr}.rank-item{font-size:.7rem}.score-row{grid-template-columns:1.2fr .5fr .35fr .5fr;font-size:.78rem;padding:9px 7px}.score-row.head{font-size:.55rem}.prob-shift{grid-template-columns:1fr}.prob-arrow{transform:rotate(90deg);text-align:center}.prob-ruler{height:78px}.draw-line::before{left:-72px}.sampling-result{grid-template-columns:1fr;text-align:center}.sampling-result .arrow{transform:rotate(90deg)}.mass-donut{max-width:235px}.generation-row{grid-template-columns:1fr}.flow-arrow{transform:rotate(90deg);text-align:center}.checker-intro{gap:10px}.check-step{grid-template-columns:42px 1fr}.position-badge{width:40px;height:40px}.hit-badge{grid-column:2}.checker-chain{grid-template-columns:1fr}.checker-chain .flow-arrow{transform:rotate(90deg)}.later-map{grid-template-columns:1fr}.later-arrow{transform:rotate(90deg)}.boundary-row{font-size:.58rem}.boundary-row .boundary:not(:first-child):not(:last-child){display:none}.legend{gap:8px 13px}}
-    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+
+    html:has(#light-preview:target) {
+      --paper: #f4efe3;
+      --paper-deep: #e9e0cf;
+      --ink: #17231f;
+      --muted: #5f6964;
+      --line: rgba(23, 35, 31, 0.18);
+      --panel: rgba(255, 255, 255, 0.42);
+      --green: #176b50;
+      --green-soft: #d8eadf;
+      --orange: #bf642e;
+      --orange-soft: #f4dfd0;
+      --blue: #315e83;
+      --blue-soft: #dbe8f1;
+      --red: #9f493c;
+      --red-soft: #f1dbd7;
+    }
+
+    html:has(#dark-preview:target) {
+      --paper: #101a17;
+      --paper-deep: #17241f;
+      --ink: #f3efe5;
+      --muted: #b7c0bb;
+      --line: rgba(236, 241, 237, 0.16);
+      --panel: rgba(255, 255, 255, 0.045);
+      --green: #78d8ae;
+      --green-soft: #173f31;
+      --orange: #ff9a61;
+      --orange-soft: #4a2a1b;
+      --blue: #9ccbf0;
+      --blue-soft: #20384c;
+      --red: #ef9a8b;
+      --red-soft: #492824;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--green) 9%, transparent), transparent 29rem),
+        linear-gradient(180deg, var(--paper), var(--paper-deep));
+      font: 18px/1.65 var(--sans);
+    }
+    button, summary { font: inherit; }
+    button { color: inherit; }
+    a { color: var(--blue); }
+    code { font: 0.9em/1.4 var(--mono); }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    h1, h2, h3 { font-family: var(--serif); letter-spacing: -0.025em; }
+    h1 { max-width: 860px; margin-bottom: 22px; font-size: clamp(3rem, 7vw, 6rem); line-height: 0.97; }
+    h2 { margin-bottom: 14px; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.04; }
+    h3 { font-size: 1.45rem; line-height: 1.2; }
+    p { max-width: 76ch; }
+    figure { margin: 0; }
+
+    .hero, main, .footer-inner { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
+    .hero { padding: 88px 0 54px; }
+    .tag {
+      margin-bottom: 18px;
+      color: var(--green);
+      font: 700 0.75rem/1 var(--mono);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .lede { max-width: 780px; color: var(--muted); font-size: 1.25rem; }
+    .boundary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      margin-top: 38px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+    .boundary p { height: 100%; margin: 0; padding: 24px; background: var(--paper); }
+
+    main { padding-bottom: 80px; }
+    section { padding: 70px 0; border-top: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 20px; margin-bottom: 34px; }
+    .number { padding-top: 9px; color: var(--green); font: 700 0.8rem/1 var(--mono); }
+    .section-head p { color: var(--muted); }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .card-head, .card-body { padding: 28px; }
+    .card-head { border-bottom: 1px solid var(--line); }
+    .plain-box { padding: 23px 25px; border-left: 5px solid var(--blue); background: var(--blue-soft); }
+    .plain-box p:last-child, .card-body p:last-child { margin-bottom: 0; }
+
+    .key-grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 26px; }
+    .key-value {
+      display: block;
+      margin: 12px 0 18px;
+      padding: 14px;
+      overflow-wrap: anywhere;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      font: 0.88rem/1.45 var(--mono);
+    }
+    .key-path { display: grid; gap: 12px; }
+    .key-step { padding: 17px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+    .key-step h4, .plain-box h4 { margin: 0 0 7px; font-size: 1rem; }
+    .key-step p, .plain-box p { margin: 0; }
+    .key-practice { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+    .key-practice article { padding: 18px; border-top: 4px solid var(--green); background: var(--green-soft); }
+    .key-practice h4 { margin: 0 0 8px; font-size: 1rem; }
+    .key-practice p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+    .stage-bridge { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--line); box-shadow: var(--shadow); }
+    .bridge-step { min-width: 0; padding: 22px; background: var(--paper); }
+    .bridge-step span { display: block; margin-bottom: 9px; color: var(--green); font: 700 0.72rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+    .bridge-step strong { display: block; margin-bottom: 7px; font-size: 1.04rem; }
+    .bridge-step p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+    .bridge-note { margin: 22px 0 0; padding: 20px 22px; border-left: 5px solid var(--orange); background: var(--orange-soft); }
+
+    .key-lab { margin-top: 28px; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); }
+    .key-lab-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 22px; border-bottom: 1px solid var(--line); }
+    .key-lab-head p { margin: 6px 0 0; color: var(--muted); }
+    .key-lab-body { padding: 22px; }
+    .fixed-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .fixed-input { min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); }
+    .fixed-input span { display: block; color: var(--muted); font-size: 0.75rem; }
+    .fixed-input strong { display: block; overflow-wrap: anywhere; font: 700 0.9rem/1.45 var(--mono); }
+    .universe-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
+    .candidate-card { min-width: 0; padding: 12px; border: 1px solid var(--red); border-radius: 12px; background: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--red) 10%, transparent) 8px 10px), var(--red-soft); transition: background 280ms ease, border-color 280ms ease, transform 280ms ease; }
+    .candidate-card.green { border-color: var(--green); background: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--green) 12%, transparent) 8px 10px), var(--green-soft); }
+    .candidate-card.neutral { border-color: var(--line); background: var(--panel); }
+    .candidate-card.changed { animation: membershipChange 520ms cubic-bezier(.2,.8,.2,1); }
+    .candidate-card strong { display: block; overflow-wrap: anywhere; font-size: 0.92rem; line-height: 1.2; }
+    .candidate-card small { display: block; margin-top: 5px; color: var(--muted); font: 0.64rem/1.35 var(--mono); }
+    .candidate-card .membership { margin-top: 7px; color: var(--red); font: 700 0.66rem/1 var(--mono); text-transform: uppercase; }
+    .candidate-card.green .membership { color: var(--green); }
+    .candidate-card.neutral .membership { color: var(--muted); }
+    @keyframes membershipChange { 0% { transform: scale(1); } 45% { transform: scale(.92); } 100% { transform: scale(1); } }
+    .key-feedback { margin: 20px 0 0; padding: 16px 18px; border-left: 5px solid var(--green); background: var(--green-soft); }
+    .hash-example { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); }
+    .hash-example code { display: block; margin: 8px 0; overflow-wrap: anywhere; }
+
+    .simulator { position: relative; width: 100%; margin: 0; }
+    .sim-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .sim-count { color: var(--muted); font: 700 0.78rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; }
+    .primary, .secondary {
+      min-height: 48px;
+      padding: 11px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+    }
+    .primary { border: 1px solid var(--green); color: white; background: var(--green); box-shadow: 0 8px 20px color-mix(in srgb, var(--green) 25%, transparent); }
+    .secondary { border: 1px solid var(--line); background: var(--paper); }
+    .primary:hover, .secondary:hover { transform: translateY(-2px); }
+    .primary[aria-disabled="true"] { opacity: 0.72; cursor: wait; transform: none; }
+    .primary:focus-visible, .secondary:focus-visible, summary:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+
+    .sim-body { padding: 30px 28px 34px; }
+    .stage-label { margin-bottom: 10px; color: var(--muted); font: 700 0.74rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+    .context-shell { position: relative; margin-bottom: 30px; padding: 22px; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); }
+    .context-track {
+      --slot-gap: 12px;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: calc((100% - (3 * var(--slot-gap))) / 4);
+      gap: var(--slot-gap);
+      transform: translateX(0);
+    }
+    .context-track.shifting {
+      transform: translateX(calc(-1 * (((100% - (3 * var(--slot-gap))) / 4) + var(--slot-gap))));
+      transition: transform 520ms cubic-bezier(.2,.8,.2,1);
+    }
+    .context-token {
+      position: relative;
+      min-width: 0;
+      padding: 17px 10px 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      text-align: center;
+      font-weight: 700;
+    }
+    .context-token small { display: block; margin-top: 3px; color: var(--muted); font: 0.66rem/1.2 var(--mono); }
+    .context-token.newest, .context-token.incoming { border-color: var(--green); background: var(--green-soft); }
+    .context-token.leaving { border-color: var(--red); background: var(--red-soft); }
+
+    .sentence-live { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+    .sentence-token { padding: 9px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); font-weight: 650; }
+    .sentence-token.added { border-color: var(--green); background: var(--green-soft); }
+    .sentence-token.blank { color: var(--muted); border-style: dashed; }
+    .sentence-token.just-added { animation: tokenLand 520ms cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes tokenLand { from { opacity: 0; transform: translateY(-12px) scale(.92); } to { opacity: 1; transform: none; } }
+
+    .choice-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 22px; align-items: stretch; }
+    .selected-panel, .result-panel { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
+    .selected-words { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; }
+    .selected-word { padding: 8px 11px; border: 1px solid var(--green); border-radius: 999px; background: var(--green-soft); color: var(--green); font-weight: 700; }
+    .selected-note, .used-context { margin: 14px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .result-word { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .result-word strong { font: 700 2.3rem/1 var(--serif); }
+    .result-badge { padding: 7px 10px; border-radius: 999px; font: 700 0.72rem/1 var(--mono); text-transform: uppercase; }
+    .result-badge.hit { color: var(--green); background: var(--green-soft); }
+    .result-badge.miss { color: var(--red); background: var(--red-soft); }
+    .result-math { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .result-math div { padding: 10px; border-radius: 10px; background: var(--panel); }
+    .result-math span { display: block; color: var(--muted); font-size: 0.74rem; }
+    .result-math strong { display: block; font-family: var(--mono); }
+    .feedback { margin: 22px 0 0; padding: 18px 20px; border-left: 5px solid var(--orange); background: var(--orange-soft); }
+
+    .progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 24px; }
+    .progress-step { height: 7px; overflow: hidden; border-radius: 999px; background: var(--line); }
+    .progress-step.done { background: var(--green); }
+    .progress-step.current { background: var(--orange); }
+
+    .static-fallback { padding: 26px; }
+    .static-fallback ol { padding-left: 24px; }
+    .static-fallback li { margin-bottom: 18px; }
+    .js-ready .static-fallback { display: none; }
+    html:not(.js-ready) .interactive-only { display: none; }
+
+    .checker-grid, .limit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .checker-row { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+    .checker-row.hit { border-left: 5px solid var(--green); }
+    .checker-row.miss { border-left: 5px solid var(--red); }
+    .checker-row p { margin: 7px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .tally { padding: 24px; border: 1px solid var(--line); background: var(--panel); }
+    .tally strong { display: block; font: 700 3.4rem/1 var(--serif); }
+
+    .checker-form { display: grid; grid-template-columns: 0.9fr 1.4fr; gap: 16px; padding: 24px; border-bottom: 1px solid var(--line); }
+    .field { min-width: 0; }
+    .field label { display: block; margin-bottom: 7px; font-weight: 700; }
+    .field input, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--paper); font: 0.9rem/1.5 var(--mono); }
+    .field input { min-height: 48px; padding: 10px 12px; }
+    .field textarea { min-height: 104px; padding: 12px; resize: vertical; }
+    .field-help { margin: 7px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .checker-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 24px 24px; }
+    .preset[aria-pressed="true"] { border-color: var(--green); background: var(--green-soft); }
+    .checker-work { padding: 24px; }
+    .checked-text { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+    .checked-token { padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .checked-token.context { color: var(--muted); }
+    .checked-token.hit { border-color: var(--green); background: var(--green-soft); }
+    .checked-token.miss { border-color: var(--red); background: var(--red-soft); }
+    .checker-current { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 18px; }
+    .checker-current > div { min-width: 0; }
+    .score-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .score-card { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+    .score-card span { display: block; color: var(--muted); font-size: 0.74rem; }
+    .score-card strong { display: block; font: 700 1.5rem/1.25 var(--serif); }
+    .checker-message { margin: 18px 0 0; padding: 17px 19px; border-left: 5px solid var(--orange); background: var(--orange-soft); }
+    .error-message { border-left-color: var(--red); background: var(--red-soft); }
+    .checker-history { display: grid; gap: 9px; margin-top: 18px; }
+    .checker-history-row { padding: 13px 15px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); font-size: 0.88rem; }
+    .checker-history-row.hit { border-left: 5px solid var(--green); }
+    .checker-history-row.miss { border-left: 5px solid var(--red); }
+
+    details { margin-top: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    summary { min-height: 48px; padding: 13px 16px; cursor: pointer; font-weight: 700; }
+    details > div { padding: 0 18px 18px; }
+
+    footer { border-top: 1px solid var(--line); }
+    .footer-inner { padding: 30px 0 50px; color: var(--muted); font-size: 0.86rem; }
+
+    @media (max-width: 760px) {
+      body { font-size: 16px; }
+      .hero { padding-top: 54px; }
+      .boundary, .key-grid, .key-practice, .choice-grid, .checker-grid, .limit-grid, .stage-bridge, .fixed-inputs, .checker-form, .checker-current { grid-template-columns: 1fr; }
+      .section-head { grid-template-columns: 38px minmax(0, 1fr); gap: 10px; }
+      .card-head, .card-body, .sim-body { padding: 21px 18px; }
+      .sim-toolbar { flex-direction: column; align-items: stretch; padding: 18px; }
+      .controls { display: grid; grid-template-columns: 0.8fr 1.2fr; width: 100%; }
+      .primary, .secondary { width: 100%; padding-inline: 12px; border-radius: 14px; }
+      .context-shell { padding: 14px 10px; }
+      .context-track { --slot-gap: 6px; }
+      .context-token { padding: 13px 4px; font-size: 0.82rem; }
+      .context-token small { font-size: 0.55rem; }
+      .result-math { grid-template-columns: 1fr 1fr; }
+      .key-lab-head { align-items: stretch; flex-direction: column; }
+      .universe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .candidate-card { padding: 10px; }
+      .checker-actions { display: grid; grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="topbar"><div class="shell"><span>Text watermarking lab · Stage 2</span><span class="status">Checked four-position trace</span></div></div>
-  <header class="shell">
-    <div class="hero">
-      <div>
-        <div class="kicker">From an ordinary sentence to exact evidence</div>
-        <h1>How a key can change the next word.</h1>
-        <p class="lede">Start with a sentence you already understand. Then strip language away and inspect the watermark operation one number at a time.</p>
-        <p class="answer"><strong>The short answer:</strong> a key and the recent context mark a temporary subset of next-token options. Their scores rise before sampling. The sampler still chooses from the full list, so the watermark changes chances rather than inserting a fixed word.</p>
-      </div>
-      <aside class="hero-note concept-card" id="conceptCard">
-        <span class="concept-label">Hand-authored concept illustration · not run data</span>
-        <div class="sentence-frame" aria-label="Jack went up the blank"><span>Jack went up the</span> <span class="sentence-blank">___</span></div>
-        <div class="concept-candidates" aria-label="Possible sentence endings"><span class="concept-word" data-boost="true">hill</span><span class="concept-word">road</span><span class="concept-word">stairs</span><span class="concept-word" data-boost="true">path</span><span class="concept-word">slope</span><span class="concept-word">trail</span><span class="concept-word">street</span><span class="concept-word">ramp</span></div>
-        <button class="primary" id="revealConcept">Reveal the temporary boost</button>
-        <p class="concept-caption"><strong>Imagine a model already scored these endings.</strong> The watermark acts next, before one token is sampled. Stage 2 does not run that model and did not generate this sentence.</p>
-      </aside>
+  <span id="light-preview" hidden></span>
+  <span id="dark-preview" hidden></span>
+
+  <header class="hero">
+    <p class="tag">Stage 2</p>
+    <h1>See how the selector builds a pattern of green hits.</h1>
+    <p class="lede">The selector uses a key and recent token history to choose five words for a score increase. The sampler chooses the next word. The checker turns the finished text into the hit count and z score from Stage 1.</p>
+    <p>A token is one unit handled by the program. In this lesson, every displayed word is one token.</p>
+    <div class="boundary">
+      <p><strong>The example sentence</strong><br>Early one morning Jack went up the hill.</p>
+      <p>We wrote the sentence, scores, and random numbers for this lesson. No language model produced them.</p>
     </div>
   </header>
 
-  <nav class="process-shell" aria-label="Stage 2 mechanism">
-    <div class="process shell">
-      <a href="#evidence"><span><b>0</b>sentence</span></a><a href="#history"><span><b>1</b>history</span></a><a href="#selector"><span><b>2</b>green set</span></a><a href="#scores"><span><b>3</b>scores +2</span></a><a href="#sampling"><span><b>4</b>probability</span></a><a href="#sampling"><span><b>5</b>draw</span></a><a href="#context"><span><b>6</b>append</span></a><a href="#checker"><span><b>7</b>checker</span></a>
-    </div>
-  </nav>
-
   <main>
-    <section id="evidence">
-      <div class="shell"><div class="evidence-gate"><div class="kicker">Recorded Stage 2 trace · synthetic scores</div><h2>Now measure the operation by itself.</h2><p>The sentence above explains where the operation would sit in real text generation. The recorded experiment below measures only the operation. It uses 20 numbered options and fixed synthetic scores so every calculation can be checked without confusing mechanism with language quality.</p><p><strong>Evidence rule:</strong> all numerical claims below come from the locked trace. The optional artifact word tags appear only in the final audit table because their meanings never affect a score or choice.</p></div></div>
-    </section>
-    <section id="history">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">01 / Locate the worked step</div><h2>Position 4 begins with four recent IDs.</h2><p>The context is the four token IDs immediately before the next choice. The generated sequence has already added IDs 0, 1, and 1, so the four-ID window has arrived at <code>[15, 0, 1, 1]</code>.</p></div>
-        <figure class="figure">
-          <figcaption class="figure-head"><div><div class="figure-label">Recorded sampler state</div><h3>Initial ID window plus four recorded choices</h3><p>Read this row as sampler state, not as a sentence. Only choices made with the +2 rule enter it.</p></div><div class="legend"><span><i class="swatch"></i>initial ID</span><span><i class="swatch green"></i>chosen ID</span><span><i class="swatch orange"></i>position 4 focus</span></div></figcaption>
-          <div class="figure-body">
-            <div class="history-track" id="historyTrack"></div>
-            <div class="window-brace"><span></span><span></span><span></span><span>position 4 context: [15, 0, 1, 1]</span></div>
-            <div class="context-steps" id="contextSteps"></div>
-            <p class="flow-note"><strong>State rule:</strong> after each choice, drop the oldest context ID and append the chosen token. The public key stays fixed, but the context changes, so the next green set can change.</p>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <section id="candidates">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">02 / Meet the options</div><h2>The toy sampler must choose one of 20 numbered options.</h2><p>Each option has an ID and a raw logit. A logit is a score, not a percentage. A larger score receives more probability after all 20 scores are converted together. No language model judged whether an option fits any preceding text.</p></div>
-        <div class="figure">
-          <div class="figure-head"><div><div class="figure-label">Fixed synthetic input</div><h3>Twenty options in ID order</h3><p>The same raw scores are used at every recorded position so the changing green set is easier to see.</p></div></div>
-          <div class="figure-body"><div class="candidate-grid" id="candidateGrid"></div><div class="definition-row"><div class="definition"><strong>Numbered option</strong><span>One entry the toy sampler can choose.</span></div><div class="definition"><strong>Option ID</strong><span>The stable number, 0 through 19.</span></div><div class="definition"><strong>Logit</strong><span>A score, not a probability or percentage.</span></div><div class="definition"><strong>Probability</strong><span>The final share after all 20 scores are recalculated to total 1.</span></div></div></div>
+    <section id="stage-one-bridge">
+      <div class="section-head">
+        <div class="number">01</div>
+        <div>
+          <h2>Stage 2 defines a hit for text</h2>
+          <p>Stage 1 started with hits and misses. Stage 2 explains how one checked token becomes a hit or a miss.</p>
         </div>
       </div>
+      <div class="stage-bridge">
+        <div class="bridge-step"><span>Stage 1</span><strong>One coin flip</strong><p>Each trial was either a hit or a miss.</p></div>
+        <div class="bridge-step"><span>Stage 2</span><strong>One checked token</strong><p>A token is a hit when it belongs to the green group rebuilt for that position.</p></div>
+        <div class="bridge-step"><span>Same baseline</span><strong>Five of 20 is 25 percent</strong><p>Under random selection, one quarter of the checked tokens should be green on average.</p></div>
+        <div class="bridge-step"><span>Same score</span><strong>Count G hits in T positions</strong><p>The checker uses the Stage 1 formula to calculate the z score.</p></div>
+      </div>
+      <p class="bridge-note">The selector uses the key to decide which candidates are green at each position. A cutoff has a later job. It can turn a completed z score into a decision after testing and calibration. Stage 2 calculates a score and stops there.</p>
+      <p>Stage 1 used a 40 percent biased coin as a teaching comparison. Stage 2 does not assume that adding 2 produces a 40 percent green hit rate. The hit rate depends on the starting scores and the other candidates.</p>
+      <p>Stage 1 used independent coin flips. Tokens here share moving contexts. This page uses the same formula as a teaching score, but it does not calibrate a detector for real model text.</p>
+      <p><a href="text-watermarking-stage-1-walkthrough.html#text-map">Review how Stage 1 maps coin flips to token hits</a>. <a href="text-watermarking-stage-1-walkthrough.html#decision">Review why the cutoff is separate from the score</a>.</p>
     </section>
 
-    <section id="selector">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">03 / Build the temporary green set</div><h2>The selector ranks all 20 candidates.</h2><p>“Green” means “receives the +2 boost at this position.” It is temporary membership, not a permanent token property, correctness label, or detection result.</p></div>
-        <div class="figure">
-          <div class="figure-head"><div><div class="figure-label">Context + key → five green IDs</div><h3>The cutoff after rank five makes the selection visible</h3><p>SHA-256 turns the same exact message into the same fingerprint. The toy selector uses those fingerprints only to create a reproducible ranking.</p></div></div>
-          <div class="figure-body selector-layout">
-            <div class="selector-inputs">
-              <h3>Inputs for recorded position 4</h3>
-              <p>The previous four generated IDs:</p><div class="context-ribbon"><span>15</span><span>0</span><span>1</span><span>1</span></div>
-              <p>Public teaching key:</p><code>stage-02-public-demo-key-v1</code>
-              <div class="equation" style="margin-top:18px">20 candidates × selected share 0.25 = <span class="result">5 green candidates</span></div>
-              <p style="margin:18px 0 7px"><strong>One candidate message</strong></p>
-              <div class="equation">lab-02|v1|stage-02-public-demo-key-v1|15,0,1,1|2</div>
-              <div class="selector-method"><div class="method-step">build 20 messages</div><div class="method-step">hash each one</div><div class="method-step">sort fingerprints</div><div class="method-step">take first five</div></div>
-              <button class="primary" id="runSelector" style="margin-top:20px">Run the selector for position 4</button>
-              <p class="feedback" id="selectorFeedback" aria-live="polite">The ranking is already shown so the explanation never disappears. Run it to follow the five selected rows.</p>
-            </div>
-            <div>
-              <div class="instruction"><strong>What to watch:</strong> IDs 11, 5, 2, 6, and 10 occupy ranks 1 through 5. The set is later returned in token-ID order as <code>[2, 5, 6, 10, 11]</code>.</div>
-              <div class="rank-list" id="rankList" aria-label="Candidates ranked by SHA-256 fingerprint"></div>
-              <div class="selector-result"><strong>Result for this context:</strong> IDs 2, 5, 6, 10, and 11 are green. Change the context and every candidate message changes, so ID 2 need not be green at another position.</div>
-            </div>
-          </div>
+    <section id="key">
+      <div class="section-head">
+        <div class="number">02</div>
+        <div>
+          <h2>What the key is and why the code needs one</h2>
+          <p>A key is a value that the system operator gives to the watermark code. The model does not learn it. The prompt and generated text do not need to contain it.</p>
         </div>
       </div>
-    </section>
 
-    <section id="scores">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">04 / Change one input</div><h2>Add 2 to five logits. Leave the other 15 alone.</h2><p>Selection changes scores. It does not choose the token. Key, context, raw logits, green IDs, candidate order, and recorded draw all remain fixed.</p></div>
-        <div class="figure">
-          <div class="figure-head"><div><div class="figure-label">One controlled comparison</div><h3>Boost 0 versus boost 2</h3></div><div class="button-row"><button id="biasOff" class="active">Boost 0</button><button id="biasOn">Boost 2</button></div></div>
-          <div class="figure-body">
-            <div class="fixed-changed"><div><strong>Fixed in both views</strong>key, context, raw logits, five green IDs, draw 0.307311</div><div><strong>Only change</strong>add 0 or add 2 to each green logit</div></div>
-            <div class="prediction"><div><strong>Predict before switching:</strong> ID 1 stays at logit 1.7. Can its probability still fall when five other logits rise?</div><div class="button-row"><button data-prediction="no">No</button><button data-prediction="yes">Yes</button></div></div>
-            <p class="feedback" id="predictionFeedback" aria-live="polite">Watch the shared softmax denominator in the next panel.</p>
-            <div class="score-layout">
-              <div><div class="score-ledger" id="scoreLedger"></div><p class="flow-note"><strong>The direct change:</strong> ID 2 is green, so <code>1.5 + 2.0 = 3.5</code>. ID 1 is red, so <code>1.7 + 0 = 1.7</code>. Four other green rows also receive +2.</p></div>
-              <aside class="math-panel">
-                <h3>Then convert all 20 scores together</h3>
-                <p>A calculation called <strong>softmax</strong> gives higher logits more weight, then divides each weight by one shared total. Subtracting the largest logit first avoids huge numbers and leaves the probabilities unchanged.</p>
-                <div class="math-step"><strong>Stable weight</strong><code>weight = exp(adjusted logit − largest logit)</code></div>
-                <div class="math-step"><strong>Shared total after +2</strong><code>sum of 20 weights = 3.138616</code></div>
-                <div class="math-step"><strong>ID 2</strong><code>exp(3.5 − 3.5) / 3.138616 = 0.318612</code></div>
-                <div class="math-step"><strong>ID 1</strong><code>exp(1.7 − 3.5) / 3.138616 = 0.052666</code></div>
-                <div class="prob-shift"><div class="prob-number"><span>ID 1 logit</span><strong>1.7 → 1.7</strong><small>unchanged</small></div><div class="prob-arrow">→</div><div class="prob-number"><span>ID 1 probability</span><strong>15.1% → 5.3%</strong><small>shared total grew</small></div></div>
-              </aside>
-            </div>
-            <div class="mass-bars">
-              <div class="mass-title"><strong>Before the boost</strong><span>green IDs own 29.3% of probability</span></div><div class="mass-bar"><div class="mass-green" style="width:29.277%">green 29.3%</div><div class="mass-red" style="width:70.723%">red 70.7%</div></div>
-              <div class="mass-title"><strong>After the +2 boost</strong><span>red IDs still keep nonzero probability</span></div><div class="mass-bar"><div class="mass-green" style="width:75.362%">green 75.4%</div><div class="mass-red" style="width:24.638%">red 24.6%</div></div>
-            </div>
+      <div class="card">
+        <div class="card-body key-grid">
+          <div>
+            <p class="tag">Teaching key</p>
+            <h3>The repository author chose this value</h3>
+            <span class="key-value">stage-02-public-demo-key-v1</span>
+            <p>We show this key so anyone can repeat the lesson. It is a readable label for teaching. It is not a secure production secret.</p>
+          </div>
+          <div class="key-path">
+            <div class="key-step"><h4>The generator uses the key before sampling</h4><p>SHA-256 turns the key, recent token numbers, and candidate number into a fixed-length result. A small change to the input usually gives a different result. The selector runs this calculation for all 20 candidates, sorts the results, and marks the first five. The same key, context, and vocabulary produce the same five marked words.</p></div>
+            <div class="key-step"><h4>The checker uses the key after generation</h4><p>The checker reads the previous four tokens and uses the matching key to rebuild the selected set.</p></div>
+            <div class="key-step"><h4>The operator stores the key outside the model</h4><p>The operator can change it without retraining the model. Every model and tokenizer setup still needs its own quality and detection tests.</p></div>
+          </div>
+        </div>
+        <div class="card-body" style="border-top: 1px solid var(--line)">
+          <h3>Why the code defines a key</h3>
+          <p>The generator and checker need a repeatable selection rule. Both use the same key, so they do not have to store a new list of marked words for every position.</p>
+          <p>The selector marks words. The sampler then uses a random number to choose the next word.</p>
+          <p>In this lesson, we print the key so readers can repeat the calculation. A production service would normally keep its key secret. The key does not encrypt the sentence, and it is not a password or an API key.</p>
+          <div class="key-practice">
+            <article><h4>Who chooses it</h4><p>The organization that runs the generator normally controls the key.</p></article>
+            <article><h4>What people normally use</h4><p>A production design would use random secret bytes from a cryptographic random generator. The exact size and format depend on the chosen method.</p></article>
+            <article><h4>Where it normally lives</h4><p>The operator would keep the secret in protected key storage and give it a separate public name.</p></article>
+          </div>
+          <div class="plain-box" style="margin-top: 24px">
+            <h4>The operator gives each secret a public name</h4>
+            <p>The checker uses that name to find the right secret. The selector uses the secret value in its calculation.</p>
           </div>
         </div>
       </div>
-    </section>
 
-    <section id="sampling">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">05 / Sample from intervals</div><h2>The draw selects an interval, not the largest probability.</h2><p>The 20 probabilities are placed end to end in token-ID order. Each candidate owns an interval whose width equals its probability. The recorded draw is the fixed number <code>0.307310772959</code>.</p></div>
-        <div class="figure">
-          <div class="figure-head"><div><div class="figure-label">Same draw on aligned rulers</div><h3>Only the interval boundaries move</h3><p>The no-boost row is a one-step comparison at the real position 4 context. It is not a second generated sequence.</p></div><div class="legend"><span><i class="swatch green"></i>green at position 4</span><span><i class="swatch orange"></i>fixed draw</span></div></div>
-          <div class="figure-body">
-            <p class="instruction"><strong>Instruction:</strong> switch the boost above or use these aligned rulers. Watch ID 2's interval grow across the orange draw while the marker stays at exactly the same place.</p>
-            <div class="ruler-stack" id="rulerStack"></div>
-            <div class="sampling-result"><div class="choice"><small>No-boost comparison</small>draw lands in <strong>ID 1</strong><small>ID 1 interval [0.184651, 0.335831)</small></div><div class="arrow">→</div><div class="choice"><small>Recorded choice after +2</small>same draw lands in <strong>ID 2</strong><small>ID 2 interval [0.116993, 0.435605)</small></div></div>
-            <p class="flow-note"><strong>Why the choice changed:</strong> the draw stayed fixed. ID 2's larger logit changed the shared probability list, which expanded its interval across the draw. Every option still retained a probability greater than zero.</p>
+      <figure class="key-lab interactive-only" id="keyLab" aria-labelledby="key-lab-title">
+        <div class="key-lab-head">
+          <div>
+            <h3 id="key-lab-title">Change only the key</h3>
+            <p>The context, 20 words, and group size stay fixed. Changing the key can change which five words are green.</p>
+          </div>
+          <div class="controls">
+            <button class="secondary preset" id="lessonKeyPreset" type="button" aria-pressed="true">Use lesson key</button>
+            <button class="secondary preset" id="comparisonKeyPreset" type="button" aria-pressed="false">Use comparison key</button>
           </div>
         </div>
+        <div class="key-lab-body" id="keyLabBody">
+          <div class="fixed-inputs">
+            <div class="fixed-input"><span>Key used for this ranking</span><strong id="universeKey">stage-02-public-demo-key-v1</strong></div>
+            <div class="fixed-input"><span>Context that stays fixed</span><strong>Early one morning Jack<br>tokens 0, 1, 2, 3</strong></div>
+          </div>
+          <div class="stage-label">All 20 candidates stay in token number order</div>
+          <p>The selector sorts the 20 SHA-256 results. A small change to the key usually gives a different order.</p>
+          <div class="universe-grid" id="keyUniverse"></div>
+          <div class="hash-example">
+            <strong id="hashWord">The selector ranks went first.</strong>
+            <code id="hashMaterial">lab-02|v1|stage-02-public-demo-key-v1|0,1,2,3|4</code>
+            <span id="hashResult">Its SHA-256 result starts with 01d63f53. The selector uses the full result for ranking.</span>
+            <p style="margin: 10px 0 0">Changing the key changes this input and the resulting rank. The program still uses SHA-256 and still marks five words.</p>
+          </div>
+          <p class="key-feedback" id="keyFeedback" role="status" aria-live="polite" aria-atomic="true">The lesson key marks Early, went, walked, snow, and trail green. The selector still marks five of 20 words.</p>
+        </div>
+      </figure>
+
+      <div class="static-fallback">
+        <h3>The two fixed key results</h3>
+        <p>With the context Early one morning Jack, the lesson key marks Early, went, walked, snow, and trail green.</p>
+        <p>The comparison key marks the, hill, path, snow, and home green. Both keys mark five of 20 words.</p>
+      </div>
+      <div class="plain-box" style="margin-top: 22px">
+        <h4>How the program builds the pattern across positions</h4>
+        <p>A word does not have one permanent green or red label. The selector ranks the vocabulary again for each context. The document pattern is the sequence of green hits across many checked positions.</p>
+        <p>If an operator changes the key during generation, the sampled word may change. That word enters the next context, so later groups may also change. If a checker changes the key for finished text, the words stay fixed. Only the rebuilt groups, hit count, and z score change.</p>
       </div>
     </section>
 
-    <section id="failure">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">06 / Test the common mistake</div><h2>A 72.6% preference can still produce a red token.</h2><p>Recorded position 2 uses the same vocabulary, +2 rule, and sampling method. Its context, green set, and draw differ.</p></div>
-        <div class="figure"><div class="figure-head"><div><div class="figure-label">Recorded counterexample</div><h3>Position 2: green is favored, red ID 1 wins</h3></div><button id="revealFailure">Place the recorded draw</button></div>
-          <div class="figure-body failure-layout"><div><div class="mass-donut"><div class="inside"><strong>72.6%</strong><span>green mass</span></div></div><p style="text-align:center;color:var(--muted)">The 15 red IDs retain 27.4% of total probability.</p></div><div><p><strong>Context:</strong> <code>[7, 11, 15, 0]</code><br><strong>Green IDs:</strong> <code>[2, 4, 9, 11, 17]</code></p><div class="mini-ruler" id="failureRuler"></div><div class="failure-answer" id="failureAnswer"><strong>Prediction:</strong> the ruler is visible. Place draw 0.112284 and check whether it lands in green or red.</div></div></div>
+    <section id="moving-window">
+      <div class="section-head">
+        <div class="number">03</div>
+        <div>
+          <h2>Choose the sentence one token at a time</h2>
+          <p>Press the same button four times. Watch the four-word window. The oldest word leaves from the left, and the sampled word enters from the right.</p>
         </div>
       </div>
-    </section>
 
-    <section id="context">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">07 / Append and continue</div><h2>Only the recorded +2 choice enters history.</h2><p>The no-boost comparison answers one “what if” question and then disappears. The chosen ID is appended, the oldest context ID drops, and the next position gets a new four-ID context.</p></div>
-        <div class="figure"><div class="figure-head"><div><div class="figure-label">Rolling state</div><h3>Every recorded context transition</h3></div></div><div class="figure-body"><div class="generation-flow" id="generationFlow"></div><p class="flow-note"><strong>Position 4 completes the recorded output:</strong> initial context <code>[3, 7, 11, 15]</code> generated <code>[0, 1, 1, 2]</code>. A fifth position was not run or implied.</p></div></div>
-      </div>
+      <figure class="card simulator" id="generationLab" aria-labelledby="sim-title">
+        <div class="sim-toolbar interactive-only">
+          <div>
+            <div class="sim-count" id="stepCount">Ready for position 1 of 4</div>
+            <strong id="sim-title">The program keeps one key while the four-word context changes.</strong>
+          </div>
+          <div class="controls">
+            <button class="secondary" id="restartRun" type="button">Start over</button>
+            <button class="primary" id="nextToken" type="button">Choose next token</button>
+          </div>
+        </div>
+
+        <div class="sim-body interactive-only">
+          <div class="stage-label">Four recent words used for the next choice</div>
+          <div class="context-shell" id="contextShell">
+            <div class="context-track" id="contextTrack">
+              <div class="context-token">Early<small>oldest</small></div>
+              <div class="context-token">one<small>recent word</small></div>
+              <div class="context-token">morning<small>recent word</small></div>
+              <div class="context-token newest">Jack<small>newest</small></div>
+            </div>
+          </div>
+
+          <div class="stage-label">Sentence so far</div>
+          <div class="sentence-live" id="sentenceLive" aria-label="Early one morning Jack, followed by four empty positions">
+            <span class="sentence-token">Early</span>
+            <span class="sentence-token">one</span>
+            <span class="sentence-token">morning</span>
+            <span class="sentence-token">Jack</span>
+            <span class="sentence-token blank">____</span>
+            <span class="sentence-token blank">____</span>
+            <span class="sentence-token blank">____</span>
+            <span class="sentence-token blank">____</span>
+          </div>
+
+          <div class="choice-grid">
+            <div class="selected-panel">
+              <div class="stage-label">The selector marks five words in the 20-word vocabulary</div>
+              <div class="universe-grid" id="generationUniverse"></div>
+              <p class="selected-note" id="selectionNote">Press Choose next token. The same lesson key will mark five words for the current context.</p>
+            </div>
+            <div class="result-panel">
+              <div class="stage-label">The word chosen by the sampler</div>
+              <div class="result-word"><strong id="resultWord">Waiting</strong><span class="result-badge" id="resultBadge">No result yet</span></div>
+              <div class="result-math">
+                <div><span>Starting score</span><strong id="baseScore">--</strong></div>
+                <div><span>Score increase</span><strong id="boostScore">--</strong></div>
+                <div><span>Final chance</span><strong id="finalChance">--</strong></div>
+                <div><span>Random number</span><strong id="drawValue">--</strong></div>
+              </div>
+              <p class="used-context" id="usedContext">The first click will use Early one morning Jack.</p>
+            </div>
+          </div>
+
+          <p class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true">The first click will mark five words and update their scores. The sampler will choose one word. The program will then move the window.</p>
+          <div class="progress" aria-label="Four generation positions">
+            <span class="progress-step current"></span><span class="progress-step"></span><span class="progress-step"></span><span class="progress-step"></span>
+          </div>
+        </div>
+
+        <div class="static-fallback">
+          <h3>The same four transitions without animation</h3>
+          <p>Your browser did not start the interactive control. You can still follow the full sequence here.</p>
+          <ol>
+            <li>The program uses Early one morning Jack and chooses went. The next window contains one morning Jack went.</li>
+            <li>The program uses one morning Jack went and chooses up. The next window contains morning Jack went up.</li>
+            <li>The program uses morning Jack went up and chooses the. The next window contains Jack went up the.</li>
+            <li>The program uses Jack went up the and chooses hill. The next window contains went up the hill.</li>
+          </ol>
+        </div>
+      </figure>
     </section>
 
     <section id="checker">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">08 / Reverse perspective</div><h2>The checker repeats the selector on observed history.</h2><p>It does not generate the sequence again. For each observed token, it rebuilds the green set from the current context and key, tests membership, updates its count, then slides the same context window.</p></div>
-        <div class="figure"><div class="figure-head"><div><div class="figure-label">Key + observed IDs → membership count</div><h3>Generation data the checker uses and omits</h3></div><button class="primary" id="nextCheck">Focus position 1</button></div>
-          <div class="figure-body"><div class="checker-intro"><div class="uses"><strong>The checker uses</strong><p>public key, exact selector rule, initial context <code>[3,7,11,15]</code>, and observed IDs <code>[0,1,1,2]</code>.</p></div><div class="omits"><strong>The checker does not need</strong><p>the generator's logits, probabilities, random draws, or stored green labels.</p></div></div>
-            <div class="checker-layout"><aside class="checker-summary"><div class="kicker">Running count</div><div class="count" id="checkCount">0 of 0</div><div class="count-def"><div><strong id="gValue">G = 0</strong>green hits</div><div><strong id="tValue">T = 0</strong>checked positions</div></div><p class="feedback" id="checkFeedback" aria-live="polite">Choose a position or advance through the observed sequence.</p></aside><div><div class="checker-steps" id="checkerSteps"></div><div class="checker-detail" id="checkerDetail">All four positions remain visible. Focusing a row expands the exact context → set → membership calculation here.</div></div></div>
-            <div class="score-derivation"><div class="derive-step"><span>observed green hits</span><strong>G = 2</strong></div><div class="derive-step"><span>checked positions</span><strong>T = 4</strong></div><div class="derive-step"><span>expected hits</span><strong>4 × 0.25 = 1</strong></div><div class="derive-step"><span>running z-score</span><strong>(2 − 1) / 0.866025 = 1.1547</strong></div></div>
-            <div class="no-verdict"><strong>Score, not a verdict.</strong> The z-score is 1.1547 standard deviations above the 25% toy expectation. Stage 2 defines no decision threshold, so it produces no positive or negative detection decision.</div>
-          </div>
+      <div class="section-head">
+        <div class="number">04</div>
+        <div>
+          <h2>Keep the text fixed and change the checker key</h2>
+          <p>The checker rebuilds one green group before each observed token. It counts hits and sends that count to the Stage 1 formula.</p>
         </div>
       </div>
+      <div class="card" id="checkerLab">
+        <div class="interactive-only">
+          <div class="checker-form">
+            <div class="field">
+              <label for="checkerKey">Teaching key</label>
+              <input id="checkerKey" value="stage-02-public-demo-key-v1" autocomplete="off" spellcheck="false" aria-describedby="checkerKeyHelp" aria-invalid="false">
+              <p class="field-help" id="checkerKeyHelp">Use a teaching key here. Never put a production secret into a browser lesson.</p>
+            </div>
+            <div class="field">
+              <label for="checkerText">Toy text</label>
+              <textarea id="checkerText" spellcheck="false" aria-describedby="checkerTextHelp" aria-invalid="false">Early one morning Jack went up the hill</textarea>
+              <p class="field-help" id="checkerTextHelp">Use only the 20 lesson labels. The checker splits on spaces and matches capital letters exactly. Write a period as its own token.</p>
+            </div>
+          </div>
+          <div class="checker-actions">
+            <button class="secondary preset" id="checkerLessonKey" type="button" aria-pressed="true">Use lesson key</button>
+            <button class="secondary preset" id="checkerComparisonKey" type="button" aria-pressed="false">Use comparison key</button>
+            <button class="secondary" id="resetChecker" type="button">Reset checker</button>
+            <button class="primary" id="startChecker" type="button">Start checking</button>
+            <button class="primary" id="nextCheck" type="button" hidden>Check next token</button>
+          </div>
+          <div class="checker-work" id="checkerWork">
+            <div class="stage-label">The first four tokens form the starting context</div>
+            <div class="checked-text" id="checkedText"></div>
+            <div class="checker-current">
+              <div>
+                <div class="stage-label" id="checkerGroupLabel">The green group will appear here</div>
+                <p class="selected-note" id="checkerGroupContext">Start the checker to choose the first context.</p>
+                <div class="universe-grid" id="checkerUniverse"></div>
+              </div>
+              <div>
+                <div class="stage-label">Running Stage 1 count</div>
+                <div class="score-cards">
+                  <div class="score-card"><span>Green hits G</span><strong id="checkerHits">0</strong></div>
+                  <div class="score-card"><span>Checked positions T</span><strong id="checkerTrials">0</strong></div>
+                  <div class="score-card"><span>Expected hits</span><strong id="checkerExpected">0</strong></div>
+                  <div class="score-card"><span>z score</span><strong id="checkerZ">--</strong></div>
+                </div>
+                <p class="checker-message" id="checkerMessage" role="status" aria-live="polite" aria-atomic="true">Press Start checking. The first four tokens will form the starting context.</p>
+              </div>
+            </div>
+            <div class="checker-history" id="checkerHistory"></div>
+          </div>
+        </div>
+        <div class="static-fallback">
+          <h3>The fixed sentence under the lesson key</h3>
+          <div class="checker-history">
+            <div class="checker-history-row hit">The checker uses Early one morning Jack before went. Went is green. The running result is G = 1, T = 1, and z = 1.7321.</div>
+            <div class="checker-history-row hit">The checker uses one morning Jack went before up. Up is green. The running result is G = 2, T = 2, and z = 2.4495.</div>
+            <div class="checker-history-row miss">The checker uses morning Jack went up before the. The is red. The running result is G = 2, T = 3, and z = 1.6667.</div>
+            <div class="checker-history-row miss">The checker uses Jack went up the before hill. Hill is red. The running result is G = 2, T = 4, and z = 1.1547.</div>
+          </div>
+          <p>The checker finds 2 green hits in 4 checked positions. Random selection predicts 1 hit on average. The z score is 1.1547.</p>
+          <p>Stage 2 has no cutoff, so this score does not produce a decision.</p>
+        </div>
+      </div>
+
+      <div class="plain-box" style="margin-top: 22px">
+        <h4>The key affects the count before the formula runs</h4>
+        <p>The key does not appear in the z score formula. It changes which observed tokens count as green hits. The formula then uses only G, T, and the 25 percent baseline.</p>
+        <p>This result describes how the text matches this toy selector, key, token mapping, and settings. It cannot identify the writer or prove that AI produced the text.</p>
+      </div>
+      <details>
+        <summary>Show the Stage 1 calculation for this sentence</summary>
+        <div>
+          <p>The checker found G = 2 hits in T = 4 positions. Random selection predicts 4 times 0.25 = 1 hit. The usual spread is 0.8660.</p>
+          <p><code>z = (2 - 1) / 0.8660 = 1.1547</code></p>
+          <p>The score says how far the hit count sits above the 25 percent teaching baseline. A cutoff would be a separate rule for making a decision.</p>
+        </div>
+      </details>
     </section>
 
-    <section id="boundary">
-      <div class="shell">
-        <div class="section-head"><div class="kicker">09 / Read the result narrowly</div><h2>The whole chain is visible. The claim stays small.</h2><p>The worked trace answers the learning question: context-dependent score boosts can change one sampled token while keeping every candidate available, and a checker can reconstruct the temporary membership later.</p></div>
-        <div class="boundary-grid"><article class="boundary-card measured"><div class="kicker">Measured trace</div><h3>What was recorded</h3><p>Four choices <code>[0,1,1,2]</code>, their contexts, four draws, all probability lists, and two green hits.</p></article><article class="boundary-card derived"><div class="kicker">Derived</div><h3>What the rule explains</h3><p>Five IDs per context, the +2 score changes, cumulative intervals, checker replay, and z-score 1.1547.</p></article><article class="boundary-card limit"><div class="kicker">Not established</div><h3>What this cannot claim</h3><p>Language quality, detection accuracy, authorship, model behavior, production security, or a generic AI detector.</p></article></div>
-        <div class="later-map"><div class="later-card"><h3>Implemented Stage 2 input</h3><p>Twenty numbered options and synthetic logits feed the selector, boost, softmax, and sampler shown here.</p></div><div class="later-arrow">→</div><div class="later-card"><h3>Later approved model stage</h3><p>A real model and tokenizer would supply context-dependent logits and token IDs. That is when a measured natural-language sentence can replace the hand-authored illustration.</p></div></div>
-        <details><summary>Exact 20-candidate position 4 table</summary><div class="details-body table-wrap"><table id="exactTable"></table></div></details>
-        <details><summary>Selector and relative-odds notes</summary><div class="details-body"><p>The exact toy message format is:</p><pre>lab-02|v1|&lt;public-key&gt;|&lt;comma-separated-context-ids&gt;|&lt;candidate-id&gt;</pre><p>For one green token compared with one unchanged red token, adding 2 multiplies their probability ratio by <code>exp(2) ≈ 7.389</code>. It does not multiply the green token's final probability by 7.389 because the shared denominator also changes.</p><p>This selector is a teaching rule. It is not an upstream KGW pseudorandom function and must not be presented as compatible with one.</p></div></details>
-        <details><summary>Reproduction details</summary><div class="details-body"><p>Source commit: <code>f7a1690d28cfb48fc825017891b5d3e82eebdd07</code></p><p>Config fingerprint: <code>a342b4d1d347587098763e8f2ff6aa75dd86cbb538dc78200963a631b2a0defa</code></p><pre>just lab-02
-just verify-lab-02
-just check</pre></div></details>
+    <section id="practice">
+      <div class="section-head">
+        <div class="number">05</div>
+        <div>
+          <h2>How an operator stores a production key</h2>
+          <p>To rebuild the marked sets and count hits, the checker must match the key, token numbering, selection rule, four-token window, fraction of words that the selector marks, and counting rule. It does not need the score increase or the random numbers used during generation.</p>
+        </div>
       </div>
+      <div class="limit-grid">
+        <div class="plain-box"><p>A production operator would generate an unpredictable secret and store it outside prompts and browser code. The operator would limit access and assign a public name to the secret. The operator would also decide when old keys should be replaced. The operator should record the score increase because it affects how strong the pattern is and which cutoff later tests may support.</p></div>
+        <div class="plain-box"><p>We use a public teaching key for repeatable examples. This value provides no secrecy. Someone who knows it may find it easier to copy or remove the pattern.</p></div>
+      </div>
+      <details>
+        <summary>Read the primary sources behind the key explanation</summary>
+        <div>
+          <p>The original KGW paper describes a randomized token set that the generator can reproduce from previous tokens. NIST guidance covers the separate work of generating and managing cryptographic keys.</p>
+          <p><a href="https://arxiv.org/abs/2301.10226">A Watermark for Large Language Models</a><br><a href="https://csrc.nist.gov/pubs/sp/800/133/r2/final">NIST recommendation for cryptographic key generation</a><br><a href="https://csrc.nist.gov/Projects/key-management">NIST key management overview</a></p>
+        </div>
+      </details>
+      <details>
+        <summary>Show the repository test trace</summary>
+        <div>
+          <p>Repository tests use a separate trace with four positions to check the Stage 2 code. Its labels do not form a sentence. We wrote the sentence example separately.</p>
+          <p><a href="../../artifacts/lab-02/trace.json">Open trace.json</a><br><a href="../../artifacts/lab-02/annotated_trace.md">Open the annotated trace</a></p>
+          <p><code>just verify-lab-02</code></p>
+        </div>
+      </details>
     </section>
   </main>
-  <footer class="shell">Measured values come from <code>artifacts/lab-02/trace.json</code> and are independently checked by <code>just verify-lab-02</code>.</footer>
+
+  <footer>
+    <div class="footer-inner">Stage 2 runs locally without a model. Model access, tokenizer access, datasets, cloud work, GPU work, publishing, and deployment still need separate approval.</div>
+  </footer>
 
   <script>
-    const words=["amber","birch","cobalt","drift","ember","fern","glow","harbor","iris","juniper","kite","linen","moss","north","opal","pine","quartz","river","stone","tide"];
-    const raw=[1.9,1.7,1.5,1.3,1.1,.9,.7,.5,.3,.1,-.1,-.3,-.5,-.7,-.9,-1.1,-1.3,-1.5,-1.7,-1.9];
-    const plain=[.18465125258471216,.15117965908547404,.12377543613312271,.10133875603782722,.08296915604683616,.06792939961247077,.055615888500853354,.04553443827540474,.03728044494020501,.03052264676097628,.024989829568547332,.02045994198194718,.016751183706811428,.013714709251225343,.011228654233501289,.009193244536646777,.007526792022718858,.006162416101021958,.005045359575169589,.004130791044527804];
-    const boosted=[.06432660091767409,.05266616641227411,.31861174009636434,.03530318709399622,.02890380495552042,.17485783036105043,.14316148313308485,.01586274448698179,.012987316739710205,.010633115614765216,.06432660091767409,.05266616641227411,.005835577577316238,.004777766824521108,.003911704630271164,.0032026328777605413,.0026220940278411913,.002146789018055697,.0017576421894522818,.0014390357134118992];
-    const green4=[2,5,6,10,11], adjusted=raw.map((v,i)=>v+(green4.includes(i)?2:0));
-    const rank=[[11,"1f82b78762"],[5,"4571366736"],[2,"5121a02245"],[6,"53b61715fd"],[10,"56138bc661"],[4,"5b21af9f2e"],[15,"5e4c71b97e"],[7,"6b4b86658f"],[12,"844f8dc6dc"],[13,"85526a5881"],[18,"8951cfd187"],[0,"a34b9a99f5"],[16,"a46cbc80cb"],[9,"a873100cce"],[8,"ae475ae702"],[3,"ae8ca8854e"],[1,"af8609c21a"],[17,"b9b53adb30"],[14,"bc85838c1d"],[19,"fc7599df26"]];
-    const steps=[
-      {p:1,c:[3,7,11,15],g:[0,10,11,12,14],d:.03533183782698912,b:0,s:0,h:1,z:1.7320508075688774},
-      {p:2,c:[7,11,15,0],g:[2,4,9,11,17],d:.1122842306510452,b:0,s:1,h:1,z:.8164965809277261},
-      {p:3,c:[11,15,0,1],g:[8,12,15,16,19],d:.15657967059376254,b:0,s:1,h:1,z:.3333333333333333},
-      {p:4,c:[15,0,1,1],g:[2,5,6,10,11],d:.30731077295889175,b:1,s:2,h:2,z:1.1547005383792517}
-    ];
-    const history=[3,7,11,15,0,1,1,2];
-    document.querySelector('#revealConcept').addEventListener('click',e=>{document.querySelector('#conceptCard').classList.add('revealed');e.currentTarget.textContent='Hill and path receive the illustrative boost'});
-    document.querySelector('#historyTrack').innerHTML='<span class="history-label">IDs</span>'+history.map((id,i)=>`<div class="history-token ${i<4?'initial':'generated'} ${i===7?'focus':''}"><span class="id">ID ${id}</span></div>`).join('');
-    document.querySelector('#contextSteps').innerHTML=steps.map(s=>`<div class="context-step ${s.p===4?'active':''}"><strong>Position ${s.p}</strong><code>[${s.c.join(', ')}]</code><div class="transition">choose <span class="append">ID ${s.s}</span>${s.p<4?` → next context`:''}</div></div>`).join('');
-    document.querySelector('#candidateGrid').innerHTML=raw.map((score,i)=>`<div class="candidate"><span class="cid">${i}</span><span><strong>ID ${i}</strong><small>synthetic logit ${score.toFixed(1)}</small></span></div>`).join('');
-    const rankList=document.querySelector('#rankList'); rankList.innerHTML=rank.map(([id,hash],i)=>`<div class="rank-item ${i<5?'selected':''} ${i===4?'cutoff':''}" data-rank="${i+1}"><span class="rank">${i+1}</span><strong>ID ${id}</strong><span class="hash">${hash}…</span></div>`).join('');
-    document.querySelector('#runSelector').addEventListener('click',e=>{rankList.querySelectorAll('.selected').forEach((el,i)=>setTimeout(()=>el.classList.add('pulse'),i*110));setTimeout(()=>rankList.querySelectorAll('.pulse').forEach(el=>el.classList.remove('pulse')),1200);document.querySelector('#selectorFeedback').textContent='The same key and context reproduce the same five ranked candidates. The green set is [2, 5, 6, 10, 11] in token-ID order.';e.currentTarget.textContent='Repeat with the same key and context'});
-    function renderLedger(on){const ids=[1,2,5,6,10,11];document.querySelector('#scoreLedger').innerHTML=`<div class="score-row head"><span>option</span><span>raw</span><span>add</span><span>adjusted</span></div>`+ids.map(id=>`<div class="score-row ${green4.includes(id)?'green':''}"><span class="token-name">ID ${id}<small>${green4.includes(id)?'green at position 4':'red comparison row'}</small></span><span>${raw[id].toFixed(1)}</span><span class="plus">+${on&&green4.includes(id)?'2.0':'0'}</span><span class="total">${(on?adjusted[id]:raw[id]).toFixed(1)}</span></div>`).join('')+`<div class="score-row"><span class="token-name">14 other rows<small>available in exact table</small></span><span>fixed</span><span>+${on?'0 or 2':'0'}</span><span>nonzero</span></div>`}
-    renderLedger(false); const off=document.querySelector('#biasOff'),on=document.querySelector('#biasOn'); off.addEventListener('click',()=>{renderLedger(false);off.classList.add('active');on.classList.remove('active')});on.addEventListener('click',()=>{renderLedger(true);on.classList.add('active');off.classList.remove('active')});
-    document.querySelectorAll('[data-prediction]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-prediction]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelector('#predictionFeedback').textContent=b.dataset.prediction==='yes'?'Yes. ID 1 keeps logit 1.7, but five larger weights increase the shared total, so ID 1 receives a smaller share.':'ID 1 can fall even with an unchanged logit. Softmax divides every weight by the new shared total.'}));
-    function ruler(probs,green,winner,label,bounds){return `<div class="ruler-block"><div class="ruler-title"><strong>${label}</strong><span>probabilities total 1.000000</span></div><div class="prob-ruler">${probs.map((p,i)=>`<div class="segment ${green.includes(i)?'green':''} ${i===winner?'winner':''}" style="width:${p*100}%" aria-label="ID ${i}, ${green.includes(i)?'selected for boost':'not selected for boost'}, ${(p*100).toFixed(3)} percent">${p>.05?`<span class="seg-id">${i}</span>`:''}</div>`).join('')}</div><div class="draw-line" style="left:30.7310772959%"></div><div class="boundary-row">${bounds.map(([x,t])=>`<span class="boundary" style="left:${x*100}%">${t}</span>`).join('')}</div></div>`}
-    document.querySelector('#rulerStack').innerHTML=ruler(plain,green4,1,'No boost: draw selects ID 1',[[0,'0'],[.184651,'0.184651'],[.335831,'0.335831'],[.459606,'0.459606'],[1,'1']])+ruler(boosted,green4,2,'After +2: same draw selects ID 2',[[0,'0'],[.064327,'0.064327'],[.116993,'0.116993'],[.435605,'0.435605'],[1,'1']]);
-    const fail=[.06874567336399426,.05628419692415598,.3404995492087392,.037728425473279224,.2282436735007165,.025290119900100716,.02070579891124192,.016952474335682352,.013879512079388371,.08396615505836072,.009303715176007823,.05628419692415598,.006236466785084041,.005105987147497677,.004180428702477268,.0034226455397680274,.002802225160293272,.016952474335682352,.001878387698450012,.001537893774924395];
-    document.querySelector('#failureRuler').innerHTML=`<div class="prob-ruler">${fail.map((p,i)=>`<div class="segment ${[2,4,9,11,17].includes(i)?'green':''} ${i===1?'winner':''}" style="width:${p*100}%">${p>.05?`<span class="seg-id">${i}</span>`:''}</div>`).join('')}</div><div class="boundary-row"><span class="boundary" style="left:0">0</span><span class="boundary" style="left:6.8746%">0.068746</span><span class="boundary" style="left:12.503%">0.125030</span><span class="boundary" style="left:100%">1</span></div>`;
-    document.querySelector('#revealFailure').addEventListener('click',e=>{if(!document.querySelector('#failureRuler .draw-line'))document.querySelector('#failureRuler').insertAdjacentHTML('beforeend','<div class="draw-line" style="left:11.2284230651%"></div>');document.querySelector('#failureAnswer').innerHTML='<strong>Recorded result:</strong> draw 0.112284 lies inside red ID 1 interval [0.068746, 0.125030). Green owns most of the probability, but red ID 1 still wins. A preference is not a guarantee.';e.currentTarget.textContent='Recorded draw placed'});
-    document.querySelector('#generationFlow').innerHTML=steps.map((s,i)=>`<div class="generation-row"><code>[<span class="drop">${s.c[0]}</span>, ${s.c.slice(1).join(', ')}]</code><span class="flow-arrow">+</span><span class="append">ID ${s.s}</span><span class="flow-arrow arrow-last">→</span><code class="next-context">${i<3?`[${s.c.slice(1).concat(s.s).join(', ')}]`:'recorded output complete'}</code></div>`).join('');
-    const checkerSteps=document.querySelector('#checkerSteps');checkerSteps.innerHTML=steps.map(s=>`<article class="check-step" data-p="${s.p}" tabindex="0"><div class="position-badge">P${s.p}</div><div><h3>Observed ID ${s.s}</h3><p>Context [${s.c.join(', ')}] → green IDs [${s.g.join(', ')}]</p></div><span class="hit-badge ${s.g.includes(s.s)?'':'miss'}">${s.g.includes(s.s)?'green hit':'red result'}</span></article>`).join('');
-    let activeCheck=-1;function focusCheck(index){activeCheck=index;const s=steps[index];document.querySelectorAll('.check-step').forEach((el,i)=>el.classList.toggle('active',i===index));document.querySelector('#checkCount').textContent=`${s.h} of ${s.p}`;document.querySelector('#gValue').textContent=`G = ${s.h}`;document.querySelector('#tValue').textContent=`T = ${s.p}`;document.querySelector('#checkFeedback').textContent=`Position ${s.p}: the checker rebuilt the green set, tested observed ID ${s.s}, and ${s.g.includes(s.s)?'added one green hit':'recorded a red result'}.`;document.querySelector('#checkerDetail').innerHTML=`<div class="checker-chain"><div><strong>Observed context</strong>[${s.c.join(', ')}]</div><span class="flow-arrow">→</span><div><strong>Rebuilt green set</strong>[${s.g.join(', ')}]</div><span class="flow-arrow">→</span><div><strong>${s.g.includes(s.s)?'Green hit':'Red result'}</strong>observed ID ${s.s} is ${s.g.includes(s.s)?'in':'not in'} the set</div></div>`;document.querySelector('#nextCheck').textContent=index===3?'Replay from position 1':`Focus position ${index+2}`}
-    checkerSteps.querySelectorAll('.check-step').forEach((el,i)=>{el.addEventListener('click',()=>focusCheck(i));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();focusCheck(i)}})});document.querySelector('#nextCheck').addEventListener('click',()=>focusCheck(activeCheck<0||activeCheck===3?0:activeCheck+1));
-    document.querySelector('#exactTable').innerHTML=`<thead><tr><th>ID</th><th>Label</th><th>Green</th><th>Raw logit</th><th>Adjusted</th><th>No boost</th><th>After +2</th></tr></thead><tbody>${words.map((w,i)=>`<tr><td>${i}</td><td>${w}</td><td>${green4.includes(i)?'yes':'no'}</td><td>${raw[i].toFixed(1)}</td><td>${adjusted[i].toFixed(1)}</td><td>${(plain[i]*100).toFixed(3)}%</td><td>${(boosted[i]*100).toFixed(3)}%</td></tr>`).join('')}</tbody>`;
+    (() => {
+      if (!window.crypto || !window.crypto.subtle) return;
+
+      const vocabulary = ["Early", "one", "morning", "Jack", "went", "up", "the", "hill", "walked", "ran", "road", "path", "stairs", "and", "saw", "snow", "down", "home", ".", "trail"];
+      const lessonKey = "stage-02-public-demo-key-v1";
+      const comparisonKey = "wrong-public-key";
+      const initialWords = ["Early", "one", "morning", "Jack"];
+      const initialIds = [0, 1, 2, 3];
+      const steps = [
+        { context: ["Early", "one", "morning", "Jack"], nextContext: ["one", "morning", "Jack", "went"], selected: ["Early", "went", "walked", "snow", "trail"], word: "went", token: 4, base: "1.7", boost: "+2.0", chance: "46.51%", draw: "0.30", interval: "0.000 to 0.465", hit: true, note: "The selector marked Early, went, walked, snow, and trail. Some sound wrong after Jack because the selector uses token numbers, not grammar." },
+        { context: ["one", "morning", "Jack", "went"], nextContext: ["morning", "Jack", "went", "up"], selected: ["Jack", "up", "hill", "stairs", "saw"], word: "up", token: 5, base: "1.7", boost: "+2.0", chance: "66.50%", draw: "0.35", interval: "0.021 to 0.686", hit: true, note: "The program used the same key with a new context. The selector marked a new green group." },
+        { context: ["morning", "Jack", "went", "up"], nextContext: ["Jack", "went", "up", "the"], selected: ["one", "went", "stairs", "snow", "trail"], word: "the", token: 6, base: "2.2", boost: "+0.0", chance: "18.05%", draw: "0.13", interval: "0.042 to 0.222", hit: false, note: "The selector did not put the word the in the green group. Its starting score remained high enough for the sampler to choose it." },
+        { context: ["Jack", "went", "up", "the"], nextContext: ["went", "up", "the", "hill"], selected: ["went", "road", "stairs", "saw", "trail"], word: "hill", token: 7, base: "2.5", boost: "+0.0", chance: "9.99%", draw: "0.06", interval: "0.012 to 0.112", hit: false, note: "The selector left hill outside the green group. The score increase raises green chances without forcing the sampler to choose a green word." }
+      ];
+
+      const byId = (id) => document.getElementById(id);
+      const encoder = new TextEncoder();
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      function makeElement(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = text;
+        return element;
+      }
+
+      function keyError(key) {
+        if (!key) return "Enter a teaching key.";
+        if (key.includes("|")) return "The teaching key cannot contain the | character.";
+        if ([...key].some((character) => character.charCodeAt(0) > 127)) return "Use only basic English letters, numbers, spaces, and punctuation in the teaching key.";
+        return "";
+      }
+
+      async function sha256Hex(text) {
+        const digest = await crypto.subtle.digest("SHA-256", encoder.encode(text));
+        return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+      }
+
+      async function rankCandidates(key, contextIds) {
+        const contextText = contextIds.join(",");
+        const rows = await Promise.all(vocabulary.map(async (word, token) => {
+          const material = `lab-02|v1|${key}|${contextText}|${token}`;
+          return { word, token, material, hash: await sha256Hex(material) };
+        }));
+        rows.sort((left, right) => left.hash === right.hash ? left.token - right.token : left.hash < right.hash ? -1 : 1);
+        rows.forEach((row, index) => { row.rank = index + 1; row.green = index < 5; });
+        return rows.sort((left, right) => left.token - right.token);
+      }
+
+      function renderUniverse(container, rows, options = {}) {
+        const changed = options.changed || new Set();
+        const neutral = options.neutral || false;
+        container.replaceChildren();
+        rows.forEach((row) => {
+          const green = !neutral && row.green;
+          const classes = ["candidate-card", neutral ? "neutral" : green ? "green" : "", changed.has(row.token) ? "changed" : ""].filter(Boolean).join(" ");
+          const card = makeElement("div", classes);
+          const word = makeElement("strong", "", row.word);
+          const details = neutral ? `token ${row.token}` : row.hash ? `token ${row.token}, rank ${row.rank}, hash ${row.hash.slice(0, 8)}` : `token ${row.token}`;
+          const small = makeElement("small", "", details);
+          const membership = makeElement("div", "membership", neutral ? "waiting" : green ? "green" : "red");
+          card.setAttribute("aria-label", `${row.word}, token ${row.token}, ${neutral ? "not ranked yet" : green ? "green" : "red"}`);
+          card.append(word, small, membership);
+          container.append(card);
+        });
+      }
+
+      function rowsFromSelected(selected) {
+        const greenWords = new Set(selected);
+        return vocabulary.map((word, token) => ({ word, token, green: greenWords.has(word), rank: null, hash: "" }));
+      }
+
+      let universeGreen = new Set();
+      let universeRun = 0;
+      async function showKeyUniverse(key) {
+        const currentRun = ++universeRun;
+        const lab = byId("keyLab");
+        lab.setAttribute("aria-busy", "true");
+        try {
+          const rows = await rankCandidates(key, initialIds);
+          if (currentRun !== universeRun) return;
+          const nextGreen = new Set(rows.filter((row) => row.green).map((row) => row.token));
+          const changed = new Set([...universeGreen, ...nextGreen].filter((token) => universeGreen.has(token) !== nextGreen.has(token)));
+          renderUniverse(byId("keyUniverse"), rows, { changed });
+          universeGreen = nextGreen;
+          byId("universeKey").textContent = key;
+          const went = rows[4];
+          byId("hashWord").textContent = `The selector ranks went at position ${went.rank}.`;
+          byId("hashMaterial").textContent = went.material;
+          byId("hashResult").textContent = `Its SHA-256 result starts with ${went.hash.slice(0, 8)}. The selector uses the full result for ranking.`;
+          const greenWords = rows.filter((row) => row.green).map((row) => row.word);
+          if (key === lessonKey) {
+            byId("keyFeedback").textContent = `The lesson key marks ${greenWords.slice(0, -1).join(", ")}, and ${greenWords.at(-1)} green. The selector still marks five of 20 words.`;
+          } else {
+            byId("keyFeedback").textContent = `The context stayed Early one morning Jack. The comparison key marks ${greenWords.slice(0, -1).join(", ")}, and ${greenWords.at(-1)} green. Eight words moved between the green and red groups. The green group still contains five words.`;
+          }
+          byId("lessonKeyPreset").setAttribute("aria-pressed", String(key === lessonKey));
+          byId("comparisonKeyPreset").setAttribute("aria-pressed", String(key === comparisonKey));
+        } finally {
+          if (currentRun === universeRun) lab.removeAttribute("aria-busy");
+        }
+      }
+
+      const nextButton = byId("nextToken");
+      const restartButton = byId("restartRun");
+      const shell = byId("contextShell");
+      const track = byId("contextTrack");
+      const progress = [...document.querySelectorAll(".progress-step")];
+      let completed = 0;
+      let moving = false;
+      let runId = 0;
+      let settleTimer = 0;
+
+      function renderContext(words) {
+        track.classList.remove("shifting");
+        track.replaceChildren(...words.map((word, index) => {
+          const token = makeElement("div", `context-token${index === 3 ? " newest" : ""}`, word);
+          token.append(makeElement("small", "", index === 0 ? "oldest" : index === 3 ? "newest" : "recent word"));
+          return token;
+        }));
+      }
+
+      function animateContext(step) {
+        const currentRun = ++runId;
+        moving = true;
+        nextButton.setAttribute("aria-disabled", "true");
+        shell.setAttribute("aria-busy", "true");
+        byId("generationLab").setAttribute("aria-busy", "true");
+        track.classList.remove("shifting");
+        track.replaceChildren(...[...step.context, step.word].map((word, index) => {
+          const state = index === 0 ? " leaving" : index === 4 ? " incoming" : "";
+          const token = makeElement("div", `context-token${state}`, word);
+          token.append(makeElement("small", "", index === 0 ? "leaving" : index === 4 ? "entering" : "recent word"));
+          return token;
+        }));
+        const settle = () => {
+          if (currentRun !== runId) return;
+          renderContext(step.nextContext);
+          moving = false;
+          nextButton.removeAttribute("aria-disabled");
+          shell.removeAttribute("aria-busy");
+          byId("generationLab").removeAttribute("aria-busy");
+        };
+        if (reducedMotion.matches) { settle(); return; }
+        requestAnimationFrame(() => requestAnimationFrame(() => track.classList.add("shifting")));
+        settleTimer = window.setTimeout(settle, 560);
+      }
+
+      function renderSentence(count) {
+        const added = steps.slice(0, count).map((step) => step.word);
+        const words = [...initialWords, ...added, ...Array.from({ length: 4 - count }, () => "____")];
+        byId("sentenceLive").replaceChildren(...words.map((word, index) => {
+          const isAdded = index >= 4 && index < 4 + count;
+          const isLast = index === 3 + count && isAdded;
+          const classes = ["sentence-token", isAdded ? "added" : "", word === "____" ? "blank" : "", isLast ? "just-added" : ""].filter(Boolean).join(" ");
+          return makeElement("span", classes, word);
+        }));
+      }
+
+      function renderProgress(count) {
+        progress.forEach((item, index) => {
+          item.className = "progress-step";
+          if (index < count) item.classList.add("done");
+          else if (index === count && count < 4) item.classList.add("current");
+        });
+      }
+
+      function showStep(step, index) {
+        renderUniverse(byId("generationUniverse"), rowsFromSelected(step.selected));
+        byId("selectionNote").textContent = step.note;
+        byId("resultWord").textContent = step.word;
+        byId("resultBadge").textContent = step.hit ? "Green hit" : "Red result";
+        byId("resultBadge").className = `result-badge ${step.hit ? "hit" : "miss"}`;
+        byId("baseScore").textContent = step.base;
+        byId("boostScore").textContent = step.boost;
+        byId("finalChance").textContent = step.chance;
+        byId("drawValue").textContent = step.draw;
+        byId("usedContext").textContent = `The selector used ${step.context.join(" ")}. The interval for ${step.word} is ${step.interval}.`;
+        const displayWord = step.word.charAt(0).toUpperCase() + step.word.slice(1);
+        byId("feedback").textContent = `The program placed ${displayWord} on the right and removed ${step.context[0]} from the left. The four-word window now contains ${step.nextContext.join(" ")}. The grid still shows the group used for the completed choice.`;
+        byId("stepCount").textContent = index === 3 ? "Sentence complete" : `Ready for position ${index + 2} of 4`;
+      }
+
+      function resetGeneration() {
+        runId += 1;
+        window.clearTimeout(settleTimer);
+        moving = false;
+        nextButton.removeAttribute("aria-disabled");
+        shell.removeAttribute("aria-busy");
+        byId("generationLab").removeAttribute("aria-busy");
+        completed = 0;
+        renderContext(initialWords);
+        renderSentence(0);
+        renderProgress(0);
+        renderUniverse(byId("generationUniverse"), rowsFromSelected([]), { neutral: true });
+        byId("selectionNote").textContent = "Press Choose next token. The same lesson key will mark five words for the current context.";
+        byId("resultWord").textContent = "Waiting";
+        byId("resultBadge").textContent = "No result yet";
+        byId("resultBadge").className = "result-badge";
+        ["baseScore", "boostScore", "finalChance", "drawValue"].forEach((id) => { byId(id).textContent = "--"; });
+        byId("usedContext").textContent = "The first click will use Early one morning Jack.";
+        byId("feedback").textContent = "The first click will mark five words and update their scores. The sampler will choose one word. The program will then move the window.";
+        byId("stepCount").textContent = "Ready for position 1 of 4";
+        nextButton.textContent = "Choose next token";
+      }
+
+      function advanceGeneration() {
+        if (moving) return;
+        if (completed === steps.length) { resetGeneration(); return; }
+        const step = steps[completed];
+        showStep(step, completed);
+        animateContext(step);
+        completed += 1;
+        renderSentence(completed);
+        renderProgress(completed);
+        if (completed === steps.length) nextButton.textContent = "Replay from start";
+      }
+
+      const checkerKey = byId("checkerKey");
+      const checkerText = byId("checkerText");
+      const startChecker = byId("startChecker");
+      const nextCheck = byId("nextCheck");
+      let checkerWords = [];
+      let checkerIds = [];
+      let checkerPosition = 4;
+      let checkerHits = 0;
+      let checkerTrials = 0;
+      let checkerBusy = false;
+      let checkerRun = 0;
+
+      function checkerZ(hits, trials) {
+        return (hits - trials * 0.25) / Math.sqrt(trials * 0.25 * 0.75);
+      }
+
+      function counted(value, singular, plural) {
+        return `${value} ${value === 1 ? singular : plural}`;
+      }
+
+      function renderCheckedText() {
+        byId("checkedText").replaceChildren(...checkerWords.map((word, index) => {
+          let state = index < 4 ? " context" : "";
+          if (index >= 4 && index < checkerPosition) state = byId(`check-row-${index}`)?.dataset.hit === "true" ? " hit" : " miss";
+          return makeElement("span", `checked-token${state}`, word);
+        }));
+      }
+
+      function setCheckerMessage(message, error = false) {
+        byId("checkerMessage").textContent = message;
+        byId("checkerMessage").className = `checker-message${error ? " error-message" : ""}`;
+      }
+
+      function resetCheckerState(clearInputs = false) {
+        checkerRun += 1;
+        checkerBusy = false;
+        byId("checkerLab").removeAttribute("aria-busy");
+        nextCheck.removeAttribute("aria-disabled");
+        checkerPosition = 4;
+        checkerHits = 0;
+        checkerTrials = 0;
+        checkerWords = [];
+        checkerIds = [];
+        if (clearInputs) {
+          checkerKey.value = lessonKey;
+          checkerText.value = "Early one morning Jack went up the hill";
+        }
+        byId("checkerHistory").replaceChildren();
+        byId("checkedText").replaceChildren();
+        renderUniverse(byId("checkerUniverse"), rowsFromSelected([]), { neutral: true });
+        byId("checkerHits").textContent = "0";
+        byId("checkerTrials").textContent = "0";
+        byId("checkerExpected").textContent = "0";
+        byId("checkerZ").textContent = "--";
+        byId("checkerGroupLabel").textContent = "The green group will appear here";
+        byId("checkerGroupContext").textContent = "Start the checker to choose the first context.";
+        setCheckerMessage("Press Start checking. The first four tokens will form the starting context.");
+        nextCheck.hidden = true;
+        startChecker.hidden = false;
+        startChecker.textContent = "Start checking";
+        checkerKey.readOnly = false;
+        checkerText.readOnly = false;
+        checkerKey.setAttribute("aria-invalid", "false");
+        checkerText.setAttribute("aria-invalid", "false");
+        updateCheckerPresetState();
+      }
+
+      function updateCheckerPresetState() {
+        byId("checkerLessonKey").setAttribute("aria-pressed", String(checkerKey.value === lessonKey));
+        byId("checkerComparisonKey").setAttribute("aria-pressed", String(checkerKey.value === comparisonKey));
+      }
+
+      function validateChecker() {
+        const keyMessage = keyError(checkerKey.value);
+        if (keyMessage) return { message: keyMessage, field: checkerKey };
+        const words = checkerText.value.trim().split(/\s+/).filter(Boolean);
+        if (words.length < 5) return { message: "Enter at least five tokens. The checker needs four previous tokens before it can check one.", field: checkerText };
+        const unknown = words.find((word) => !vocabulary.includes(word));
+        if (unknown) return { message: `${unknown} is not in this 20-word teaching vocabulary.`, field: checkerText };
+        return null;
+      }
+
+      function beginChecking() {
+        const error = validateChecker();
+        checkerKey.setAttribute("aria-invalid", "false");
+        checkerText.setAttribute("aria-invalid", "false");
+        if (error) {
+          error.field.setAttribute("aria-invalid", "true");
+          setCheckerMessage(error.message, true);
+          error.field.focus();
+          return;
+        }
+        checkerRun += 1;
+        checkerWords = checkerText.value.trim().split(/\s+/).filter(Boolean);
+        checkerIds = checkerWords.map((word) => vocabulary.indexOf(word));
+        checkerPosition = 4;
+        checkerHits = 0;
+        checkerTrials = 0;
+        byId("checkerHistory").replaceChildren();
+        renderCheckedText();
+        renderUniverse(byId("checkerUniverse"), rowsFromSelected([]), { neutral: true });
+        byId("checkerHits").textContent = "0";
+        byId("checkerTrials").textContent = "0";
+        byId("checkerExpected").textContent = "0";
+        byId("checkerZ").textContent = "--";
+        byId("checkerGroupLabel").textContent = `Waiting to check ${checkerWords[4]}`;
+        byId("checkerGroupContext").textContent = `The first context is ${checkerWords.slice(0, 4).join(" ")}.`;
+        checkerKey.readOnly = true;
+        checkerText.readOnly = true;
+        startChecker.hidden = true;
+        nextCheck.hidden = false;
+        nextCheck.textContent = "Check next token";
+        setCheckerMessage(`The checker will use ${checkerWords.slice(0, 4).join(" ")} before it checks ${checkerWords[4]}.`);
+        nextCheck.focus();
+      }
+
+      async function checkNextToken() {
+        if (checkerBusy || checkerPosition >= checkerWords.length) return;
+        checkerBusy = true;
+        const currentRun = ++checkerRun;
+        nextCheck.setAttribute("aria-disabled", "true");
+        byId("checkerLab").setAttribute("aria-busy", "true");
+        const contextIds = checkerIds.slice(checkerPosition - 4, checkerPosition);
+        const contextWords = checkerWords.slice(checkerPosition - 4, checkerPosition);
+        const observedId = checkerIds[checkerPosition];
+        const observedWord = checkerWords[checkerPosition];
+        try {
+          const rows = await rankCandidates(checkerKey.value, contextIds);
+          if (currentRun !== checkerRun) return;
+          const hit = rows[observedId].green;
+          renderUniverse(byId("checkerUniverse"), rows);
+          byId("checkerGroupLabel").textContent = `The green group used to check ${observedWord}`;
+          byId("checkerGroupContext").textContent = `The checker used ${contextWords.join(" ")}.`;
+          checkerTrials += 1;
+          if (hit) checkerHits += 1;
+          const z = checkerZ(checkerHits, checkerTrials);
+          const row = makeElement("div", `checker-history-row ${hit ? "hit" : "miss"}`);
+          row.id = `check-row-${checkerPosition}`;
+          row.dataset.hit = String(hit);
+          row.textContent = `The checker used ${contextWords.join(" ")}. ${observedWord} was ${hit ? "green, so it added one hit" : "red, so the hit count stayed the same"}.`;
+          byId("checkerHistory").append(row);
+          checkerPosition += 1;
+          renderCheckedText();
+          byId("checkerHits").textContent = String(checkerHits);
+          byId("checkerTrials").textContent = String(checkerTrials);
+          byId("checkerExpected").textContent = (checkerTrials * 0.25).toFixed(2).replace(/\.00$/, "");
+          byId("checkerZ").textContent = z.toFixed(4);
+          if (checkerPosition === checkerWords.length) {
+            const expected = Number((checkerTrials * 0.25).toFixed(2));
+            setCheckerMessage(`The checker found ${counted(checkerHits, "green hit", "green hits")} in ${counted(checkerTrials, "checked position", "checked positions")}. Random selection predicts ${counted(expected, "hit", "hits")} on average. The z score is ${z.toFixed(4)}. Stage 2 has no cutoff, so this score does not produce a decision.`);
+            nextCheck.hidden = true;
+            startChecker.hidden = false;
+            startChecker.textContent = "Check again";
+            checkerKey.readOnly = false;
+            checkerText.readOnly = false;
+          } else {
+            setCheckerMessage(`${observedWord} was ${hit ? "green" : "red"}. The running count is ${checkerHits} hits in ${checkerTrials} checked positions. The next context is ${checkerWords.slice(checkerPosition - 4, checkerPosition).join(" ")}.`);
+          }
+        } catch {
+          if (currentRun === checkerRun) setCheckerMessage("The browser could not finish the hash calculation. Reset the checker and try again.", true);
+        } finally {
+          if (currentRun === checkerRun) {
+            nextCheck.removeAttribute("aria-disabled");
+            byId("checkerLab").removeAttribute("aria-busy");
+            checkerBusy = false;
+          }
+        }
+      }
+
+      function useCheckerKey(key) {
+        resetCheckerState(false);
+        checkerKey.value = key;
+        updateCheckerPresetState();
+      }
+
+      function switchKeyUniverse(key) {
+        showKeyUniverse(key).catch(() => {
+          byId("keyFeedback").textContent = "The browser could not compare the teaching keys. Reload the page and try again.";
+        });
+      }
+
+      byId("lessonKeyPreset").addEventListener("click", () => switchKeyUniverse(lessonKey));
+      byId("comparisonKeyPreset").addEventListener("click", () => switchKeyUniverse(comparisonKey));
+      nextButton.addEventListener("click", advanceGeneration);
+      restartButton.addEventListener("click", resetGeneration);
+      startChecker.addEventListener("click", beginChecking);
+      nextCheck.addEventListener("click", checkNextToken);
+      byId("resetChecker").addEventListener("click", () => resetCheckerState(true));
+      byId("checkerLessonKey").addEventListener("click", () => useCheckerKey(lessonKey));
+      byId("checkerComparisonKey").addEventListener("click", () => useCheckerKey(comparisonKey));
+      checkerKey.addEventListener("input", () => { checkerKey.setAttribute("aria-invalid", "false"); updateCheckerPresetState(); });
+      checkerText.addEventListener("input", () => checkerText.setAttribute("aria-invalid", "false"));
+
+      async function initialize() {
+        try {
+          resetGeneration();
+          resetCheckerState(true);
+          await showKeyUniverse(lessonKey);
+          document.documentElement.classList.add("js-ready");
+        } catch {
+          document.documentElement.classList.remove("js-ready");
+        }
+      }
+
+      initialize();
+    })();
   </script>
 </body>
 </html>

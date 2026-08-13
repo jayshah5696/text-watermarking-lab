@@ -1,123 +1,160 @@
 # Stage 2 publication brief
 
-## Article role
+## Purpose
 
-- Final article section: “The secret green-list coin.”
-- Reader question: How can a key raise some next-token chances without forcing one result?
-- Reader outcome: explain the complete chain from recent token IDs through temporary green
-  membership, a +2 logit boost, shared normalization, one draw, and checker replay.
-- Narrow answer: the context and public teaching key select five of 20 candidates; adding 2 to
-  those five logits changes every normalized probability, but all 20 candidates remain possible.
+The article section explains how the program raises the chances of selected next words. It then
+shows how a checker finds the same selections in finished text.
 
-## Narrative and evidence fixtures
+Open with the Stage 1 connection. Stage 1 received an abstract hit or miss at each position. Stage
+2 shows how the key and recent token history create that result. The checker keeps the Stage 1
+values `G`, `T`, the 25 percent baseline, and the z score formula.
 
-The final section needs two visibly different layers.
+The key and cutoff have separate jobs. The key affects which observed tokens count as green hits.
+A cutoff can turn a completed score into a decision after calibration. Stage 2 does not set one.
 
-- **Narrative illustration:** `Jack went up the ___` with ordinary possible endings. This is
-  hand-authored and exists only to show where the watermark operation sits in a language system.
-  Its in-figure label must say `Concept illustration · not model output or run data`.
-- **Recorded mechanism fixture:** the locked 20-option Stage 2 trace. This supplies every numeric
-  claim and remains unchanged. IDs are the primary public labels; the synthetic word tags appear
-  only in reproduction or audit material.
+Keep one sentence through the full explanation.
 
-The bridge sentence is: “The sentence shows where the operation would sit in real text generation.
-The recorded experiment below measures only the operation itself.”
+> `Early one morning Jack went up the hill.`
 
-## Why the locked fixture remains suitable
+We wrote this example and chose its scores and random numbers. A model did not generate it. These
+values are an illustration. The repository keeps a separate fixed trace for code tests.
 
-The evenly spaced raw logits isolate keyed membership and logit-bias mechanics. The vocabulary
-labels are artifact metadata, not a sentence. Their semantic content must not be interpreted as
-generated prose or model behavior.
+## Required explanation of the key
 
-The recorded trace already supplies the final article's necessary contrast:
+The repository author chose `stage-02-public-demo-key-v1`. The model and prompt did not choose it.
 
-- Position 4 is the teaching spine. With context `[15, 0, 1, 1]` and draw
-  `0.307310772959`, the no-boost comparison selects ID 1, while the +2 sampler selects green ID 2.
-- Position 2 is the failure panel. The green candidates hold about 72.6% of probability, yet draw
-  `0.112284` selects red ID 1.
-- All four positions show the rolling context and allow the checker to reproduce the pattern
-  green, red, red, green.
+SHA-256 turns the key, context, and candidate number into a fixed-length result. The selector sorts
+those results. A small change to the input usually gives a different order.
 
-Changing labels, seed, key, or logits now only to improve the story would invalidate the selected
-artifact and risk outcome-driven fixture selection. Keep the locked trace. If a future scientific
-question requires another fixture, specify that question and selection method before running it.
+The selector combines the key with the previous four token numbers and each candidate number. It
+runs this SHA-256 calculation and selects five of 20 words. The checker can repeat the same work
+later.
 
-## Required article figures
+Changing the key changes the SHA-256 inputs and usually changes their ranking. It does not change
+SHA-256, the 25 percent green fraction, the score increase, the z score formula, or a later cutoff.
+For the first context, eight words move between the green and red groups when the key changes. Both
+keys still select five words.
 
-### Figure 0: where the watermark acts
+We print the key in the lesson so readers can reproduce the result. A production operator would
+normally generate an unpredictable secret and keep it in protected server storage. The operator
+would use a separate public name to identify the secret. The final key size and format depend on
+the chosen watermark method and need a security review.
 
-- Panels: `Jack went up the ___`; several plausible next words; a temporary keyed subset; model
-  scores entering before the boost; sampling after the boost.
-- Visible label: `Hand-authored concept illustration · not model output or run data`.
-- Caption draft: “A generation-time watermark acts after a model has scored possible next tokens
-  and before one token is sampled. Stage 2 does not run that model; the sentence only locates the
-  operation.”
-- Alt text draft: “The unfinished sentence Jack went up the blank sits beside familiar endings
-  such as hill, road, stairs, and path. A watermark layer marks a temporary subset for a score
-  boost before sampling.”
+To rebuild the marked sets and count hits, the checker must match the key, token numbering,
+selection rule, number of recent words, fraction of words that the selector marks, and counting
+rule. It does not need the score increase or the random numbers used during generation. The
+operator should still record the score increase because it affects the strength of the pattern and
+the cutoff that later tests may support.
 
-### Figure A: one keyed token choice
+The key is separate from the model weights. The operator can change it without retraining the model.
+Changing the model or tokenizer can change token numbers, starting scores, text quality, and hit
+rates. Tests and useful cutoffs do not automatically transfer to the new setup.
 
-- Panels: recent context and key; digest ranking with rank-five cutoff; selected score additions;
-  shared softmax calculation; aligned cumulative probability rulers; fixed draw; selected token.
-- Caption draft: “At recorded position 4, the public teaching key and recent IDs select five
-  temporary green candidates. Adding 2 to their logits expands ID 2's cumulative interval across
-  the same draw, changing the sampled option from ID 1 in the no-boost comparison to ID 2.”
-- Alt text draft: “A seven-step diagram follows context IDs 15, 0, 1, 1 through a SHA-256 ranking,
-  five green IDs, a plus-two score boost, and two aligned probability rulers. An orange draw at
-  0.3073 falls in ID 1 before the boost and ID 2 after it.”
+If the operator puts a shared secret in public browser code, every user can read it. Public checking
+needs a service that verifies who may submit text, or another method designed for public
+verification. Stage 2 builds neither system.
 
-### Figure B: preference is not a guarantee
+## Figure 1
 
-- Panels: position 2 context and green set; green mass 72.6% versus red mass 27.4%; cumulative
-  ruler; draw 0.112284 inside red ID 1's interval.
-- Caption draft: “The +2 rule raises total green probability without forcing a green option. At
-  position 2, the recorded draw still lands in red ID 1.”
-- Alt text draft: “A probability mass chart gives green candidates 72.6 percent and red candidates
-  27.4 percent. A cumulative ruler places draw 0.112284 inside red ID 1.”
+Show the Stage 1 bridge and the 20-word key comparison.
 
-### Figure C: generation versus checking
+The figure keeps `Early one morning Jack`, the vocabulary, and the 25 percent fraction fixed. Two
+key controls recolor the 20 candidate cards. Each card includes its token number, short hash result,
+rank, and green or red label.
 
-- Panels: four rolling contexts; observed IDs `[0, 1, 1, 2]`; rebuilt green set at each position;
-  hit pattern green, red, red, green; `G=2`, `T=4`; running z-score 1.1547 with no threshold.
-- Caption draft: “The checker needs the public key, selection rule, initial context, and observed
-  IDs. It rebuilds membership without the generator's logits, probabilities, or random draws.”
-- Alt text draft: “Four rows show the context window shifting through observed tokens 0, 1, 1,
-  and 2. The checker marks the first and fourth tokens green and ends with two hits in four checked
-  positions.”
+Caption text:
 
-## Values required from evidence
+> Changing only the key changes the hash ranking and which five words are green. It does not change
+> the group size, the Stage 1 formula, or a later decision cutoff.
 
-The committed `artifacts/lab-02/trace.json` contains:
+Alt text:
 
-- initial context, per-position context, public key, `gamma`, and `delta`;
-- raw and adjusted logits;
-- original and boosted probabilities;
-- each recorded draw and its no-boost comparison token;
-- each actual +2 token and green membership;
-- running `G`, `T`, and z-score; and
-- source commit and configuration fingerprint.
+> Twenty word cards remain in token number order. Five are green and fifteen are red. Controls for
+> the lesson key and comparison key move eight words between the green and red groups while the context remains Early one
+> morning Jack.
 
-The digest prefixes in Figure A are derived by replaying the documented selector for the recorded
-position 4 context. Published figure values must continue to match `just verify-lab-02`.
+## Figure 2
 
-## Allowed claims
+Use one persistent four-word window for all four generation choices.
 
-- The locked toy rule selects five of 20 IDs per context.
-- Adding 2 multiplies one green token's odds relative to one unchanged red token by
-  `exp(2) ≈ 7.389` before shared normalization.
-- In recorded position 4, the same draw selects ID 1 without the boost and ID 2 after it.
-- The checker reconstructs two green hits among four observed positions for this trace.
+The figure keeps the current window, full 20-word green and red grid, sampled word, starting score,
+score increase, final chance, random number, and running sentence together. Each press moves the
+oldest word out and places the sampled word on the right.
 
-## Claims to avoid
+Caption text:
 
-- The vocabulary represents language-model output or natural language quality.
-- The toy SHA-256 selector is compatible with an upstream KGW implementation.
-- Two hits in four positions estimate detection accuracy or produce a detection verdict.
-- A result proves AI authorship, Claude behavior, secrecy, or production security.
+> The program keeps the key fixed while the four-word context moves. Each press shows the selected
+> words and the sampled result for that position.
 
-## Transition to Stage 3
+Alt text:
 
-Stage 2 supplies every operation except the source of the logits and token IDs. A separately
-approved Stage 3 would replace the synthetic scores and labels with one real model and tokenizer
-while preserving the visible location of the intervention between model logits and sampling.
+> Four word cards show Early, one, morning, and Jack. Went enters from the right while Early leaves
+> from the left. The selected set, score change, chance, random number, and running sentence appear
+> below the window.
+
+## Figure 3
+
+Show the teaching key, toy text field, repeatable checker control, and Stage 1 count.
+
+The checker rebuilds the full selected set before each observed word. The final count is 2 hits in
+4 positions. The expected count is 1, the z score is 1.1547, and Stage 2 has no cutoff. The
+comparison key finds zero hits in this fixed example.
+
+Caption text:
+
+> The checker turns four observed tokens into the Stage 1 values G and T. The key affects which
+> tokens count as hits. The z score formula does not use the key.
+
+Alt text:
+
+> A key field and text field appear above four checked results. Went and up are green. The and hill
+> are red. Cards show G equals 2, T equals 4, expected hits equals 1, and z equals 1.1547. A sentence
+> says that Stage 2 has no cutoff.
+
+## Fixed illustration values
+
+- The first selected set is `Early, went, walked, snow, trail`.
+- `Went` ranks first under the lesson key with displayed hash prefix `01d63f53`.
+- The comparison key selects `the, hill, path, snow, home` for the first context. Eight words change
+  green or red label, and both keys select five words.
+- `Went` rises from 22.85% to 46.51% after the program adds 2 to its score.
+- `Ran` keeps score 1.9 while its chance falls from 27.91% to 7.69%.
+- Before the score increase, 0.30 falls in the range for `walked`. After the increase, it falls in the range for `went`.
+- The generated words are `went, up, the, hill`.
+- `Went` and `up` are green hits. `The` and `hill` are red results.
+- Four checked positions have 2 hits and z score 1.1547.
+- The checker finds zero hits with the comparison key `wrong-public-key` in this fixed example. Another key can
+  still match words by chance.
+
+Tests in `tests/unit/test_stage_02_lesson.py` recalculate these values.
+
+## Repository appendix
+
+The unchanged file `artifacts/lab-02/trace.json` remains the code test record. It uses fixed token
+numbers and includes source and configuration information. The command `just verify-lab-02`
+recalculates it.
+
+Keep the test trace out of the sentence walkthrough. Its labels do not form language, and we did
+not rename its results to create the sentence.
+
+## Claims the article can make
+
+- The selector chooses five of 20 candidates for each context.
+- Adding 2 raises the odds of a selected word against an unchanged word by `exp(2)` before the
+  program converts the scores to chances.
+- A score increase does not force the sampler to pick a selected word.
+- The checker can rebuild the selected sets from observed history when it has the matching setup.
+- The key affects the z score by changing which observed tokens count as green hits. It does not appear in the formula.
+- Repository tests use the fixed trace to check the Stage 2 implementation.
+
+## Claims the article cannot make
+
+- The sentence is model output or evidence of language quality.
+- The article cannot claim that the printed teaching key protects a secret.
+- The SHA-256 lesson rule matches an upstream KGW implementation.
+- Two hits in four positions measure detection accuracy or support a decision.
+- The score identifies the writer, proves that AI wrote the text, or describes a private vendor
+  system.
+
+Stage 3 would replace the chosen scores with scores from an approved model and tokenizer. That work
+still needs separate approval.
