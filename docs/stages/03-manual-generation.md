@@ -32,7 +32,8 @@ with a supported library adapter as a separate profile.
 - MLX-LM: `>=0.31.3,<0.32`, resolved exactly by `uv.lock`.
 - MLX: `>=0.31.2,<0.33`, resolved exactly by `uv.lock`.
 - Device: the local Apple GPU through MLX.
-- Model mode: evaluation with the checkpoint's pinned 4-bit weights.
+- Model mode: evaluation with the checkpoint's pinned 4-bit weights. Convert the final-position
+  logits to float32 before the Stage 3 score operation and sampling filters.
 - Batch size: one.
 - The lab may download only the pinned model and tokenizer. The verifier must use the local cache.
 

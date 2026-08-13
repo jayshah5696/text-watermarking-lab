@@ -122,7 +122,7 @@ def _generate_record(
 
     for position in range(1, config.max_new_tokens + 1):
         logits = model(model_input, cache=prompt_cache)
-        raw_scores = logits[0, -1, :]
+        raw_scores = logits[0, -1, :].astype(mx.float32)
         previous_token_id = prompt_ids[-1] if not generated else generated[-1]
         processed = process_scores(
             raw_scores=raw_scores,
