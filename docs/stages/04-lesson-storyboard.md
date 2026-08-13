@@ -2,130 +2,196 @@
 
 ## One question
 
-When Transformers replaces our hand-written loop, which steps stay the same, and which exact
+Stage 3 already generated a watermark with MLX. Why check it against Transformers, and which exact
 details change?
 
-Transformers still marks green token IDs, changes model preference numbers, chooses a token, and
-rebuilds green hits from copied text. Its exact operation order differs from Stage 3.
+Stage 3 used an explicit loop so the learner could inspect every step. Stage 4 keeps that explanation
+but checks it against one exact maintained Transformers path. The causal parts match. The full
+recipes and outputs do not.
 
 ## One recorded story
 
-Keep this passage visible for the whole page:
+Keep this passage visible from the Stage 3 bridge through detection:
 
 `Early one morning Jack went up the hill. At the top he`
 
-Use the first recorded GPT-2 model preference list. Keep the candidate rows, token IDs, key,
-temperature, top-k, top-p, and added value fixed while the page compares two operation orders. Then
-follow the first two reference-selected tokens into the saved continuation and checker.
+Stage 3 continues it with LFM2 and selects `Jack` first. Stage 4 sends the passage directly to GPT-2
+and selects ` was`, then ` greeted`. The page must explain the changed model, tokenizer, prompt
+framing, selector, device, and operation order before showing those different outputs.
+
+The first saved GPT-2 score list is the generation microscope. The first two GPT-2 pieces are the
+detector microscope. After those are understood, the page expands to all six recorded continuations
+and a bounded exact key replay.
+
+## Visual system
+
+- Reuse the warm graph-paper field, dark serif headings, small green section numbers, cream work
+  surfaces, and flat colored explanation bands from Stages 1 to 3.
+- Use green hatching only for membership under the current key. Use orange for the recorded sampled
+  token, blue for fixed inputs and formulas, and rust for a failed assumption or scope boundary.
+- Draw the generation process as a continuous horizontal score track on desktop and a vertical track
+  on mobile. Candidate tokens never change row identity.
+- Draw detector checks as visible links between adjacent token pieces. The link carries the previous
+  ID into the green-set rule and points at the current ID.
+- Keep formulas large enough to read. Substitute the recorded numbers directly under each symbol.
+- Make each main screenshot understandable without reading the previous section.
 
 ## Beat order
 
-1. Start with the continuity passage and the earlier four-part explanation in plain words. A key
-   chooses a temporary green group, preference numbers change, a random draw chooses one token, and
-   copied text is counted.
-2. State the one test. Replace the hand-written loop with the exact Transformers 5.14.1 path and
-   check each operation.
-3. Show what stays fixed from Stage 3. Then show only three declared changes on the main path. The
-   model and tokenizer change, the passage loses its chat wrapper, and Transformers owns the ordered
-   operations. Put the full software and device recipe in a disclosure.
-4. Reveal the recorded GPT-2 token pieces for the passage. Keep the final prompt token attached to
-   the model preference list it conditions.
-5. Introduce temperature in plain words. Divide every model preference number by 0.8 on the
-   persistent candidate rows.
-6. Keep the 40 highest choices, then keep the smallest leading group whose combined chance reaches
-   at least 95 percent. Explain each filter before naming top-k or top-p.
-7. Reveal the green IDs and add 2 after the filters. Green is an arbitrary key-selected label. It
-   does not mean safe, correct, or higher quality.
-8. Ask whether the recorded token will keep the same final chance when only operation order changes.
-9. Reset the same saved GPT-2 values and apply the Stage 3 order. Show the recorded numbers. State
-   that this is a calculation on saved GPT-2 values, not a second model generation.
-10. Restore the Transformers state. Reveal the recorded first token choice and append that exact
-    visual object to the passage. Then reveal token 2.
-11. Name the formal result. The four kinds of operation match, while the exact recipes do not.
-12. Continue the saved reference path to up to 40 tokens. Move those exact copied token pieces into
-    the checker while leaving the prompt outside.
-13. Mark token 1 as context only and token 2 as the first eligible decision. Count green pieces
-    before displaying z. Translate the watermark evidence score into one complete sentence. Keep
-    the yes-or-no cutoff field subordinate to the counts and score.
-14. Keep the original copied IDs and counting rule fixed. Change to the comparison key and update
-    green marks and counts.
-15. Move to the separate constructed sequence. Alternate the first two copied IDs three times.
-    Run both documented library modes, then list distinct pair values explicitly. Keep the six token
-    objects fixed. If the library flag does not collapse repeats, show that failed expectation before
-    the explicit count.
-16. Return to the original passage. End with repository evidence, external implementation facts,
-    and untested boundaries. Stage 5 remains gated.
+1. Show a four-stage rail. Stage 1 supplies the count and z score. Stage 2 supplies the keyed green
+   set. Stage 3 puts the mechanism inside an explicit MLX generation loop. Stage 4 asks whether a
+   maintained Transformers path performs the same kinds of operation.
+2. Keep the Stage 3 passage on screen. Show the recorded Stage 3 first token `Jack`, the manual order,
+   and the goal of using MLX. MLX gave direct control of the loop on the local Apple GPU. It made
+   scores, filters, sampling, cache, and checking inspectable.
+3. State why Stage 4 exists. A teaching implementation can be internally consistent and still differ
+   from the library a later experiment will use. The reference check tests contracts, order, copied
+   IDs, and counts before scale increases.
+4. Overlay the two paths. Keep shared ideas aligned and mark declared changes separately. Do not
+   compare output quality or imply equivalent token IDs.
+5. Introduce the saved GPT-2 score list after prompt token ` he`, ID 339. Explain that GPT-2 supplies
+   50,257 model preference numbers. Show five fixed witness rows and label them as a sample from the
+   complete list.
+6. Show temperature as arithmetic. For ` was`, substitute
+   `-125.5542 / 0.8 = -156.9427`. Explain that only differences among the numbers affect the final
+   chances.
+7. Show top-k as ranking. Keep the 40 largest values. Fade removed candidate marks but leave their
+   rows in place.
+8. Show top-p as cumulative chance. Animate a running total over the current 40 choices and stop at
+   the first group reaching 95 percent. The reference path leaves 19 choices.
+9. Show the green rule after the filters. The key and previous token mark 12,564 of 50,257 vocabulary
+   IDs green, but only green choices still present can receive 2. For ` was`, show
+   `-156.9427 + 2 = -154.9427`.
+10. Show softmax. Use the final survivors to turn preference numbers into chances. Substitute the
+    selected-token numerator and recorded denominator result, then show 8.642730 percent.
+11. Ask whether the same score list will produce the same chance under the Stage 3 order. Record the
+    prediction before revealing the alternate calculation.
+12. Run the earlier order on the same GPT-2 list. For ` was`, show
+    `(-125.5542 + 2) / 0.8 = -154.4427`. Then apply top-p before top-k. Eleven choices remain and the
+    chance is 8.825517 percent. State that only order changed in this calculation.
+13. Restore the Transformers order. State that the program reset its random generator to seed
+    568285428, then reveal the recorded sampled token. Mark ` was` orange and append the same object
+    to the passage. Point out that ` saw` had a larger chance among the visible witnesses, so the
+    highest chance did not force the recorded choice. Reveal ` greeted` next. The artifact records
+    the seed and chosen token, not one separate random-number draw.
+14. Move only the saved continuation across a clear checker boundary. Leave the prompt and padding
+    outside. Decode and re-tokenize the continuation, then show that all copied IDs match.
+15. Build the first detector check from two tokens. ` was`, ID 373, supplies context. The exact
+    generation key and `lefthash` rule choose the green set for that context. ` greeted`, ID 21272,
+    is the first current token the checker can score.
+16. Expand the same links across all 40 copied pieces. Count 17 green links among 39. Show the ordinary
+    average `0.25 * 39 = 9.75` before introducing z.
+17. Substitute the complete detector formula:
+    `(17 - 9.75) / sqrt(39 * 0.25 * 0.75) = 2.6811`. Read it as a sentence. Then show the strict
+    cutoff `z > 3.0` and the insufficient-evidence result.
+18. Open the recorded continuation explorer. Choose continuity, notebook, or library. For each,
+    switch between the saved control and watermark output. Keep the prompt, full continuation,
+    token count, copied-ID status, green strip, G, z, comparison key, and cutoff sentence together.
+19. Open the live key replay after the recorded examples are clear. Fix one saved continuation.
+    Change among the exact public teaching keys bundled with the page. Repaint all 39 eligible links
+    and recompute G, expected G, z, and cutoff. State the finite key range and that the browser is
+    replaying detection, not generation.
+20. Introduce repetition using plain language. One-token context means each check is an adjacent
+    transition. Build `A B A B A B` and label the five occurrences `AB, BA, AB, BA, AB`. Ask how many
+    different transition patterns exist. Group equal links to reveal two patterns.
+21. Explain why the count matters. Counting every occurrence treats three copies of `AB` as three
+    pieces of evidence. Counting each distinct pattern once treats them as one pattern. Then reveal
+    the pinned Transformers 5.14.1 mismatch: both library settings returned 3/5, while the explicit
+    value-based count returned 1/2. This is a compatibility finding, not model output.
+22. End with an evidence map. Connect selected claims to their source artifact or implementation.
+    Separate measured local behavior, derived browser replay, external library facts, and untested
+    claims. Keep raw hashes and full result tables in disclosures.
 
-## Main interaction
+## Interaction sequence
 
-### Compare operation order
+### Stage rail
 
-- Instruction: show the Transformers steps one at a time, then apply the same steps in the earlier
-  order.
-- Fixed: saved GPT-2 model preference numbers, recent token ID, key, temperature, top-k, top-p, and
-  added value.
-- Changed: operation order.
-- Watch: which token choices remain and the final chance of the recorded selected token.
-- Result: use the verified values in this form. "Same starting values and settings. Only the order
-  changed. The Transformers order left [N] choices and gave [token] a [P] percent chance. The earlier
-  order left [N] choices and gave the same token a [P] percent chance. This saved list does not show
-  that either order is better."
+- Instruction: select an earlier stage to see the question it answered.
+- Fixed: project goal and continuity passage.
+- Changed: the visible stage summary.
+- Watch: each stage adds one missing mechanism.
+- Result: Stage 4 checks the Stage 3 explanation rather than replacing its learning value.
 
-### Reveal the recorded choice
+### Formula microscope
 
-- Instruction: restore the Transformers order and reveal the recorded first token.
-- Fixed: reference distribution, saved random draw, passage, and candidate rows.
-- Changed: only the visibility of the recorded selection and appended text.
-- Watch: the orange candidate remains the same visual object when it moves into the passage.
-- Result: name the recorded token and its final chance. State that adding 2 changes a chance and does
-  not force a token.
+- Instruction: advance one operation and read the numeric substitution.
+- Fixed: saved GPT-2 list, previous token, key, settings, candidate rows, and scale.
+- Changed: one operation at a time.
+- Watch: the selected token's number, availability, survivor count, and chance.
+- Result: each formal term names a visible operation the learner has already performed.
 
-### Check copied text
+### Operation-order comparison
 
-- Instruction: check only the saved generated continuation.
-- Fixed: copied continuation, GPT-2 tokenizer revision, generation key, and all-pairs counting rule.
-- Changed: readable text becomes token IDs and eligible pairs become counts.
-- Watch: the prompt stays outside. Token 1 supplies context. Token 2 is the first eligible decision.
-- Result: fill the green count, eligible count, expected count, and z from the verified continuity
-  record before showing the configured cutoff.
+- Instruction: predict same or different, then apply the earlier order to the same saved values.
+- Fixed: all numbers and settings.
+- Changed: operation order only.
+- Watch: 19 choices versus 11, and 8.642730 percent versus 8.825517 percent.
+- Result: identical operation names and settings do not guarantee identical final chances.
 
-### Check the same text with a different key
+### Detector construction
 
-- Instruction: keep the original copied token IDs and counting rule, then use the comparison key.
-- Fixed: copied IDs, tokenizer, operation recipe, evidence formula, and all-pairs counting rule.
-- Changed: published key.
-- Watch: green marks and counts. The eligible count must stay fixed.
-- Result: state both key results and that one comparison key cannot measure a false-alarm rate.
+- Instruction: move only continuation pieces into the checker and build the first adjacent check.
+- Fixed: saved text, GPT-2 tokenizer, generation key, context width one, and all-occurrence rule.
+- Changed: readable text becomes token IDs and links become counts.
+- Watch: the prompt remains outside, token 1 is context, and token 2 is the first eligible decision.
+- Result: checking reconstructs evidence from copied continuation IDs, not hidden generation state.
 
-### Test the repeated-pair option
+### Recorded continuation explorer
 
-- Instruction: on the separate six-token constructed sequence, compare both library modes with an
-  explicit list of distinct adjacent pair values.
-- Fixed: six alternating token pieces, their order, key, complete recipe, and evidence formula.
-- Changed: counting implementation.
-- Watch: whether the library flag changes five occurrence markers, then compare it with the two
-  distinct value pairs listed below the unchanged tokens.
-- Result: use the verified result. State both library outputs, the explicit distinct-pair output,
-  and that GPT-2 did not generate this constructed sequence.
+- Instruction: choose one passage, then compare its saved control and watermark outputs.
+- Fixed: pinned runtime and detector recipe.
+- Changed: recorded passage and condition.
+- Watch: text, green positions, G, z, and cutoff result vary together.
+- Result: the three fixed examples show both strong and weak evidence, not an accuracy rate.
 
-## Evidence rules
+### Live key replay
 
-- Do not write measured values into the page until `just verify-lab-04` passes.
-- Use the same candidate rows and chance scale for both order views.
-- Show "5 displayed of 50,257" so the witness rows cannot be mistaken for the complete vocabulary.
-- Stop paired generation chance comparisons after the first sampled histories diverge.
-- Label the Stage 3 order calculation as derived from saved GPT-2 values.
-- Label the alternating-token example as derived and separate from model output.
-- Keep developer paths, hashes, package versions, approximate p-values, formulas, and full citations
-  in disclosures.
+- Instruction: keep one saved continuation fixed and select a bundled public key.
+- Fixed: copied IDs, tokenizer, green fraction, selector, context width, counting rule, and formula.
+- Changed: key only.
+- Watch: T remains 39 while green positions, G, z, and the cutoff result change.
+- Result: the detector key is part of the complete recipe. The browser does not regenerate text.
+
+### Repeated-transition lesson
+
+- Instruction: count five transition occurrences, then group equal transition values.
+- Fixed: six token pieces, order, key, and checker formula.
+- Changed: whether equal transitions count again.
+- Watch: five occurrence markers collapse to two pattern markers.
+- Result: an option name is not evidence that a library version performs the intended value-based
+  grouping. The explicit check found a mismatch.
+
+## Main path and appendix
+
+Keep on the main path:
+
+- Stage 1 to 4 continuity and Stage 3's MLX goal;
+- plain operation, formula, numeric substitution, and visible result for every generation step;
+- the two processor orders and their measured difference;
+- the first two GPT-2 tokens and complete detector construction;
+- all six recorded continuations through an explorer;
+- bounded live key replay;
+- repeated-transition explanation and compatibility mismatch;
+- measured conclusion and limits.
+
+Move to disclosures:
+
+- package versions, model revision, file size, source commit, config hash, and platform;
+- full prompt token pieces and full copied ID arrays;
+- p-values and implementation class names;
+- full six-row table for copying;
+- official source links and reproduction commands.
 
 ## Screenshot tests
 
-1. The order screenshot shows the passage, fixed values, persistent candidate rows, both operation
-   sequences, full counts, and one plain result sentence. It states that only the Transformers order
-   produced the saved continuation.
-2. The checker screenshot shows copied token pieces crossing the boundary while prompt pieces remain
-   outside. It labels token 1 as context and token 2 as the first eligible decision, followed by
-   counts and narrow interpretation.
-3. The repetition screenshot keeps six alternating token pieces fixed, numbers five adjacent pair
-   occurrences, and makes the two counting rules understandable without earlier sections.
+1. Bridge screenshot: a newcomer can say why Stage 3 used MLX, why Stage 4 adds Transformers, what
+   stayed conceptually the same, and what profile parts changed.
+2. Formula screenshot: a newcomer can follow ` was` through one visible operation, read the formula
+   substitution, identify the complete-list survivor count, and distinguish a preference number from
+   a final chance.
+3. Detector screenshot: a newcomer can see the prompt outside, token 1 as context, token 2 as the
+   first scored token, and the path from 17/39 to z 2.6811 to the below-cutoff sentence.
+4. Key explorer screenshot: a newcomer can identify the fixed copied text, selected public key,
+   changed green positions, stable T, recomputed z, finite key range, and no-generation boundary.
+5. Repetition screenshot: a newcomer can count five transition occurrences, identify two distinct
+   transition values, and explain the recorded 3/5 versus explicit 1/2 mismatch.
