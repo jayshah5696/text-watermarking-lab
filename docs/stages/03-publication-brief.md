@@ -37,9 +37,10 @@ score increase forces a green result.
 
 ## Fixture selection
 
-The three prompts were fixed before the model run. The first prompt reuses Stage 2 words so the
-reader can compare the hand-authored lesson with real tokenization. The notebook and library
-prompts use ordinary publishable prose and give the model different contexts.
+The three passages were fixed before the selected model run. The first passage reuses Stage 2 words
+so the reader can compare the hand-authored lesson with real tokenization. The notebook and library
+passages use ordinary publishable prose and give the model different contexts. Each passage is put
+inside the same fixed instruction and the tokenizer's documented chat template.
 
 Do not change prompts, seeds, settings, or keys to improve prose or detector scores after the run.
 Keep early end tokens, awkward output, a weak score, or a comparison-key match when the recorded run
@@ -50,8 +51,9 @@ produces one. Those outcomes limit the claim and belong in the evidence.
 ### Figure 1: words become token pieces
 
 Show the Stage 2 sentence beside the pinned tokenizer's pieces and IDs for the first Stage 3
-prompt. The reader should see that a familiar word may include leading space or split into more
-than one token.
+passage. The reader should see that a familiar word may include leading space or split into more
+than one token. A disclosure must show the fixed instruction and chat-template control tokens that
+surround the passage in the complete model input.
 
 Caption draft:
 

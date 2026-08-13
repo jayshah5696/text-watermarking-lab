@@ -51,6 +51,10 @@ PyTorch rather than a newer MLX model fixture.
 
 The remaining settings are:
 
+- instruction prefix: `Continue the passage with one short paragraph. Return only the continuation.`
+  followed by one blank line and the fixed passage;
+- input framing: the pinned tokenizer's documented chat template with one user message and a
+  generation prompt;
 - base seed `20260812`;
 - 40 new tokens at most for each continuation;
 - stop when the tokenizer emits its end token;
@@ -75,6 +79,15 @@ For one previous token ID and one public development key, compute a 32-bit mixin
 candidate token ID with MLX array operations. Mark exactly `floor(0.25 * vocabulary_size)` candidates
 with the lowest mixing scores as green. This is the locked Stage 3 selector. Fixed-vector tests must
 pin its membership. The public key is reproducibility metadata, not a production secret.
+
+The author-facing passage stays visible in the lesson. The instruction prefix and control tokens
+added by the chat template must appear in a disclosure so the page never implies that the model saw
+only the passage. The selected artifact records the complete model-input token IDs and token pieces.
+
+An initial unselected diagnostic fed the post-trained checkpoint raw passage text without its
+documented chat template. It produced repetitive continuations. That run exposed a missing input
+contract and was discarded before evidence selection. The three passages, seeds, sampling settings,
+keys, green fraction, and score increase were not changed.
 
 ## Manual loop order
 
@@ -119,8 +132,8 @@ is not a calibrated decision.
 
 - schema version, source commit, configuration hash, platform, Python, MLX, and MLX-LM versions;
 - pinned model and tokenizer identifiers and revisions;
-- every prompt, prompt token ID, condition, derived seed, stop reason, generated token ID, and
-  decoded continuation;
+- every prompt, complete model-input token ID and token piece, condition, derived seed, stop reason,
+  generated token ID, and decoded continuation;
 - copied-text token IDs and their exact-match status;
 - same-key and comparison-key `G`, `T`, and z scores;
 - for every generation step, the input length, watermark context ID, five leading candidates,

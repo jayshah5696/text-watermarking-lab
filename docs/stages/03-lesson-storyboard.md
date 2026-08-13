@@ -18,7 +18,8 @@ checking.
 2. Show the whole loop before opening it. The loop receives token IDs, gets model scores, applies
    the configured increase, filters scores, samples one token, appends it, and repeats.
 3. State the Stage 3 question. The reader must locate the score increase inside that loop.
-4. Keep the continuity prompt fixed and reveal its recorded LFM2 token pieces and IDs.
+4. Keep the continuity passage fixed and reveal its recorded LFM2 token pieces and IDs. Show the
+   fixed instruction and chat-template control tokens in a disclosure.
 5. Define the model as code that receives the token history and returns one score for every
    possible next token. Show only the final-position scores.
 6. Reveal which candidates are green and add 2 only to their scores.
@@ -75,8 +76,9 @@ score as a sentence.
 
 ## Screenshot tests
 
-The token screenshot must identify the prompt, model revision, token pieces, IDs, and the statement
-that Stage 2's word labels have become real tokenizer output.
+The token screenshot must identify the passage, fixed instruction, chat-template boundary, model
+revision, token pieces, IDs, and the statement that Stage 2's word labels have become real tokenizer
+output.
 
 The loop screenshot must show the numbered order, one aligned candidate, the score before and after
 the intervention, the final probability, the sampled token, and the filtered-token failure case.

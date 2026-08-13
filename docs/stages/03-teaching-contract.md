@@ -29,8 +29,8 @@ After the page, the learner should be able to explain:
   increase enabled.
 - Smallest full round trip: the first two recorded tokens. Token 1 supplies checker context, and
   token 2 is the first token the checker can count.
-- Starting inputs: pinned LFM2 revision, prompt token IDs, prompt seed, sampling settings, and the
-  same key used during generation.
+- Starting inputs: pinned LFM2 revision, fixed instruction and chat template, complete model-input
+  token IDs, prompt seed, sampling settings, and the same key used during generation.
 - Observable result: one sampled token, its candidate score path, its probability, and its green
   membership.
 - Hand reasoning: follow one candidate from raw model score through filters, optional bias,
@@ -79,6 +79,8 @@ write values into the lesson before the artifact exists.
 ## Continuity rules
 
 - Begin with the Stage 2 running sentence and show the same words becoming LFM2 tokens.
+- Keep the author-facing passage separate from the instruction and chat-template control tokens.
+  Show the complete model input in a disclosure.
 - Show the complete loop first: token IDs, model scores, filters, score increase, probability,
   sample, append, and repeat. Then zoom into the first generated token.
 - Keep Stage 1 `G`, `T`, and z labels when the checker returns.
