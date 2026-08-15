@@ -1,3 +1,4 @@
+import tomllib
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -24,65 +25,98 @@ class Structure(HTMLParser):
             self.summaries += 1
 
 
-def test_lesson_preserves_stage_continuity_and_profile_boundary() -> None:
+def test_lesson_and_runtime_core_do_not_import_modal() -> None:
+    runtime_files = (
+        ROOT / "src/watermark_lab/transformers_runtime.py",
+        ROOT / "src/watermark_lab/gemma_adapter.py",
+        ROOT / "src/watermark_lab/key_policy.py",
+        ROOT / "src/watermark_lab/service_contract.py",
+    )
+    assert all("import modal" not in path.read_text() for path in runtime_files)
+    coverage = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["coverage"]["run"]
+    assert coverage["omit"] == ["src/watermark_lab/modal_app.py"]
+
+
+def test_lesson_teaches_the_actual_stage_05_implementation_question() -> None:
     lesson = LESSON.read_text()
     for required in (
-        "Measure the signal",
-        "Define a green hit",
-        "Generate by hand",
-        "Check the library",
-        "Measure the runtime",
-        "Early one morning Jack went up the hill. At the top he",
-        "Carry the recipe, not the token IDs",
-        "GPT-2 on local CPU",
-        "Gemma 4 E2B BF16 on L4",
-    ):
-        assert required in lesson
-    for filename in (
-        "text-watermarking-stage-1-walkthrough.html",
-        "text-watermarking-stage-2-lesson.html",
-        "text-watermarking-stage-3-lesson.html",
-        "text-watermarking-stage-4-lesson.html",
-    ):
-        assert f'href="{filename}"' in lesson
-
-
-def test_lesson_values_match_selected_evidence() -> None:
-    lesson = LESSON.read_text()
-    for required in (
-        "36.739 s",
-        "5.782 s",
-        "9.682 GiB",
-        "56.1%",
-        "18.422 tok/s",
-        "7.165 ms",
-        "G = 11 / T = 26",
-        "z = 2.0381",
-        "7/20",
-        "1.0328",
-        "9/22",
-        "1.7233",
-        "9,600 / 18.422 = 521.1 seconds",
-        "$0.1157",
-        "19,200 / 18.422 = 1,042.2 seconds",
-        "$0.2314",
-    ):
-        assert required in lesson
-
-
-def test_lesson_teaches_one_variable_comparison_and_projection_boundary() -> None:
-    lesson = LESSON.read_text()
-    for required in (
-        "Only the watermark processor changed",
-        "Stop token alignment after sampled histories diverge",
-        "The first control includes one-time CUDA warm-up behavior",
-        "Use the slower watermarked rate",
-        "Excluded:",
-        "This is not a Modal invoice",
-        "Stage 6 has not started",
-        "Detector separation was not a pass condition",
+        "How do we add a generation-time watermark",
+        "Implement and host",
+        "The reusable path has four jobs",
+        "Model adapter",
+        "Watermark profile",
+        "Generation core",
+        "Detector core",
+        "Gemma 4 is the worked example",
+        "Modal is only the machine",
     ):
         assert required.lower() in lesson.lower()
+
+
+def test_lesson_shows_exact_generation_and_detection_boundaries() -> None:
+    lesson = LESSON.read_text()
+    for required in (
+        "model.generate(",
+        "watermarking_config=profile.to_transformers()",
+        "WatermarkDetector(",
+        "model_config=",
+        "adapter.model_config",
+        "device=",
+        "adapter.device",
+        "adapter.token_tensor(copied_ids)",
+        "z_threshold=3.0",
+    ):
+        assert required in lesson
+    assert "The key enters at generation time" in lesson
+    assert "The key is not prompt text" in lesson
+
+
+def test_lesson_defines_compatible_models_without_claiming_every_model() -> None:
+    lesson = LESSON.read_text().lower()
+    for required in (
+        "compatible does not mean every hub repository",
+        "encoder-only models",
+        "remote apis that hide logits",
+        "automodelforcausallm",
+        "automodelformultimodallm",
+        "config.get_text_config()",
+        "parse assistant content",
+    ):
+        assert required in lesson
+    assert "works for any model" not in lesson
+    assert "any hugging face model" not in lesson
+
+
+def test_lesson_teaches_public_and_private_key_boundaries() -> None:
+    lesson = LESSON.read_text()
+    for required in (
+        "public_demo_key",
+        "private_key_from_environment",
+        "WATERMARK_HASHING_KEY",
+        "WATERMARK_KEY_VERSION",
+        "The public demo key provides reproducibility, not secrecy",
+        "Never sends a key",
+        "Forbidden:</strong> key value",
+        "non-secret key version",
+        "Modal, a VM, Kubernetes, or another GPU provider",
+    ):
+        assert required.lower() in lesson.lower()
+
+
+def test_lesson_preserves_the_real_parsing_failure_and_selected_proof() -> None:
+    lesson = LESSON.read_text()
+    for required in (
+        "str(parsed)",
+        "assistant_content(parsed)",
+        "The first Gemma smoke exposed this boundary",
+        "Early one morning Jack went up the hill. At the top he",
+        "11/26",
+        "2.0381",
+        "36.739 seconds",
+        "9.682 GiB",
+        "$0.1157",
+    ):
+        assert required in lesson
 
 
 def test_lesson_is_self_contained_accessible_and_has_static_fallback() -> None:
@@ -91,36 +125,36 @@ def test_lesson_is_self_contained_accessible_and_has_static_fallback() -> None:
     parser.feed(lesson)
     assert parser.scripts == 1
     assert parser.external_scripts == 0
-    assert parser.details == parser.summaries == 2
+    assert parser.details == parser.summaries == 3
     for required in (
-        'id="showKept"',
-        'id="showChanged"',
-        'id="nextPhase"',
-        'id="resetPhase"',
-        'id="predictSlower"',
-        'id="predictSame"',
-        'id="revealPair"',
-        'id="project200"',
-        'id="project400"',
-        'class="static-fallback"',
+        'id="plain"',
+        'id="gemma"',
+        'id="control"',
+        'id="marked"',
+        'id="badParse"',
+        'id="goodParse"',
+        'id="demoMode"',
+        'id="privateMode"',
+        'class="static"',
         "prefers-reduced-motion",
-        "@media(max-width:760px)",
+        "@media(max-width:800px)",
     ):
         assert required in lesson
     for forbidden in ("fetch(", "localStorage", 'type="module"', "http://"):
         assert forbidden not in lesson
 
 
-def test_visible_copy_keeps_claims_narrow_and_plain() -> None:
-    lesson = LESSON.read_text()
+def test_claims_remain_narrow() -> None:
+    lesson = LESSON.read_text().lower()
     for required in (
         "consistent with this configured watermark and key",
-        "would not establish AI origin, authorship",
+        "does not prove ai origin, authorship",
+        "private claude implementation",
+        "does not define the implementation",
         "does not prove human origin or absence of a watermark",
-        "do not estimate detection accuracy or writing quality",
-        "No false-alarm rate",
-        "private Claude implementation",
+        "still unimplemented",
+        "authenticated endpoint and deployment",
     ):
-        assert required.lower() in lesson.lower()
+        assert required in lesson
     for forbidden in ("\u2014", "\u2013", "\u2192", "\u201c", "\u201d", "move the knobs"):
         assert forbidden not in lesson

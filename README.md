@@ -7,10 +7,11 @@ Anthropic's private Claude implementation.
 Stage 1 starts with a biased coin. Stage 2 uses 20 visible token IDs and a toy keyed selector.
 Stage 3 puts a separate MLX selector inside an explicit LFM2 350M generation loop. Stage 4 checks
 that mental model against the maintained Transformers 5.14.1 watermark path with a pinned GPT-2
-fixture on the local CPU. Stage 5 carries the same reference recipe to pinned Gemma 4 E2B in BF16
-for one six-generation Modal L4 smoke test. Together they connect the detector statistic, keyed
-membership, real model scores, sampling, operation order, copied-text checking, and measured
-runtime cost. The detector recognizes only
+fixture on the local CPU. Stage 5 extracts a reusable implementation boundary for compatible
+Transformers generation models and works through Gemma 4 E2B in BF16. It shows where the key enters
+`generate()`, how model adapters isolate prompt and response details, how copied text reaches the
+matching detector, and how a host keeps a private key inside the process. Modal supplied the L4 for
+the saved smoke; it is not part of the watermark algorithm. The detector recognizes only
 this project's deliberately embedded watermark profile and key, not arbitrary
 AI-written text.
 
@@ -18,9 +19,10 @@ AI-written text.
 
 Stages 0 through 5 provide the reproducible Python 3.12 foundation, the biased-coin detector, a
 deterministic toy-vocabulary trace, paired local MLX continuations, a pinned Transformers reference
-adapter, and an approval-gated Gemma 4 E2B Modal smoke test. Stage 5 evidence was generated from
-clean source commit `09831ba` on one NVIDIA L4. Its three watermarked rows stayed below the strict
-`z > 3` cutoff; the runtime, memory, and cost-projection gates passed.
+adapter, and a provider-neutral generation, detection, adapter, and key boundary. Gemma 4 is the
+checked Stage 5 example. Its evidence was generated from clean source commit `09831ba` on one NVIDIA
+L4. All three watermarked rows stayed below the strict `z > 3` cutoff; the implementation and
+runtime gates passed. See [`docs/stages/05-hosting-blueprint.md`](docs/stages/05-hosting-blueprint.md).
 
 ```console
 just --list
@@ -60,9 +62,11 @@ just verify-lab-05
 
 The current slice has no dataset, hosted endpoint, production secret, or public deployment. Stage 3
 uses one approved local Apple GPU fixture. Stage 4 uses one approved local CPU fixture. Stage 5 used
-one disposable Modal L4 invocation with no Secret and no persistent Volume. Three passages do not
-establish accuracy, prose quality, or a generally useful cutoff. A result above a configured cutoff
-means only "consistent with this configured watermark and key," never "AI-written."
+one disposable Modal L4 invocation with no Secret and no persistent Volume. The committed demo key
+is public for reproducibility and provides no secrecy. The private-key path defines how a host would
+inject process-local key material; it does not claim production key management. Three passages do
+not establish accuracy, prose quality, or a generally useful cutoff. A result above a configured
+cutoff means only "consistent with this configured watermark and key," never "AI-written."
 
 Start with [docs/START_HERE.md](docs/START_HERE.md). Repository rules are in
 [AGENTS.md](AGENTS.md), and the live implementation boundary is in [STATUS.md](STATUS.md).

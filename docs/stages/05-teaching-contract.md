@@ -2,144 +2,127 @@
 
 ## Learner
 
-- Intended learner: a curious programmer who opens only the HTML file.
-- Safe prior knowledge: a token is a numbered text piece; the model produces next-token preference
-  numbers; Stage 4's checker turns copied text into a green count and z score.
-- Knowledge taught here: why a smoke test comes before a large experiment, what moves into GPU
-  memory, what elapsed time and throughput mean, where watermark processor cost appears, how a
-  measured rate becomes a bounded cost projection, and why a projection ends at a human gate.
+- Intended learner: a Python programmer who can call a Transformers model but has never added a
+  generation-time watermark or hosted a keyed model service.
+- Safe prior knowledge: tokenization, `model.generate()`, and the Stage 4 idea that a logits
+  processor changes next-token scores before sampling.
+- Knowledge taught here: the reusable model contract, where the watermark key enters generation,
+  how copied text reaches the matching detector, which pieces vary by model, and where a host must
+  keep a private key.
 
 ## One learning question
 
-- Question: what does the Stage 4 reference watermark cost when the same recipe runs on Gemma 4
-  E2B on one L4?
-- Project role: this is the last infrastructure check before any dataset manifest or 24-row run.
-- Plain answer before measurement: keep one model, GPU, prompt, seed, sampler, and checker fixed;
-  compare control and watermarked generation; measure time and memory; use the slower observed rate
-  to size the next run; then stop.
+- Question: how do we add the maintained Transformers watermark at generation time and host the
+  keyed path for a compatible model?
+- Project role: Stage 4 verified the maintained library behavior. Stage 5 turns that behavior into
+  an implementation boundary that can run on Gemma or another compatible Transformers generation
+  model.
+- Plain answer: load a compatible model and tokenizer or processor, derive its text configuration,
+  construct `WatermarkingConfig` from a server-held key, pass it only to the watermarked
+  `generate()` call, parse only the assistant continuation, and run `WatermarkDetector` with the
+  same profile and key.
 
 ## Learning outcome
 
 After the page, the learner should be able to explain:
 
-1. which Stage 4 settings stay fixed and which Stage 5 profile fields change;
-2. the difference among model download, model load, generation time, processor time, throughput,
-   GPU memory, and a GPU-only cost projection;
-3. why six saved generations can validate a runtime path but cannot measure detector accuracy,
-   prose quality, or a total cloud bill.
+1. the exact generation and detection calls that carry the watermark key;
+2. which adapter details change for GPT-2, Gemma, or another compatible Transformers model;
+3. how to place model loading, keyed generation, copied-text detection, and public responses behind
+   a host without returning the private key.
 
 ## Spine example
 
-- Smallest example with the full mechanism: the fixed continuity passage under paired control and
-  reference-watermarked Gemma generation on the same L4.
-- Starting state: one pinned Gemma revision in BF16, one rendered prompt, one derived seed, one
-  sampler profile, one checker profile, and a 200-token cap.
-- Observable result: fill only from `artifacts/lab-05/trace.json` after the approved run: generated
-  counts, elapsed seconds, tokens per second, peak reserved bytes, watermark processor time, copied
-  `G/T`, and z for both branches.
-- Hand-worked reasoning: convert raw nanoseconds to seconds; divide generated tokens by generation
-  seconds; compute memory headroom; divide 9,600 and 19,200 tokens by the slower measured rate;
-  multiply projected seconds by USD 0.000222 per L4 second.
-- Failure or ambiguity: a weak score can coexist with a correct runtime path; the watermark can be
-  too slow or memory-hungry; an output can end early; GPU-only projected generation charge omits
-  other bill components.
+- Smallest example containing the full mechanism: the Stage 5 continuity prompt goes through the
+  pinned Gemma 4 processor, BF16 model, generation-time watermark processor, structured-response
+  parser, copied-text tokenizer, and matching detector.
+- Starting state: one compatible Transformers model, one text vocabulary, one device, one public
+  demo key for reproducibility, and one watermark profile.
+- Observable result: the saved watermarked continuation and its copied-text result `G=11`, `T=26`,
+  `z=2.0381`.
+- Hand-worked reasoning: identify the key at configuration construction, follow the config into
+  `generate()`, remove prompt and chat control tokens from the returned continuation, then build the
+  detector from the same model text config, device, profile, and key.
+- Failure case: the first implementation stringified Gemma's parsed response object. It scored the
+  dictionary representation instead of the assistant's `content`. The corrected implementation
+  extracts content before re-tokenization.
 
 ## Controlled exploration
 
-### First comparison: runtime bridge
+### First comparison: model profile
 
-- Held fixed: passage identity, green fraction, bias, keys, sampling settings, context width,
-  checker statistic, and paired design.
-- Changed: model, tokenizer, vocabulary, device, precision, prompt rendering, and token cap move as
-  one declared runtime profile from Stage 4 to Stage 5.
-- Watch: which objects keep their meaning and which identifiers cannot transfer.
-- Sentence afterward: the recipe continues, but the token IDs and device-specific green sets do
-  not.
+- Held fixed: watermark profile, key contract, generation API, continuation boundary, and detector
+  contract.
+- Changed: model loader, tokenizer or processor, chat rendering, response parser, text config,
+  precision, and device.
+- Watch: a portable implementation carries settings and interfaces, never token IDs or green sets.
+- Sentence afterward: a compatible model adapter supplies text IDs and a text vocabulary to the same
+  generation-time watermark contract.
 
-### Second comparison: watermark off versus on
+### Second comparison: control and watermarked generation
 
-- Held fixed: exact model, L4, BF16, rendered prompt, seed, temperature, top-k, top-p, and maximum
-  length.
-- Changed: presence of the maintained watermark processor.
-- Watch: generated text, elapsed time, processor calls, peak reserved memory, green count, and z.
-- Sentence afterward: one paired smoke measures the local cost and evidence of the intervention; it
-  does not estimate an average effect.
+- Held fixed: loaded model, encoded prompt, seed, sampling settings, device, and output limit.
+- Changed: `watermarking_config` is absent or present in `model.generate()`.
+- Watch: the key stays inside the constructed configuration; it is not written into the prompt or
+  returned with the generated text.
+- Sentence afterward: the maintained logits processor applies the keyed score change during each
+  next-token decision.
 
-### Third comparison: 200 versus 400-token projection
+### Third comparison: public demo and hosted service
 
-- Held fixed: slower measured throughput and recorded L4 per-second price.
-- Changed: projected generated-token total, from 9,600 to 19,200.
-- Watch: projected seconds and GPU-only charge double under a linear assumption while fixed load and
-  other costs remain excluded.
-- Sentence afterward: a projection is arithmetic from one smoke rate, not a measured bill or a
-  promise of linear scaling.
+- Held fixed: the same Python generation and detection functions.
+- Changed: the demo reads a documented public key while the service reads a private key from the
+  host's secret store at process start.
+- Watch: requests contain prompts and generation settings; responses contain generated text and
+  approved metadata; neither contains the private key.
+- Sentence afterward: Modal, a VM, or another GPU host provides compute. The watermark boundary is
+  the same process-local Transformers code.
 
 ## Evidence ledger
 
 | Page claim or value | Type | Source | Verification |
 | --- | --- | --- | --- |
-| Stage 4 settings, passage, and checker boundary | measured configuration | `configs/lab_04.toml`; `artifacts/lab-04/trace.json` | `just verify-lab-04` and direct comparison |
-| Gemma model identity, revision, architecture, vocabulary, and license | external configuration | pinned Hugging Face model card and `configs/lab_05.toml` | exact metadata and file checks in remote result |
-| Modal L4, CPU, memory, and Volume price rates | external | `https://modal.com/pricing`, retrieved 2026-08-15 | exact values locked in config and cited in appendix |
-| Model download/load, six generations, processor time, memory, and detector evidence | measured | `artifacts/lab-05/trace.json` | local schema/arithmetic verifier and remote invariants |
-| Tokens per second, memory headroom, and 200/400 projections | derived | measured Stage 5 fields plus locked formulas | independent local recomputation |
-| Six generations do not measure accuracy, quality, or total cost | limitation | Stage 5 scope | claim review |
+| `WatermarkingConfig` enters through `generate()` | external and checked | Transformers 5.14.1 API; `src/watermark_lab/transformers_runtime.py` | unit fakes and Stage 4/5 evidence |
+| Detector uses matching model text config, device, profile, and key | external and checked | Transformers 5.14.1 API; runtime core | unit fakes and saved detector evidence |
+| Gemma uses a processor, chat template, text config, BF16 CUDA model, and parsed assistant content | measured implementation | `src/watermark_lab/gemma_adapter.py`; selected Stage 5 trace | unit tests and `just verify-lab-05` |
+| Public demo key and server-held private key have different trust properties | opinion and limitation | `src/watermark_lab/key_policy.py`; hosting blueprint | contract and tests |
+| Modal is one replaceable host | implementation fact | `src/watermark_lab/modal_app.py`; hosting blueprint | import-free architecture tests |
+| Continuity watermarked result is `11/26`, z `2.0381` | measured | `artifacts/lab-05/trace.json` | `just verify-lab-05` |
+| Cost and memory show that the pinned example fits one L4 | measured and derived | selected Stage 5 trace | local verifier |
 
 ## Boundaries
 
-- This stage establishes one pinned Gemma 4 E2B BF16 smoke path on one Modal L4 and records its
-  measured runtime, memory, copied-text evidence, and bounded projections.
-- It does not establish detector accuracy, a false-alarm rate, language quality, robustness,
-  model-size generality, CUDA portability, a total Modal invoice, or a useful production cutoff.
-- It does not access C4 or any dataset. Stage 6 remains unimplemented.
-- It does not run E4B, another GPU, the 24-row experiment, attacks, deployment, or publishing.
-- A positive checker result means only “consistent with this configured watermark and key.”
-
-## Continuity rules
-
-- Link and summarize Stages 1 through 4 before Stage 5 begins.
-- Keep the continuity passage visible from the Stage 4 bridge through the paired Gemma result and
-  copied-text checker.
-- Reuse prompt, watermark processor, selected-token stream, checker links, `G/T`, and z as stable
-  visual objects.
-- State the changed runtime profile before showing a new model output.
-- Stop matched token comparison when the two sampled histories differ.
-- Keep units attached to every value: seconds, tokens/second, bytes or GiB, and USD per second.
-- Use green only for key-selected membership, orange for saved sampled text, blue for measured
-  infrastructure, yellow for derived projections, and coral/rust for boundaries or failed gates.
-- Use plain labels before “BF16,” “throughput,” “peak reserved memory,” and “projection.”
+- This stage establishes a reusable, tested implementation boundary for compatible Transformers
+  generation models and demonstrates it with the already measured Gemma 4 smoke.
+- Compatibility means the runtime can encode a text prompt, call a `generate()` path that accepts a
+  logits processor through `watermarking_config`, expose a text vocabulary through model config,
+  and decode or parse continuation text. It does not mean every Hub repository works unchanged.
+- A public demo key makes the educational fixture reproducible but offers no secrecy. Anyone who
+  knows it can try to spoof or remove the signal.
+- A production service must inject a private key server-side, restrict detector access, avoid logs
+  that reveal the key, and define rotation and versioning outside the model response.
+- This work does not deploy an endpoint, create a secret, run another GPU job, access a dataset, or
+  start Stage 6.
+- A positive result means only "consistent with this configured watermark and key."
 
 ## Interaction contract
 
-1. Stage rail: reveal the single question and completed result of each prior stage.
-2. Recipe handoff: sort profile fields into “kept” and “changed,” then map each changed field to why
-   token equality is not expected.
-3. Load sequence: advance through container start, pinned files, GPU residency, and ready state.
-   Use only measured intervals; mark unavailable platform phases explicitly.
-4. Paired continuity run: predict whether watermarking changes time, memory, and checker evidence;
-   reveal the saved control and watermark branches from one shared start.
-5. Metric microscope: select one metric at a time. Show its raw inputs, arithmetic, unit, and full
-   interpretation sentence.
-6. Copied-text replay: move only each saved continuation into the same checker recipe. Reveal `G`
-   and `T` before z and the cutoff statement.
-7. Projection ladder: use the measured slower rate, first for 9,600 tokens and then 19,200. Keep
-   price and exclusions fixed. Show the linear assumption beside the result.
-8. Human gate: walk through memory, speed, runtime, smoke-rubric, and budget checks. End at review;
-   never imply Stage 6 ran.
-9. Evidence map and optional technical appendix: source every value and keep hashes, versions, raw
-   nanoseconds, raw bytes, full tables, and commands out of the novice main path.
-
-Every action states what stays fixed, what changes, what to watch, and what the observed result
-means.
+1. Follow one prompt through the actual Python modules.
+2. Switch between a plain causal-LM profile and the Gemma profile. Show exactly which adapter methods
+   change.
+3. Toggle the `watermarking_config` argument in the real `generate()` call while every other input
+   remains fixed.
+4. Place the same runtime inside a provider-neutral process boundary. Choose public demo key or
+   server-held key and inspect what may cross the HTTP boundary.
+5. Repair the structured-response parsing bug by selecting `content` instead of `str(parsed)`.
+6. Replay the saved continuation through the matching detector.
+7. End with the measured Gemma smoke as proof that the implementation ran, with cost in a compact
+   feasibility appendix.
 
 ## Output and QA
 
 - Destination: `.agent/diagrams/text-watermarking-stage-5-lesson.html`.
-- Views: 1440 by 1000 light, 390 by 844 light, and 1200 by 900 dark, while preserving the earlier
-  lessons' visual continuity. If the final lesson follows the newly required black technical system,
-  provide an explicit light test surface only for QA and retain semantic colors.
-- Context-free screenshots: Stage 4-to-5 recipe bridge, paired continuity timing/memory/checker view,
-  and projection plus human gate.
-- Test all controls, keyboard focus, reduced motion, scripts-off fallback, console output, and
-  horizontal overflow.
-- Run learner copy through the Humanizer plain register and final lint audit.
+- Main screenshots: implementation pipeline, generation-time key insertion, and hosted key boundary.
+- Test 1440 by 1000 desktop, 390 by 844 mobile, 1200 by 900 dark, reduced motion, keyboard focus,
+  scripts-off fallback, every control, console output, and horizontal overflow.
+- No required network, font, script, model, or cloud dependency in the HTML.

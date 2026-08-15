@@ -52,6 +52,7 @@ addopts = "--strict-markers -ra"
 [tool.coverage.run]
 branch = true
 source = ["watermark_lab"]
+omit = ["src/watermark_lab/modal_app.py"]
 
 [tool.coverage.report]
 show_missing = true

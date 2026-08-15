@@ -2,8 +2,9 @@
 
 ## Current stage
 
-Stages 0 through 5 complete locally on `main`; Stage 5 smoke passed its runtime gate and awaits
-human review before Stage 6.
+Stages 0 through 5 complete locally on `main`. Stage 5 now centers the reusable Transformers
+implementation and hosted key boundary, with the saved Gemma smoke as checked proof. No endpoint,
+production secret, or Stage 6 work has started.
 
 ## Implemented
 
@@ -50,7 +51,14 @@ human review before Stage 6.
 - Six fixed Gemma smoke continuations across the three Stage 4 passages, copied-text replay,
   generation-key and comparison-key detector evidence, GPU timing, peak memory, and bounded
   200/400-token run projections.
-- Stage 5 uses one disposable cloud invocation with no dataset, no Hugging Face Secret, no
+- Reusable Stage 5 Transformers core with explicit watermark and sampling profiles, one generation
+  call boundary, copied-text finalization, and matching detector construction.
+- Gemma 4 adapter for chat rendering, text-config lookup, generated-ID slicing, strict assistant
+  content extraction, copied-text tokenization, and CUDA detector tensors.
+- Public-demo and private-environment key policies plus bounded provider-neutral request and response
+  records that never serialize the key value.
+- Hosting blueprint for a long-lived keyed model process. Modal is one replaceable compute adapter.
+- Stage 5 used one disposable cloud invocation with no dataset, no Hugging Face Secret, no
   persistent Volume, and no deployed endpoint.
 
 ## Verified
@@ -132,11 +140,16 @@ human review before Stage 6.
 - The fixed Stage 5 gate passed: exact L4/BF16 path, six complete records, 56.1 percent memory
   headroom, watermarked throughput above 2 tok/s, readable non-empty outputs, and projections below
   the USD 5 ceiling.
+- CPU-only tests prove that control and watermarked generation calls differ only by the maintained
+  `watermarking_config` argument, Gemma structured responses contribute only assistant content, a
+  private key can be read from an injected environment, and public service records omit the key
+  value.
 
 ## Not implemented
 
 - Dataset access or manifests.
-- Hosted detector or public playground.
+- Authenticated hosted generator, hosted detector, or public playground.
+- Production secret creation, key rotation, access control, rate limiting, and abuse policy.
 - Stage 6 natural-web calibration or any 24-row generation run.
 
 No dataset-backed calibration or generally useful detector cutoff exists.

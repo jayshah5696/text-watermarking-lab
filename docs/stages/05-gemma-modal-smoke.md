@@ -12,14 +12,17 @@ publish. It stops after six generations and the human review gate.
 
 ## Question
 
-What does the same maintained watermark intervention cost on a credible current open model?
+Can the maintained Transformers generation-time watermark be implemented behind a reusable model
+adapter and hosted key boundary, with Gemma 4 E2B as the concrete smoke example?
 
 ## Narrow answer expected before the run
 
-The watermark recipe should move from GPT-2 on a local CPU to Gemma 4 E2B on one CUDA L4 without
-changing its green fraction, score increase, keys, context width, sampling settings, or copied-text
-checker. Model load, generation speed, processor time, CUDA memory, and detector evidence must be
-measured. No direction or size is assumed.
+The reusable path should separate model-specific prompt and response handling from the shared
+watermark profile, generation call, copied-text boundary, and matching detector. The Gemma adapter
+should carry the Stage 4 recipe onto one CUDA L4 without changing its green fraction, score
+increase, keys, context width, sampling settings, or copied-text checker. Model load, generation
+speed, processor time, CUDA memory, and detector evidence must still be measured as feasibility
+checks. Modal supplies the measured GPU runtime; it is not part of the watermark algorithm.
 
 ## Continuity
 
@@ -56,6 +59,29 @@ passages, sampler settings, checker statistic, and paired design remain visible.
 
 Record the CUDA runtime, driver, GPU name, total VRAM, vocabulary size, package versions, model
 revision, model file size, source commit, configuration hash, Modal App name, and image metadata.
+
+## Reusable implementation and hosting boundary
+
+The implementation has three layers:
+
+1. a shared Transformers watermark core that constructs the generation profile, calls
+   `model.generate()`, slices generated IDs after the prompt, re-tokenizes copied continuation text,
+   and constructs the matching detector;
+2. a model adapter that loads and encodes one compatible Transformers generation architecture,
+   exposes its text configuration, and extracts assistant content from generated IDs;
+3. a host adapter that supplies compute and, for a real service, injects a private key into the
+   long-lived process.
+
+A compatible model must expose next-token generation through a `generate()` path that accepts the
+maintained `watermarking_config`, provide a text vocabulary through model configuration, and provide
+a tokenizer or processor for prompts and copied text. This is not a claim that every Hugging Face
+repository works unchanged.
+
+The committed Stage 5 key remains public for reproducibility. A hosted private key must come from a
+secret store at process startup and must never appear in prompt text, serialized records, logs,
+exceptions, responses, or client-side code. A non-secret key-version label may cross the service
+boundary. This stage documents and tests that boundary but does not create a secret or deploy an
+endpoint.
 
 ## Modal resources
 

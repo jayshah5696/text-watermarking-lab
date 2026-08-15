@@ -2,177 +2,154 @@
 
 ## One question
 
-What does the Stage 4 reference watermark cost when the same recipe runs on Gemma 4 E2B on one
-Modal L4?
+How do we add the maintained Transformers watermark at generation time and host the keyed path for
+Gemma or another compatible generation model?
 
-The learner already saw where Transformers inserts the processor and how copied text becomes `G/T`
-and z. Stage 5 freezes those ideas, changes the runtime profile, measures one six-generation smoke,
-and stops before a dataset or full experiment.
+Stage 4 established the library behavior. Stage 5 must show the implementation. Modal appears only
+where the process needs a machine with an L4.
 
 ## One recorded story
 
-Keep this passage visible:
+Carry the continuity prompt through the actual boundary:
 
 `Early one morning Jack went up the hill. At the top he`
 
-Start with the exact Stage 4 recipe beside it. Move the recipe, not the Stage 4 token IDs, into the
-Gemma runtime. Show the control and watermarked Gemma branches from one shared rendered prompt and
-seed. When their sampled histories diverge, stop pairing individual token positions. Follow each
-saved continuation through measured time, memory, and the copied-text checker. Use the slower
-measured rate to project two later run sizes, then end at the human gate.
+The learner starts with a generic `TextGenerationAdapter`. They choose the Gemma profile, render one
+user message with Gemma's chat template, encode it on CUDA, and call one shared generation function.
+The only condition change is whether that function passes a `WatermarkingConfig` into
+`model.generate()`. The generated IDs exclude the prompt. Gemma's response parser returns a
+structured object, so the adapter extracts `content`, re-tokenizes that copied text, and gives only
+those IDs to a detector built from the same text config, device, profile, and key.
 
-## Visual system
+The measured continuation closes the story. Infrastructure and cost prove that this implementation
+ran on one L4; they do not define the lesson.
 
-- Use the black technical-document shell required by the current lesson skill while preserving the
-  earlier lessons' object continuity: numbered sections, fixed-value strips, green membership marks,
-  orange sampled text, blue measured infrastructure, yellow derived arithmetic, and coral boundary
-  notes.
-- Draw the runtime as one continuous path rather than a dashboard. A single prompt object moves
-  through container, model load, paired generation, copied-text check, projection, and gate.
-- Keep control and watermark branches on a shared time origin and comparable unit scales.
-- Label every time and memory mark directly. Do not encode meaning through color alone.
-- On mobile, stack paired branches but preserve the shared start, condition label, and scale.
-- Each main screenshot repeats enough local explanation to stand alone.
+## Visual language
+
+- Use one horizontal code path: request, adapter, encoded prompt, generation, parsed continuation,
+  detector, response.
+- Keep the key as a labeled server-side object. Draw a boundary when it enters
+  `WatermarkingConfig`. Never draw it inside prompt text or the public response.
+- Use blue for model adapters and data movement, green for keyed watermark operations, orange for
+  generated continuation text, yellow for code under examination, and coral for trust boundaries
+  or bugs.
+- Keep code excerpts short, exact, and linked to repository modules in the appendix.
+- Modal receives one small side label: replaceable GPU host.
 
 ## Beat order
 
-1. Show a five-stage rail. Stage 1 defines evidence; Stage 2 creates green membership; Stage 3 puts
-   it in a real loop; Stage 4 checks a maintained implementation; Stage 5 asks whether that path is
-   ready to scale.
-2. Keep the continuity passage and Stage 4 profile visible. State the Stage 4 measured result in one
-   sentence without reopening its full lesson.
-3. Ask the learner to sort profile fields into “kept” and “changed.” Keep green fraction, bias, keys,
-   context width, sampler settings, checker, passage, and paired seed rule. Change model, tokenizer,
-   vocabulary, device, precision, prompt rendering, and token cap.
-4. State the consequence before output appears: Gemma and GPT-2 token IDs and green sets are not
-   expected to match. The experiment carries a recipe, not a saved token path.
-5. Introduce the smallest faithful runtime: a declared Python image, one disposable Modal function,
-   one L4, one pinned model revision, no dataset, no Volume, and six generations.
-6. Move the pinned model file into GPU memory. Explain BF16 as the numeric storage format used for
-   weights. Show measured download and load intervals only after defining their start and stop.
-7. Introduce GPU memory with a physical quantity: total bytes available, bytes reserved at peak, and
-   bytes left. Name the ratio “memory headroom” only after the subtraction is visible.
-8. Render the exact continuity user message. Reveal the complete chat-framed input before the model
-   runs.
-9. Split from one shared start into control and watermark branches. State everything held fixed and
-   identify the processor as the only treatment change.
-10. Ask for a prediction: same, faster, or slower; same or different peak memory; stronger or weaker
-    checker evidence. Store the prediction only in page state, never as project evidence.
-11. Run the saved control branch. Show output count and wall time. Divide tokens by seconds before
-    naming the rate “throughput.” Read the result as one complete sentence.
-12. Run the saved watermark branch. Show the same measurements, plus processor calls and total
-    processor GPU time from the separate instrumented replay.
-13. If histories diverge, break the visual token connector at that exact point. Keep the two text
-    blocks separate afterward. Explain that later token-to-token differences combine the treatment
-    with different sampled histories.
-14. Compare wall time, throughput, peak reserved memory, and checker evidence on shared scales.
-    Avoid a percent slowdown if short-run timing makes it misleading; show raw values first.
-15. Move only the displayed continuation text from each branch into the checker. Leave prompt,
-    padding, and any hidden reasoning outside.
-16. Build `G/T`, expected `0.25T`, z, and strict cutoff in the same order as earlier lessons. Repeat
-    the narrow interpretation sentence beside each result.
-17. Expand from the continuity pair to a compact three-passage strip. Keep every row visible. State
-    that three passages show smoke variation, not an accuracy or quality estimate.
-18. Introduce projection only after measured throughput is clear. Select the slower measured
-    condition. Show `9,600 / rate = seconds`, then multiply by `0.000222 USD/second`.
-19. Repeat with 19,200 tokens while holding the rate and price fixed. Explain the linear assumption
-    and why the second generated-token total doubles.
-20. Put excluded components beside both projections: image build, download, model load, CPU, memory,
-    storage, retries, and non-linear scaling. Mark unavailable values as unavailable.
-21. Walk through the human gate one condition at a time: correct L4/BF16 path, six complete rows,
-    verifier, memory headroom, watermarked speed, smoke rubric, and budget projection.
-22. Show the measured go/no-go outcome. Regardless of outcome, stop. A pass authorizes discussion,
-    not Stage 6 execution.
-23. End with an evidence map separating measured smoke values, derived projections, external model
-    and price facts, and untested claims. Keep versions, hashes, raw units, and commands in the
-    appendix.
+1. State the implementation question and show the Stage 4 handoff: Transformers already owns the
+   maintained processor order.
+2. Define compatible model in concrete terms. The model must expose text IDs, text vocabulary,
+   `generate()`, and continuation decoding. Some models also need chat rendering and structured
+   response parsing.
+3. Present the four reusable objects: `ModelAdapter`, `WatermarkProfile`, generation function, and
+   detector function.
+4. Switch between a GPT-style plain causal model and Gemma. Keep the common interface fixed. Change
+   loader class, prompt renderer, text config lookup, precision/device, and parser.
+5. Follow the continuity prompt into the Gemma adapter. Show the exact user message and rendered chat
+   input boundary.
+6. Build a watermark profile from green fraction, bias, seeding scheme, context width, and one key.
+   Explain that the public fixture key is reproducible, not secret.
+7. Put the profile into the real call:
+   `model.generate(..., watermarking_config=profile.to_transformers())`.
+8. Toggle the argument off for control and on for watermarked generation. Keep model, prompt IDs,
+   seed, sampler, and token cap fixed.
+9. Open the next-token loop conceptually. Transformers computes logits, applies sampling warpers and
+   the keyed watermark processor, samples one token, appends it, and repeats. Do not reimplement the
+   loop in Stage 5.
+10. Slice generated IDs after `prompt_length`. Prompt IDs never become copied-text evidence.
+11. Show the real Gemma parsing failure. `str(parsed)` serializes role and content labels into the
+   checked string. Replace it with a strict `content` extractor and a documented decode fallback.
+12. Re-tokenize only the displayed continuation. Build `WatermarkDetector` from the matching text
+   config, device, profile, and key.
+13. Return `G`, `T`, z, and a narrow decision. Do not return the private key.
+14. Wrap the same runtime in a provider-neutral service boundary. Process startup loads model and
+   server key once. A request supplies prompt and safe generation parameters. A response returns
+   text and approved metadata.
+15. Compare key modes. The public demo key may live in config and artifacts. The private service key
+   comes from a secret environment variable, is parsed once, never logged, never serialized, and
+   receives a non-secret version label for rotation.
+16. Place Modal, a VM, and another GPU platform under the same host interface. State that Modal is
+   the measured example, not part of the algorithm.
+17. Reveal the saved Gemma result: six calls completed, continuity watermark result `11/26`, z
+   `2.0381`, and no row crossed the cutoff. Explain that implementation success and detector power
+   are different questions.
+18. Put download, memory, speed, and cost in a compact feasibility appendix. They show that the
+   example fits the chosen host.
+19. End with the unsupported edges: arbitrary remote code, encoder-only models, APIs that hide
+   logits, unknown multimodal processors, key rotation, abuse controls, and calibrated production
+   thresholds.
 
 ## Interaction sequence
 
-### Stage rail
+### Adapter switch
 
-- Instruction: select a prior stage and read the one problem it removed.
-- Fixed: continuity passage and project goal.
-- Changed: visible prior result.
-- Watch: Stage 5 adds runtime evidence rather than a new watermark formula.
-- Result: scaling is a separate question from algorithm correctness.
+- Instruction: choose plain causal LM or Gemma.
+- Fixed: the `ModelAdapter` contract and watermark generation/detection functions.
+- Changed: model-specific loading, prompt formatting, text config, and response parsing.
+- Watch: the shared core never checks a model ID.
+- Result: portability comes from an explicit adapter contract, not from claiming every model works.
 
-### Recipe handoff
+### Generation-time toggle
 
-- Instruction: place each field under kept or changed, then reveal the checked mapping.
-- Fixed: all recorded field names.
-- Changed: learner classification only.
-- Watch: token IDs belong to the changed model/tokenizer profile.
-- Result: the complete settings profile, not a vague “same watermark,” defines continuity.
+- Instruction: turn watermarking off, then on.
+- Fixed: model, prompt IDs, random seed, sampling settings, and output limit.
+- Changed: one `watermarking_config` argument.
+- Watch: the key enters the logits processor during token generation.
+- Result: no post-processing can reproduce this intervention after text has already been sampled.
 
-### Runtime sequence
+### Parser repair
 
-- Instruction: advance one phase and read its start/stop definition.
-- Fixed: pinned revision, L4, BF16, and one smoke invocation.
-- Changed: container, download, load, ready state.
-- Watch: unavailable platform timings stay explicitly unavailable.
-- Result: load time and generation time answer different questions.
+- Instruction: compare the first stringified parser output with the corrected content extraction.
+- Fixed: generated model output.
+- Changed: the copied-text boundary.
+- Watch: role labels and dictionary punctuation disappear before tokenization.
+- Result: a working model call can still produce invalid detector evidence if parsing is wrong.
 
-### Paired continuity run
+### Hosting boundary
 
-- Instruction: predict the direction, then reveal control and watermark measurements.
-- Fixed: rendered prompt, model, device, seed, sampling settings, and token cap.
-- Changed: watermark processor present or absent.
-- Watch: elapsed time, throughput, peak reserved memory, text, and checker evidence.
-- Result: one pair exposes a causal treatment but cannot estimate a population average.
+- Instruction: choose reproducible demo or private service mode.
+- Fixed: model runtime and public request/response schema.
+- Changed: key source and disclosure policy.
+- Watch: the private key remains inside the server process.
+- Result: the compute provider is replaceable; the key boundary is not.
 
-### Metric microscope
+### Saved proof
 
-- Instruction: select time, rate, memory, processor, or checker.
-- Fixed: saved continuity records.
-- Changed: one explanation and calculation.
-- Watch: raw inputs, unit, and interpretation.
-- Result: every displayed metric names a reproducible operation.
-
-### Projection ladder
-
-- Instruction: calculate 200-token run size first, then extend to 400.
-- Fixed: slower measured rate and L4 price.
-- Changed: total generated tokens only.
-- Watch: seconds and GPU-only charge scale while exclusions stay visible.
-- Result: a projection sizes a decision; it does not report a bill.
-
-### Human gate
-
-- Instruction: inspect each preregistered check in order.
-- Fixed: thresholds written before the run.
-- Changed: measured pass/fail state.
-- Watch: weak detector separation does not itself fail runtime correctness.
-- Result: the smoke ends in review rather than automatically launching more work.
+- Instruction: replay the recorded continuity result through the implementation diagram.
+- Fixed: selected Stage 5 trace.
+- Changed: visible layer, from request to generation to detection.
+- Watch: each saved field belongs to one code boundary.
+- Result: the smoke proves this path ran on pinned Gemma; it does not establish production accuracy.
 
 ## Main path and appendix
 
 Keep on the main path:
 
-- five-stage continuity;
-- kept versus changed profile fields;
-- one measured load sequence;
-- paired continuity timing, memory, text, and checker result;
-- all three saved pairs in compact form;
-- hand-worked 200/400 projections;
-- exclusions and human gate;
-- claim boundary.
+- compatibility contract;
+- concrete adapter differences;
+- actual generation call;
+- key insertion and trust boundary;
+- continuation slicing and strict response parsing;
+- matching detector call;
+- provider-neutral hosting process;
+- measured Gemma proof and claim boundary.
 
 Move to disclosures:
 
-- source commit, config hash, model file bytes, package/CUDA/driver versions, Modal image metadata;
-- full rendered inputs and token arrays;
-- raw nanoseconds and bytes;
-- all detector policies and p-values;
-- full six-row table;
-- source links and reproduction commands.
+- full package versions, commit and config hashes;
+- full Modal resource declaration;
+- raw token arrays and nanoseconds;
+- memory and cost projection;
+- alternative detector policies;
+- deployment work that remains unimplemented.
 
 ## Screenshot tests
 
-1. Bridge screenshot: a newcomer can identify what stayed fixed, what changed, and why Stage 4 and
-   Stage 5 token IDs should not match.
-2. Paired-run screenshot: a newcomer can identify the fixed prompt/seed/runtime, the single treatment
-   change, each branch's units, where token alignment stops, and the copied-text checker result.
-3. Projection screenshot: a newcomer can reproduce `tokens / tokens-per-second`, identify the L4
-   price, distinguish measured inputs from derived outputs, list excluded costs, and locate the
-   human approval gate.
+1. Implementation screenshot: a programmer can name the four shared objects and the methods supplied
+   by a model adapter.
+2. Generation screenshot: a programmer can point to the exact line where the key affects generation
+   and explain what stays fixed in the control call.
+3. Hosting screenshot: a programmer can identify key source, process boundary, public request fields,
+   public response fields, and the replaceable compute provider.

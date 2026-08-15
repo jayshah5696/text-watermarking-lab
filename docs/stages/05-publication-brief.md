@@ -2,152 +2,167 @@
 
 ## Article role
 
-This section answers one question: what changes when the Stage 4 reference recipe moves from a
-small local CPU fixture to Gemma 4 E2B on a cloud L4?
+Stage 5 explains how to put the maintained Transformers watermark into a real generation path and
+how to place that keyed path behind a host. Gemma 4 E2B is the worked model. Modal supplies the L4
+used for the saved smoke; it is not part of the watermark algorithm.
 
-The reader may assume that Transformers owns the maintained generation loop and that copied text
-becomes `G`, `T`, and z. Stage 5 must define BF16, GPU memory, model load, generation throughput,
-watermark processor time, and a cost projection in everyday language.
+The section answers:
 
-The narrow expected answer is one sentence: the same sampling intervention can run on a larger
-current model, but its time and memory cost must be measured because Gemma's 262K-token vocabulary
-makes the maintained full-vocabulary green-list step real work.
+> How do we add a generation-time watermark to a compatible Transformers model and keep its key
+> inside a hosted service?
 
-## Teaching spine
+The answer must show actual code boundaries. A vague architecture diagram is insufficient.
 
-Keep the continuity passage:
+## Implementation spine
 
-`Early one morning Jack went up the hill. At the top he`
+The reusable path has four pieces:
 
-Use its paired Gemma row as the recorded story. Keep the passage, seed, L4, BF16 model, generation
-settings, and checker recipe fixed. Change only whether the reference watermark processor is
-present. Follow both branches only while their inputs and histories match; after the first sampled
-difference, compare aggregate time, memory, copied text, and checker evidence rather than aligning
-unrelated tokens.
+1. A model adapter loads the model, renders or encodes prompts, exposes the text model config, and
+   extracts assistant continuation text.
+2. A watermark profile owns the green fraction, bias, key, seeding scheme, and context width.
+3. The generation function passes the profile's `WatermarkingConfig` to `model.generate()` only for
+   the watermarked condition.
+4. The detector tokenizes only copied continuation text and builds `WatermarkDetector` from the
+   matching text config, device, profile, and key.
 
-The main path must make these transitions visible:
+Use the continuity passage for every code and data boundary. The article should show the Gemma
+structured-response bug because it demonstrates why the adapter exists.
 
-1. Stage 4's GPT-2/CPU fixture hands the complete recipe to Stage 5.
-2. A Modal container supplies one L4; Modal is outside the watermark algorithm.
-3. The pinned Gemma files move into GPU memory once.
-4. The same rendered prompt and seed begin the control and watermark calls.
-5. The watermark processor creates a keyed green group and changes surviving scores at every token.
-6. The page measures elapsed generation time and peak reserved GPU memory for each branch.
-7. Copied continuation text returns to the same configured checker.
-8. The slower measured speed projects the 24-row run at 200 and 400 tokens.
-9. A human gate decides whether later dataset and full-run work is justified.
+## Compatible-model claim
 
-The challenge case is a weak or slow watermark row. It remains evidence. Six generations cannot
-measure accuracy or quality, and a projected GPU charge is not a Modal invoice.
+Use "compatible Transformers generation model," not "any Hugging Face model." Compatibility
+requires:
 
-## Fixture selection
+- next-token text generation through a `generate()` implementation that accepts the maintained
+  watermark configuration;
+- a text vocabulary available from model configuration;
+- a tokenizer or processor that can encode prompts and copied text;
+- a continuation boundary that removes prompt and control tokens;
+- a way to decode or parse assistant content;
+- the selected device being supported by the model and watermark processor.
 
-The three passages, seed rule, sampling settings, keys, green fraction, bias, context width, and
-checker formula were selected before the Stage 5 run. They come from Stages 3 and 4.
+A plain decoder-only model may use `AutoModelForCausalLM` and `AutoTokenizer`. Gemma 4 uses
+`AutoModelForMultimodalLM`, `AutoProcessor`, `model.config.get_text_config()`, a chat template, BF16
+CUDA weights, and structured-response parsing. Other architectures may require another adapter or
+may be incompatible.
 
-The 200-token cap is fixed before evidence because a 40-token row cannot estimate the proposed
-200-token run, while 400 tokens would double the smoke without resolving the Stage 6 dataset gate.
-Do not tune prompts, seeds, keys, or settings after seeing output.
+## Key boundary
 
-The exact model revision is
-`google/gemma-4-E2B-it@3e22461f65e89153144f8adb70e3b8c2cc9845a7`. Record the model card and
-Apache 2.0 license. The model is an open-model experiment fixture, not a stand-in for Claude or
-proof of model quality.
+The public Stage 5 fixture key stays in versioned config so readers can reproduce the evidence. It
+is unsuitable for a real trust boundary because anyone can know it.
 
-## Visual plan
+A hosted service should:
 
-### Figure 1: the recipe crosses a runtime boundary
+- receive the private key from the host's secret store as an environment variable or equivalent;
+- parse it once during process startup;
+- construct generation and detector profiles inside the process;
+- never put it in prompts, logs, traces, exceptions, responses, or client-side JavaScript;
+- return a non-secret key version label when rotation requires one;
+- restrict detector access if exposing detection would help an attacker tune around the signal.
 
-Keep the Stage 4 objects aligned on the left: passage, processor order, key profile, copied-text
-checker, `G/T`, and z. Move them across a visible boundary to Gemma 4, BF16, and one L4. Mark model,
-tokenizer, vocabulary, device, prompt rendering, and length as changed profile fields.
+This stage provides the code boundary and deployment blueprint. It does not create a secret or
+endpoint.
 
-Caption draft:
+## Provider-neutral hosting blueprint
 
-> Stage 5 keeps the maintained watermark recipe and paired passages. It changes the model,
-> tokenizer, device, precision, prompt rendering, and output length, so token-for-token equality is
-> neither expected nor tested.
+The long-lived process loads one model and one key. The transport layer is thin:
 
-Alt text draft:
+```text
+POST /generate
+  prompt + approved sampling fields
+        -> process-local adapter and keyed generation
+        <- continuation + model/profile/key-version labels
 
-> A fixed passage and watermark recipe move from GPT-2 on a CPU to Gemma 4 E2B on an L4. Stable
-> settings are separated from changed runtime and model fields.
+POST /detect (optional and access controlled)
+  copied text
+        -> process-local tokenizer and matching detector
+        <- G, T, z, cutoff decision, profile/key-version labels
+```
 
-### Figure 2: one paired passage through time and memory
+Modal can wrap this process in a class or web endpoint. A VM, container platform, or another GPU
+service can host the same core. GPU selection, autoscaling, authentication, rate limits, request
+validation, timeouts, audit policy, and key rotation belong to the deployment layer.
 
-Use a shared start. Branch to control and watermark calls. Display generated token count, wall time,
-tokens per second, peak reserved memory, and processor time from the selected artifact. Stop token
-alignment when histories differ. Bring both copied outputs into matched checker boxes.
+## Recorded proof
 
-Caption draft:
+The selected Stage 5 smoke proves that the implementation path completed for the pinned Gemma 4 E2B
+revision in BF16 on one L4. It generated three control/watermarked pairs, extracted copied assistant
+content, and ran matching detectors.
 
-> Both branches begin from the same rendered prompt and random seed. Once sampled histories differ,
-> the comparison continues in measured time, memory, and copied-text detector evidence.
+The continuity watermarked row generated 28 IDs. Its copied continuation produced 26 eligible
+checks, 11 green hits, and z `2.0381`. The other watermarked rows also stayed below `z > 3`. Preserve
+that result. The smoke validates the path, not a production detector threshold or accuracy claim.
 
-Alt text draft:
+## Figures
 
-> One prompt splits into control and watermarked generation on the same L4. Each branch shows time,
-> speed, memory, copied continuation, and detector count.
+### Figure 1: one core, two model adapters
 
-### Figure 3: smoke measurement to bounded projection
+Show the shared generation and detector functions in the center. Put a plain causal-LM adapter and
+Gemma adapter beside them. Label the exact methods each adapter supplies.
 
-Start with the slower measured condition. Show tokens per second as an observed rate, then multiply
-the 9,600- and 19,200-token run sizes into projected seconds and GPU-only charges at the recorded L4
-rate. List excluded costs beside the result.
+Caption:
 
-Caption draft:
+> The watermark core depends on text IDs, a text vocabulary, generation, and continuation parsing.
+> A model adapter supplies those details without putting model IDs into the shared algorithm.
 
-> The projection uses the slower measured condition and Modal's recorded L4 rate. It estimates GPU
-> generation time only; image build, download, model load, CPU, memory, and storage are separate or
-> unavailable.
+### Figure 2: the key enters during generation
 
-Alt text draft:
+Show the control and watermarked `generate()` calls side by side. Highlight the sole extra argument.
+Open one next-token step to show the keyed processor changing scores before sampling.
 
-> A measured token rate feeds two arithmetic paths for a 9,600-token and 19,200-token run. Each path
-> ends in projected time and GPU-only cost with exclusions listed.
+Caption:
 
-Context-free screenshots must cover the Stage 4-to-5 bridge, paired continuity row, and projection
-with its exclusions. Desktop keeps the paired branches side by side. Mobile stacks them while
-retaining shared-start identity and units.
+> The watermarked call passes `WatermarkingConfig` into `generate()`. Transformers applies the
+> keyed score change during each next-token decision. The key is absent from prompt text and public
+> output.
 
-## Evidence contract
+### Figure 3: hosted trust boundary
 
-The selected artifact records every value required by these figures. The page and blog note may use
-only `artifacts/lab-05/trace.json`, values independently derived from it, and external facts linked
-to primary sources.
+Draw client, authenticated transport, long-lived model process, host secret store, and replaceable
+compute provider. Mark every field that may cross the boundary.
 
-Every substantive claim receives one label:
+Caption:
 
-- `measured`: produced by the selected Modal smoke;
-- `derived`: arithmetic from recorded values;
-- `external`: model-card, Transformers, or Modal documentation;
-- `opinion` or `limitation`: teaching judgment and scope boundary.
+> The host injects the private key into the model process. Clients send prompts and receive text plus
+> non-secret profile labels. Modal is one possible compute provider beneath this boundary.
 
-Do not copy timings, memory, detector values, or costs from terminal output or memory.
+### Figure 4: parsing failure and repair
 
-## Expected result before the run
+Show Gemma's parsed object, the invalid `str(parsed)` path, and the corrected `parsed["content"]`
+path into copied-text tokenization.
 
-The exact Gemma revision should load in BF16 on one L4 and finish six generations. The watermark
-processor should add measurable per-token work. The copied-text checker should reproduce its counts
-with the same CUDA profile. No assumption is made about score separation, speed penalty, memory
-headroom, early endings, or prose quality.
+Caption:
 
-## Blog handoff requirements
+> The first smoke scored a serialized response object. The corrected adapter extracts assistant
+> content before re-tokenization. Generation can succeed while evidence handling fails.
 
-`blog/notes/05-gemma-modal-smoke.md` must include:
+## Claims
 
-1. the article subsection and expected result above;
-2. exact model, runtime, App, device, and rate snapshot;
-3. the measured six-row smoke result;
-4. one complete continuity timing/memory/checker example;
-5. one inconvenient result or limitation;
-6. the two projected run sizes with formulas and exclusions;
-7. figure captions and alt text;
-8. allowed and prohibited claims;
-9. the explicit human go/no-go result;
-10. the transition to Stage 6 without implying that dataset work has started.
+Allowed:
 
-Allowed claims are limited to this pinned run: observed load, speed, processor timing, memory,
-copied-text evidence, and derived projections. Prohibited claims include detection accuracy,
-quality preservation, a total cloud bill, GPU portability, a deployed false-positive rate, a
-universal model-scale cost, Claude equivalence, or Stage 6 readiness without the recorded gate.
+- The shared code supports compatible Transformers generation models through an explicit adapter.
+- The saved Gemma example completed on the pinned revision and L4 runtime.
+- The public demo key supports reproduction and provides no secrecy.
+- A private hosted key must stay inside the service boundary.
+- Modal is a replaceable host for the measured example.
+
+Prohibited:
+
+- Every Hugging Face model works without an adapter.
+- This is production key management, a deployed service, or a secure public detector.
+- The saved smoke measures accuracy, quality, robustness, or a calibrated threshold.
+- A positive result proves AI origin or reproduces Anthropic's private implementation.
+
+## Handoff artifacts
+
+Update:
+
+- `src/watermark_lab/transformers_runtime.py`
+- `src/watermark_lab/gemma_adapter.py`
+- `src/watermark_lab/key_policy.py`
+- `docs/stages/05-hosting-blueprint.md`
+- Stage 5 tests
+- `.agent/diagrams/text-watermarking-stage-5-lesson.html`
+- Stage 5 blog note, claims ledger, README, and status language
+
+Reuse the selected Stage 5 trace. No new model or cloud run is needed for this reframing.

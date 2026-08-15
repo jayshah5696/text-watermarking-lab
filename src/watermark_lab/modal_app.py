@@ -43,11 +43,17 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
         AutoModelForMultimodalLM,
         AutoProcessor,
         WatermarkDetector,
-        WatermarkingConfig,
     )
 
+    from watermark_lab.gemma_adapter import Gemma4Adapter
     from watermark_lab.lab05_config import config_from_toml_bytes
     from watermark_lab.stats import green_hit_z_score
+    from watermark_lab.transformers_runtime import (
+        SamplingProfile,
+        WatermarkProfile,
+        finalize_generation,
+        generation_kwargs,
+    )
 
     config = config_from_toml_bytes(config_json.encode())
     if config.modal_gpu != "L4" or config.max_generation_calls != 6:
@@ -81,23 +87,29 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
     model.eval()
     torch.cuda.synchronize()
     model_load_ns = time.perf_counter_ns() - load_start
-    model_config = model.config.get_text_config()
+    adapter = Gemma4Adapter(model, processor, "cuda")
+    model_config = adapter.model_config
     if model.__class__.__name__ != config.model_class:
         raise RuntimeError("loaded Gemma class differs from the contract")
 
-    profile: dict[str, Any] = {
-        "greenlist_ratio": config.green_fraction,
-        "bias": config.watermark_bias,
-        "hashing_key": config.generation_key,
-        "seeding_scheme": config.seeding_scheme,
-        "context_width": config.context_width,
-    }
+    generation_profile = WatermarkProfile(
+        green_fraction=config.green_fraction,
+        bias=config.watermark_bias,
+        hashing_key=config.generation_key,
+        seeding_scheme=config.seeding_scheme,
+        context_width=config.context_width,
+    )
+    sampling = SamplingProfile(
+        max_new_tokens=config.max_new_tokens,
+        temperature=config.temperature,
+        top_k=config.top_k,
+        top_p=config.top_p,
+    )
 
     def time_watermark_processor(
         prompt_ids: tuple[int, ...], generated_ids: tuple[int, ...]
     ) -> tuple[int, int]:
-        watermark_config = WatermarkingConfig(**profile)
-        watermark_processor = watermark_config.construct_processor(
+        watermark_processor = generation_profile.to_transformers().construct_processor(
             int(model_config.vocab_size), "cuda"
         )
         scores = torch.zeros((1, int(model_config.vocab_size)), device="cuda", dtype=torch.float32)
@@ -119,11 +131,17 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
         return calls, total_ns
 
     def evidence(token_ids: tuple[int, ...], key: int, role: str, unique: bool) -> dict[str, Any]:
-        watermark_config = WatermarkingConfig(**{**profile, "hashing_key": key})
+        detector_profile = WatermarkProfile(
+            green_fraction=config.green_fraction,
+            bias=config.watermark_bias,
+            hashing_key=key,
+            seeding_scheme=config.seeding_scheme,
+            context_width=config.context_width,
+        )
         detector = WatermarkDetector(
             model_config=model_config,
             device="cuda",
-            watermarking_config=watermark_config,
+            watermarking_config=detector_profile.to_transformers(),
             ignore_repeated_ngrams=unique,
         )
         tensor = torch.tensor([token_ids], device="cuda", dtype=torch.long)
@@ -154,64 +172,43 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
     reserved_after_load = torch.cuda.memory_reserved()
     for prompt in config.prompts:
         message = config.instruction_prefix + prompt.text
-        messages = [{"role": "user", "content": message}]
-        rendered = processor.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        encoded = processor(text=rendered, return_tensors="pt")
-        input_ids = encoded["input_ids"].to("cuda")
-        attention_mask = encoded["attention_mask"].to("cuda")
+        encoded = adapter.encode_prompt(message)
+        input_ids = encoded.input_ids
         prompt_ids = tuple(int(value) for value in input_ids[0].tolist())
         seed = config.prompt_seed(prompt.id)
         for condition in ("control", "reference_watermark"):
             torch.manual_seed(seed)
             torch.cuda.manual_seed_all(seed)
             torch.cuda.reset_peak_memory_stats()
-            kwargs: dict[str, Any] = {
-                "attention_mask": attention_mask,
-                "do_sample": True,
-                "max_new_tokens": config.max_new_tokens,
-                "temperature": config.temperature,
-                "top_k": config.top_k,
-                "top_p": config.top_p,
-                "pad_token_id": processor.tokenizer.pad_token_id
-                or processor.tokenizer.eos_token_id,
-            }
-            if condition == "reference_watermark":
-                kwargs["watermarking_config"] = WatermarkingConfig(**profile)
+            runtime_condition = "watermarked" if condition == "reference_watermark" else "control"
+            kwargs = generation_kwargs(
+                adapter=adapter,
+                encoded=encoded,
+                sampling=sampling,
+                condition=runtime_condition,
+                watermark=generation_profile if runtime_condition == "watermarked" else None,
+            )
             start_event = torch.cuda.Event(enable_timing=True)
             end_event = torch.cuda.Event(enable_timing=True)
             torch.cuda.synchronize()
             wall_start = time.perf_counter_ns()
             start_event.record()
             with torch.inference_mode():
-                output = model.generate(input_ids=input_ids, **kwargs)
+                output = model.generate(**kwargs)
             end_event.record()
             torch.cuda.synchronize()
             wall_ns = time.perf_counter_ns() - wall_start
             gpu_ns = int(start_event.elapsed_time(end_event) * 1_000_000)
-            generated = tuple(int(value) for value in output[0, input_ids.shape[1] :].tolist())
-            raw_text = processor.decode(generated, skip_special_tokens=False)
-            try:
-                parsed = processor.parse_response(raw_text, prefix=input_ids[0])
-                if isinstance(parsed, dict):
-                    content = parsed.get("content")
-                    if not isinstance(content, str):
-                        raise TypeError("parsed response content is not text")
-                    copied_text = content
-                elif isinstance(parsed, str):
-                    copied_text = parsed
-                else:
-                    raise TypeError("parsed response has an unsupported shape")
-            except (KeyError, TypeError, ValueError):
-                copied_text = processor.decode(generated, skip_special_tokens=True)
-            copied_ids = tuple(
-                int(value)
-                for value in processor.tokenizer.encode(copied_text, add_special_tokens=False)
+            continuation = finalize_generation(
+                adapter=adapter,
+                encoded=encoded,
+                output=output,
+                condition=runtime_condition,
             )
+            generated = continuation.generated_token_ids
+            raw_text = continuation.raw_generated_text
+            copied_text = continuation.copied_text
+            copied_ids = continuation.copied_token_ids
             if len(copied_ids) < 2:
                 raise RuntimeError(f"{prompt.id}/{condition} produced fewer than two copied tokens")
             detector_results = [
@@ -234,7 +231,7 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
                     "prompt_text": prompt.text,
                     "condition": condition,
                     "seed": seed,
-                    "rendered_input": rendered,
+                    "rendered_input": encoded.rendered_text,
                     "prompt_token_ids": prompt_ids,
                     "generated_token_ids": generated,
                     "raw_generated_text": raw_text,

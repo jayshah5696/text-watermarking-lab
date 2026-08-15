@@ -1,9 +1,21 @@
-# Measure the reference path on Gemma and one L4
+# Implement the Transformers watermark and prove it on Gemma
 
 ## Question
 
-What does the Stage 4 reference watermark cost when the same recipe runs on Gemma 4 E2B on a
-cloud GPU?
+How do we add the maintained generation-time watermark to a compatible Transformers model and keep
+the key inside a hosted process?
+
+## Implementation answer
+
+A model adapter supplies prompt encoding, text configuration, generated-ID slicing, assistant
+content extraction, copied-text tokenization, and device tensors. The shared core constructs a
+watermark profile and passes its `WatermarkingConfig` to `model.generate()` only for the
+watermarked condition. Detection uses copied continuation text plus the same model text config,
+device, profile, and key.
+
+The committed key is public so the selected evidence can be reproduced. A real service would read a
+private key from its host's secret store during process startup and return only a non-secret key
+version. Modal supplied one L4 for the checked Gemma example. It was not part of the algorithm.
 
 ## Expected result before running
 
