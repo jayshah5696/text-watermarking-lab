@@ -71,7 +71,7 @@ verify-lab-04:
 # COSTS MONEY: run the single approved Stage 5 Modal L4 smoke test.
 lab-05:
     @echo "COST WARNING: one Modal L4 smoke invocation; hard ceiling USD 5.00"
-    uv run modal run -m watermark_lab.modal_app::run_smoke --config-json "$(cat configs/lab_05.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05.toml | cut -d' ' -f1)" --write-result runs/lab-05/modal-result.json
+    uv run modal run -m --write-result runs/lab-05/modal-result.json watermark_lab.modal_app::run_smoke --config-json "$(cat configs/lab_05.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05.toml | cut -d' ' -f1)"
 
 # Validate Stage 5 selected evidence locally without cloud or model access.
 verify-lab-05:
@@ -80,7 +80,7 @@ verify-lab-05:
 # COSTS MONEY: run one approved ten-pair Gemma implementation demonstration.
 lab-05-examples:
     @echo "COST WARNING: one Modal L4 invocation, exactly 20 generation calls; ceiling USD 5.00"
-    uv run modal run -m watermark_lab.modal_app::run_examples --config-json "$(cat configs/lab_05_examples.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05_examples.toml | cut -d' ' -f1)" --write-result runs/lab-05/examples-modal-result.json
+    uv run modal run -m --write-result runs/lab-05/examples-modal-result.json watermark_lab.modal_app::run_examples --config-json "$(cat configs/lab_05_examples.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05_examples.toml | cut -d' ' -f1)"
 
 # Validate the selected ten-pair comparison locally without cloud or model access.
 verify-lab-05-examples:
