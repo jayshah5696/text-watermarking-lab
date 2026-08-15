@@ -112,6 +112,20 @@ For 24 paired rows at 400 tokens per output:
 These are linear GPU-generation projections. They exclude image build, model download, model load,
 CPU, memory, storage, retries, and non-linear scaling. They are not a Modal invoice.
 
+## Ten-pair implementation demonstration
+
+A separately approved run added ten frozen paired prompts, for twenty outputs, on the same pinned
+Gemma/L4 path. Every pair reused its prompt-derived seed across control and watermarked generation.
+The selected comparison records copied text, generation-key `G/T`, z, p-value, and strict `z > 3`
+decision in `artifacts/lab-05/examples.json`.
+
+No row crossed the cutoff. Watermarked z was higher in seven pairs, lower in two, and equal in one.
+The identical museum pair is preserved rather than removed. These twenty outputs show the
+implementation acting on more fixtures; they do not estimate detector accuracy or quality.
+
+The p-value is the configured no-watermark probability of evidence at least this extreme. It is not
+a detection probability and not the probability that a continuation is watermarked.
+
 ## Review gate
 
 The exact pinned revision loaded in BF16 on the required L4. All six generation and copied-text

@@ -58,8 +58,10 @@ production secret, or Stage 6 work has started.
 - Public-demo and private-environment key policies plus bounded provider-neutral request and response
   records that never serialize the key value.
 - Hosting blueprint for a long-lived keyed model process. Modal is one replaceable compute adapter.
-- Stage 5 used one disposable cloud invocation with no dataset, no Hugging Face Secret, no
-  persistent Volume, and no deployed endpoint.
+- Separately approved ten-pair implementation demonstration: ten frozen prompts, twenty generated
+  outputs, paired seeds, copied text, generation-key `G/T`, z, p-value, and strict decisions.
+- Stage 5 used two bounded disposable cloud invocations in total, with no dataset, Hugging Face
+  Secret, persistent Volume, or deployed endpoint.
 
 ## Verified
 
@@ -144,6 +146,12 @@ production secret, or Stage 6 work has started.
   `watermarking_config` argument, Gemma structured responses contribute only assistant content, a
   private key can be read from an injected environment, and public service records omit the key
   value.
+- `just verify-lab-05-examples` locally reconstructs the ten-pair JSON and Markdown, paired seeds,
+  prompt order, Stage 1 z scores, p-value bounds, and strict `z > 3` decisions without model, GPU,
+  network, or cloud access.
+- Across the ten paired prompts, no control or watermarked row crossed `z > 3`. Watermarked z was
+  higher in seven pairs, lower in two, and equal in one. These twenty outputs demonstrate the
+  implementation and do not estimate accuracy or a false-alarm rate.
 
 ## Not implemented
 

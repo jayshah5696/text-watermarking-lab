@@ -1,3 +1,4 @@
+import json
 import tomllib
 from html.parser import HTMLParser
 from pathlib import Path
@@ -143,6 +144,15 @@ def test_lesson_is_self_contained_accessible_and_has_static_fallback() -> None:
         'id="nextToken"',
         'id="hostSvg"',
         'id="sendRequest"',
+        'id="exampleList"',
+        'id="controlText"',
+        'id="watermarkedText"',
+        'id="controlZ"',
+        'id="watermarkedZ"',
+        'id="controlP"',
+        'id="watermarkedP"',
+        "p-value is not detection probability",
+        "Ten prompts demonstrate the implementation",
         'role="img"',
         'aria-labelledby="pathTitle pathDesc"',
         'aria-labelledby="tokenTitle tokenDesc"',
@@ -155,6 +165,26 @@ def test_lesson_is_self_contained_accessible_and_has_static_fallback() -> None:
         assert required in lesson
     for forbidden in ("fetch(", "localStorage", 'type="module"', "http://"):
         assert forbidden not in lesson
+
+
+def test_embedded_ten_pair_results_match_selected_examples() -> None:
+    lesson = LESSON.read_text()
+    selected = json.loads((ROOT / "artifacts/lab-05/examples.json").read_text())
+    assert len(selected["pairs"]) == 10
+    for required in (
+        "2.0381",
+        "0.035523",
+        "2.1004",
+        "p:.030144",
+        "2.2517",
+        "p:.019823",
+        "1.6036",
+        "z:.9333",
+        "z:.2265",
+        "z:-.2462",
+        "none crossed z &gt; 3",
+    ):
+        assert required.lower() in lesson.lower()
 
 
 def test_claims_remain_narrow() -> None:

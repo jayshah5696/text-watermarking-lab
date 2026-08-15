@@ -21,8 +21,11 @@ Stages 0 through 5 provide the reproducible Python 3.12 foundation, the biased-c
 deterministic toy-vocabulary trace, paired local MLX continuations, a pinned Transformers reference
 adapter, and a provider-neutral generation, detection, adapter, and key boundary. Gemma 4 is the
 checked Stage 5 example. Its evidence was generated from clean source commit `09831ba` on one NVIDIA
-L4. All three watermarked rows stayed below the strict `z > 3` cutoff; the implementation and
-runtime gates passed. See [`docs/stages/05-hosting-blueprint.md`](docs/stages/05-hosting-blueprint.md).
+L4. A separately approved demonstration then ran ten fixed paired prompts, for twenty outputs, on
+the same pinned path. None crossed the strict `z > 3` cutoff. The lesson preserves control and
+watermarked text, `G/T`, z, p-value, and decision for every pair. The p-value is evidence under the
+configured no-watermark baseline, not the probability that text is watermarked. See
+[`docs/stages/05-hosting-blueprint.md`](docs/stages/05-hosting-blueprint.md).
 
 ```console
 just --list
@@ -43,8 +46,10 @@ and records six paired continuations.
 `just lab-04` downloads only the approved pinned GPT-2 model and tokenizer when absent, runs six
 local CPU continuations, and records the reference order and copied-text detector checks.
 `just lab-05` is the explicit cost-incurring Modal command. It is not part of ordinary verification.
-`just verify-lab-05` validates returned selected evidence locally without a model, GPU, network, or
-cloud call.
+`just verify-lab-05` validates the original smoke evidence locally without a model, GPU, network,
+or cloud call. `just verify-lab-05-examples` independently validates the selected ten-pair
+comparison. `just lab-05-examples` is a separate cost-incurring command and must not be run without
+approval.
 
 ```console
 just lab-01
