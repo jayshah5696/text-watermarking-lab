@@ -2,7 +2,8 @@
 
 ## Current stage
 
-Stages 0 through 4 complete locally on `jay/lab-04-transformers-reference`; awaiting user review.
+Stages 0 through 5 complete locally on `main`; Stage 5 smoke passed its runtime gate and awaits
+human review before Stage 6.
 
 ## Implemented
 
@@ -43,6 +44,14 @@ Stages 0 through 4 complete locally on `jay/lab-04-transformers-reference`; awai
   counts, prompt and padding exclusion, and an explicit repeated-pair compatibility fixture.
 - Evidence-grounded Stage 4 blog handoff and continuous interactive lesson that keeps the same
   passage and token objects visible through order comparison, saved draw, and detector replay.
+- Pinned `google/gemma-4-E2B-it` fixture at revision
+  `3e22461f65e89153144f8adb70e3b8c2cc9845a7`, loaded in BF16 through Transformers 5.14.1 on one
+  Modal NVIDIA L4.
+- Six fixed Gemma smoke continuations across the three Stage 4 passages, copied-text replay,
+  generation-key and comparison-key detector evidence, GPU timing, peak memory, and bounded
+  200/400-token run projections.
+- Stage 5 uses one disposable cloud invocation with no dataset, no Hugging Face Secret, no
+  persistent Volume, and no deployed endpoint.
 
 ## Verified
 
@@ -107,20 +116,35 @@ Stages 0 through 4 complete locally on `jay/lab-04-transformers-reference`; awai
 - The self-contained `file://` Stage 4 lesson passed desktop light, mobile light, desktop dark,
   reduced-motion, keyboard, control, disclosure, and static-fallback checks. No console errors or
   horizontal overflow were found.
+- `just verify-lab-05` locally reconstructs selected JSON and Markdown, detector z scores, record
+  invariants, and cost projections without a model, GPU, network, or cloud call.
+- The Stage 5 disposable worker downloaded the pinned model in 36.739 seconds and loaded it onto
+  CUDA in 5.782 seconds. Peak reserved memory was 9.682 GiB of 22.034 GiB, leaving 56.1 percent
+  headroom.
+- Watermarked generation ran at 18.422, 18.747, and 19.259 generated tokens per second. Separate
+  synchronized processor replays took 7.165, 5.373, and 5.898 milliseconds over the complete
+  continuations.
+- The three watermarked copied continuations scored `11/26` (z `2.0381`), `7/20` (z `1.0328`),
+  and `9/22` (z `1.7233`). None crossed the configured strict `z > 3` cutoff.
+- At the slowest watermarked rate, 9,600 generated tokens project to 521.1 seconds and `$0.1157`
+  of L4 generation time; 19,200 project to 1,042.2 seconds and `$0.2314`. These exclude image,
+  download, load, CPU, memory, storage, retry, and non-linear scaling costs.
+- The fixed Stage 5 gate passed: exact L4/BF16 path, six complete records, 56.1 percent memory
+  headroom, watermarked throughput above 2 tok/s, readable non-empty outputs, and projections below
+  the USD 5 ceiling.
 
 ## Not implemented
 
 - Dataset access or manifests.
-- Modal or other hosted compute setup.
 - Hosted detector or public playground.
-- Stage 5 model-scale or cloud work.
+- Stage 6 natural-web calibration or any 24-row generation run.
 
 No dataset-backed calibration or generally useful detector cutoff exists.
 
 ## Approval required next
 
-Stage 5 planning or implementation. Any new model, tokenizer, dataset, cloud resource, GPU scope,
-GitHub remote, publishing, or public deployment requires separate explicit approval.
+Stage 6 planning or implementation. Any dataset, additional model/GPU/cloud invocation, persistent
+cloud resource, GitHub remote, publishing, or public deployment requires separate explicit approval.
 
 ## Known limitations
 
@@ -146,3 +170,11 @@ GitHub remote, publishing, or public deployment requires separate explicit appro
 - The Transformers 5.14.1 repeated-pair option did not collapse value-equal pairs in the fixed
   fixture. The explicit distinct-pair result is a compatibility check, not a general claim about
   other library versions.
+- Six Gemma smoke generations on one L4 do not measure detector accuracy, a false-alarm rate,
+  language quality, a useful cutoff, cross-device portability, or a total cloud bill.
+- All three Stage 5 watermarked continuations ended before 30 generated token IDs and remained
+  below z `3`. The project did not tune prompts, seeds, keys, or settings after observing them.
+- The first control generation includes one-time CUDA warm-up behavior. It is not evidence that
+  watermarking speeds generation.
+- Synchronized watermark processor timing perturbs execution and is reported as component timing,
+  not as an end-to-end speed penalty.
