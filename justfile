@@ -59,3 +59,11 @@ lab-03:
 # Recompute and validate Stage 3 evidence from the local model cache.
 verify-lab-03:
     uv run python scripts/verify_lab_03.py
+
+# Generate paired Stage 4 traces with the pinned Transformers reference adapter.
+lab-04:
+    uv run python labs/04_transformers_reference.py
+
+# Recompute and validate Stage 4 evidence from the local model cache.
+verify-lab-04:
+    uv run python scripts/verify_lab_04.py

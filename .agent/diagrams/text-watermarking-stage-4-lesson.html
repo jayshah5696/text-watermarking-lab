@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Stage 4: from the MLX teaching loop to Transformers</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper: #f4efe3;
+      --surface: rgba(255, 251, 241, .94);
+      --surface-solid: #fffaf0;
+      --ink: #14221d;
+      --muted: #5c6862;
+      --line: #c8c1b2;
+      --grid: rgba(75, 92, 82, .18);
+      --green: #15734f;
+      --green-soft: #d8eee2;
+      --blue: #126f91;
+      --blue-soft: #d7ebf2;
+      --orange: #c95f23;
+      --orange-soft: #f6ddca;
+      --rust: #a23d32;
+      --rust-soft: #f1d5d0;
+      --gray: #e6e1d6;
+      --shadow: 0 15px 36px rgba(37, 43, 38, .09);
+      --radius: 18px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #101814;
+        --surface: rgba(24, 34, 29, .95);
+        --surface-solid: #18221d;
+        --ink: #eef3ec;
+        --muted: #b2beb7;
+        --line: #425048;
+        --grid: rgba(184, 210, 194, .11);
+        --green: #6dcc99;
+        --green-soft: #183c2a;
+        --blue: #68c4e2;
+        --blue-soft: #173843;
+        --orange: #f0a16d;
+        --orange-soft: #482b1c;
+        --rust: #ee917f;
+        --rust-soft: #432520;
+        --gray: #29332e;
+        --shadow: 0 18px 42px rgba(0, 0, 0, .27);
+      }
+    }
+    * { box-sizing: border-box; min-width: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 34px 34px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    h1, h2, h3 { font-family: ui-serif, Georgia, Cambria, serif; line-height: 1.05; text-wrap: balance; }
+    h1 { max-width: 970px; margin: 0; font-size: clamp(3rem, 8.3vw, 7rem); letter-spacing: -.06em; }
+    h2 { margin: 0; font-size: clamp(2rem, 5vw, 4.1rem); letter-spacing: -.045em; }
+    h3 { margin: 0 0 .4rem; font-size: clamp(1.15rem, 2vw, 1.45rem); }
+    p { margin: .55rem 0; }
+    a { color: var(--blue); }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+    button, input { font: inherit; }
+    button {
+      min-height: 44px;
+      border: 1px solid var(--green);
+      border-radius: 999px;
+      padding: .62rem 1rem;
+      color: #fff;
+      background: var(--green);
+      font-weight: 760;
+      cursor: pointer;
+    }
+    button.secondary { color: var(--green); background: transparent; }
+    button.small { min-height: 38px; padding: .43rem .75rem; font-size: .86rem; }
+    button[aria-pressed="true"] { color: #fff; background: var(--green); }
+    button:disabled { opacity: .42; cursor: default; }
+    button:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible {
+      outline: 3px solid var(--orange);
+      outline-offset: 3px;
+    }
+    [hidden] { display: none!important; }
+    .wrap { width: min(1180px, calc(100% - 34px)); margin: 0 auto; }
+    .hero { padding: 72px 0 30px; }
+    .kicker, .section-num, .tag {
+      color: var(--green);
+      font-size: .76rem;
+      font-weight: 850;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .lead { max-width: 820px; font-size: clamp(1.08rem, 2.2vw, 1.35rem); color: var(--muted); }
+    .question {
+      max-width: 920px;
+      margin-top: 2rem;
+      padding: 1.2rem 1.35rem;
+      border-left: 5px solid var(--orange);
+      background: var(--orange-soft);
+      font-size: clamp(1.12rem, 2.4vw, 1.46rem);
+      font-weight: 780;
+    }
+    .stage-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 34px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .stage-node { position: relative; padding: 18px; background: var(--surface-solid); color: var(--ink); text-decoration: none; }
+    .stage-node:not(:last-child)::after { content: ""; position: absolute; right: -9px; top: 50%; width: 16px; height: 16px; border-top: 2px solid var(--blue); border-right: 2px solid var(--blue); transform: translateY(-50%) rotate(45deg); z-index: 2; }
+    .stage-node.current { background: var(--green-soft); }
+    .stage-node span { display: block; color: var(--green); font-size: .72rem; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; }
+    .stage-node strong { display: block; margin: .3rem 0; font-family: ui-serif, Georgia, serif; font-size: 1.08rem; }
+    .stage-node small { color: var(--muted); }
+    main { padding-bottom: 70px; }
+    section { margin: 0 0 104px; scroll-margin-top: 24px; }
+    .section-head { display: grid; grid-template-columns: 54px minmax(0, 820px); gap: 18px; margin-bottom: 28px; }
+    .section-num { padding-top: .55rem; }
+    .section-intro { color: var(--muted); font-size: 1.08rem; max-width: 800px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: clamp(18px, 3vw, 30px); }
+    .band { padding: 16px 18px; border-left: 5px solid var(--blue); background: var(--blue-soft); }
+    .band.rust { border-color: var(--rust); background: var(--rust-soft); }
+    .band.green { border-color: var(--green); background: var(--green-soft); }
+    .controls { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0; }
+    .grid-2, .grid-3, .grid-4 { display: grid; gap: 14px; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .mini { padding: 17px; border: 1px solid var(--line); border-radius: 13px; background: color-mix(in srgb, var(--surface-solid) 86%, var(--gray)); }
+    .passage { padding: 18px 20px; border-left: 5px solid var(--orange); background: var(--surface-solid); font-family: ui-serif, Georgia, serif; font-size: 1.18rem; }
+    .operation-row { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 8px; margin: 18px 0; }
+    .operation { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-solid); }
+    .operation b { display: block; color: var(--green); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; }
+    .bridge { display: grid; grid-template-columns: 1fr 140px 1fr; gap: 14px; align-items: stretch; }
+    .bridge-arrow { display: grid; place-items: center; color: var(--blue); text-align: center; font-weight: 800; }
+    .path-card { padding: 22px; border: 1px solid var(--line); border-top: 6px solid var(--blue); border-radius: 15px; background: var(--surface-solid); }
+    .path-card.stage3 { border-top-color: var(--green); }
+    .path-card dl { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; margin: 14px 0 0; }
+    dt { color: var(--muted); } dd { margin: 0; }
+    .same-change { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .same-change > div { padding: 15px; border-radius: 12px; }
+    .same-change .same { background: var(--green-soft); }
+    .same-change .changed { background: var(--blue-soft); }
+    .formula-overview { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 18px 0; }
+    .formula-step { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-solid); text-align: left; color: var(--ink); }
+    button.formula-step { border-color: var(--line); min-height: 96px; border-radius: 12px; font-weight: 600; }
+    .formula-step.active { outline: 3px solid var(--orange); background: var(--orange-soft); }
+    .formula-step span { display: block; color: var(--green); font-size: .7rem; font-weight: 850; text-transform: uppercase; }
+    .formula-step code { display: block; margin-top: 6px; font-size: .78rem; }
+    .microscope { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(430px, 1.4fr); gap: 18px; margin-top: 18px; }
+    .formula-board { padding: 22px; border-radius: 14px; background: #17201c; color: #f7f2e8; }
+    .formula-board .plain { color: #c7d2ca; }
+    .formula-large { display: block; margin: 18px 0; font-size: clamp(1.1rem, 2.4vw, 1.7rem); color: #fff4e5; }
+    .substitution { padding: 12px; border-left: 4px solid #65bdd8; background: rgba(101, 189, 216, .12); }
+    .funnel { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 8px; margin: 18px 0; }
+    .funnel-stage { padding: 12px; border: 1px solid var(--line); border-radius: 10px; text-align: center; background: var(--surface-solid); }
+    .funnel-stage strong { display: block; font-size: 1.7rem; }
+    .funnel-arrow { color: var(--blue); font-weight: 850; }
+    .candidate-head, .candidate-row { display: grid; grid-template-columns: minmax(105px, 1fr) 72px 112px minmax(150px, 1.5fr) 104px; gap: 10px; align-items: center; }
+    .candidate-head { padding: 0 10px 8px; color: var(--muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+    .candidate-row { min-height: 66px; margin: 7px 0; padding: 10px; border: 1px solid var(--line); border-radius: 11px; transition: opacity .25s, background .25s, border .25s; }
+    .candidate-row.green { background-image: repeating-linear-gradient(135deg, transparent 0 11px, color-mix(in srgb, var(--green-soft) 75%, transparent) 11px 20px); }
+    .candidate-row.removed { opacity: .42; }
+    .candidate-row.sampled { border: 4px solid var(--orange); padding: 7px; }
+    .candidate-name { font-weight: 850; }
+    .candidate-name small { display: block; color: var(--muted); font-weight: 500; }
+    .prob-track { height: 13px; overflow: hidden; border-radius: 99px; background: var(--gray); }
+    .prob-fill { width: 0; height: 100%; border-radius: inherit; background: var(--blue); transition: width .5s ease; }
+    .candidate-row.green .prob-fill { background: var(--green); }
+    .step-reading { margin-top: 15px; padding: 14px 16px; background: var(--blue-soft); border-left: 4px solid var(--blue); }
+    .order-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .order-track { padding: 20px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-solid); }
+    .order-track.reference { border-top: 6px solid var(--blue); }
+    .order-track.earlier { border-top: 6px solid var(--green); }
+    .order-list { display: grid; gap: 7px; margin: 14px 0; }
+    .order-item { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; padding: 8px; border-radius: 9px; background: var(--gray); }
+    .order-item i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-solid); font-style: normal; font-weight: 850; }
+    .order-track.playing .order-item.active { background: var(--orange-soft); outline: 2px solid var(--orange); }
+    .order-formula { padding: 14px; border-radius: 11px; background: #17201c; color: #fff4e5; font-size: 1.02rem; }
+    .chance-compare { margin-top: 15px; }
+    .chance-line { display: grid; grid-template-columns: 140px 1fr 98px; gap: 9px; align-items: center; margin: 8px 0; }
+    .chance-line .fill { height: 18px; border-radius: 99px; background: var(--blue); }
+    .chance-line.earlier .fill { background: var(--green); }
+    .sample-scene { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .chance-stack { display: grid; gap: 10px; }
+    .sample-token { display: inline-block; padding: .18rem .45rem; border: 3px solid var(--orange); border-radius: 7px; background: var(--orange-soft); font-family: ui-monospace, monospace; font-weight: 800; }
+    .continuation-box { margin-top: 18px; padding: 20px; border: 1px solid var(--line); background: var(--surface-solid); font-family: ui-serif, Georgia, serif; font-size: 1.08rem; }
+    .token-strip { display: flex; flex-wrap: wrap; gap: 5px; margin: 14px 0; }
+    .token-chip { position: relative; padding: .42rem .48rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-solid); font-family: ui-monospace, monospace; font-size: .78rem; }
+    .token-chip.context { border-color: var(--blue); background: var(--blue-soft); }
+    .token-chip.green { border-color: var(--green); background: var(--green-soft); }
+    .token-chip .index { display: block; color: var(--muted); font: 650 .62rem ui-sans-serif, system-ui; }
+    .boundary-scene { display: grid; grid-template-columns: .75fr 70px 1.5fr; gap: 14px; align-items: stretch; }
+    .boundary-box { padding: 18px; border: 2px dashed var(--line); border-radius: 14px; }
+    .boundary-box.prompt { background: var(--gray); }
+    .boundary-box.detector { border-color: var(--green); background: color-mix(in srgb, var(--green-soft) 55%, var(--surface-solid)); }
+    .boundary-label { display: grid; place-items: center; color: var(--blue); text-align: center; font-weight: 850; }
+    .first-pair { display: grid; grid-template-columns: 1fr 70px 1fr; align-items: center; gap: 10px; margin: 18px 0; }
+    .pair-link { text-align: center; color: var(--green); font-weight: 850; }
+    .math-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+    .math-card { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-solid); }
+    .math-card strong { display: block; margin-top: 6px; font-size: 1.55rem; }
+    .z-work { padding: 18px; background: #17201c; color: #fff4e5; border-radius: 12px; font-size: clamp(.95rem, 2vw, 1.25rem); }
+    .record-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .record-button { min-height: 128px; padding: 15px; border-radius: 14px; color: var(--ink); background: var(--surface-solid); text-align: left; border-color: var(--line); }
+    .record-button[aria-pressed="true"] { background: var(--green-soft); color: var(--ink); border-color: var(--green); }
+    .record-button strong, .record-button span { display: block; }
+    .record-button .pair-score { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; font-family: ui-monospace, monospace; }
+    .condition-switch { display: inline-flex; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--gray); }
+    .condition-switch button { border: 0; min-height: 38px; color: var(--ink); background: transparent; }
+    .condition-switch button[aria-pressed="true"] { color: #fff; background: var(--green); }
+    .record-detail { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+    .record-text { padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-solid); }
+    .record-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .metric { padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-solid); }
+    .metric span { color: var(--muted); font-size: .76rem; }
+    .metric strong { display: block; font-size: 1.5rem; }
+    .z-chart { position: relative; height: 64px; margin: 18px 0 8px; border-radius: 12px; background: linear-gradient(90deg, var(--rust-soft) 0 69.2%, var(--green-soft) 69.2%); }
+    .z-axis { position: absolute; left: 3%; right: 3%; top: 31px; height: 2px; background: var(--ink); }
+    .z-cut { position: absolute; left: 69.2%; top: 6px; bottom: 5px; border-left: 2px dashed var(--rust); }
+    .z-marker { position: absolute; top: 19px; width: 16px; height: 16px; transform: translateX(-50%); border-radius: 50%; background: var(--blue); border: 3px solid var(--surface-solid); }
+    .z-marker.watermark { top: 34px; background: var(--green); }
+    .key-lab { margin-top: 20px; padding: 20px; border: 2px solid var(--blue); border-radius: 15px; background: var(--blue-soft); }
+    .key-input-row { display: grid; grid-template-columns: minmax(210px, 320px) 1fr; gap: 12px; align-items: end; }
+    .key-input-row label { display: block; font-weight: 780; }
+    input[type="number"] { width: 100%; min-height: 48px; margin-top: 6px; padding: .6rem .75rem; border: 2px solid var(--blue); border-radius: 9px; color: var(--ink); background: var(--surface-solid); }
+    .pair-occurrences { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+    .pair-occurrence { padding: 12px 8px; border: 2px solid var(--line); border-radius: 11px; text-align: center; background: var(--surface-solid); }
+    .pair-occurrence.ab { border-color: var(--green); background: var(--green-soft); }
+    .pair-occurrence.ba { border-color: var(--blue); background: var(--blue-soft); }
+    .distinct-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .distinct-pair { padding: 16px; border-radius: 12px; text-align: center; font-family: ui-monospace, monospace; font-weight: 800; }
+    .distinct-pair.ab { background: var(--green-soft); border: 2px solid var(--green); }
+    .distinct-pair.ba { background: var(--blue-soft); border: 2px solid var(--blue); }
+    .evidence-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .evidence-column { padding: 18px; border-top: 6px solid var(--blue); background: var(--surface-solid); border-radius: 13px; }
+    .evidence-column.measured { border-color: var(--green); }
+    .evidence-column.derived { border-color: var(--blue); }
+    .evidence-column.external { border-color: var(--orange); }
+    .evidence-column.untested { border-color: var(--rust); }
+    .evidence-column ul { padding-left: 1.15rem; }
+    details { margin: 12px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-solid); }
+    summary { padding: 14px 16px; cursor: pointer; font-weight: 780; }
+    details > div { padding: 0 16px 16px; color: var(--muted); }
+    .static-fallback { margin-top: 18px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; }
+    .js .static-fallback { display: none; }
+    footer { padding: 34px 0 60px; border-top: 1px solid var(--line); color: var(--muted); }
+    @media (max-width: 850px) {
+      .stage-rail, .grid-4, .formula-overview, .evidence-map { grid-template-columns: 1fr 1fr; }
+      .stage-node::after { display: none; }
+      .operation-row { grid-template-columns: 1fr 1fr; }
+      .bridge, .microscope, .sample-scene, .boundary-scene, .record-detail { grid-template-columns: 1fr; }
+      .bridge-arrow, .boundary-label { min-height: 50px; }
+      .order-compare, .same-change { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .wrap { width: min(100% - 24px, 1180px); }
+      .hero { padding-top: 42px; }
+      .stage-rail, .grid-2, .grid-3, .grid-4, .formula-overview, .record-grid, .math-stack, .evidence-map { grid-template-columns: 1fr; }
+      .section-head { grid-template-columns: 32px 1fr; gap: 8px; }
+      .operation-row { grid-template-columns: 1fr; }
+      .candidate-head { display: none; }
+      .candidate-row { grid-template-columns: 1fr 70px; gap: 5px 8px; }
+      .candidate-row .score-now { grid-column: 1; }
+      .candidate-row .prob-track { grid-column: 1 / -1; }
+      .candidate-row .prob-label { grid-column: 2; grid-row: 2; text-align: right; }
+      .funnel { grid-template-columns: 1fr; }
+      .funnel-arrow { text-align: center; }
+      .chance-line { grid-template-columns: 105px 1fr 82px; font-size: .78rem; }
+      .key-input-row, .pair-occurrences, .distinct-pairs { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto!important; transition: none!important; animation: none!important; }
+    }
+  </style>
+  <noscript><style>
+    button, input, .record-detail, .key-lab { display: none!important; }
+  </style></noscript>
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <header class="hero wrap">
+    <p class="kicker">Text watermarking lab / Stage 4</p>
+    <h1>From the MLX teaching loop to Transformers.</h1>
+    <p class="lead">Stage 3 exposed every next-token operation in code. Stage 4 checks that explanation against Transformers 5.14.1 with one pinned GPT-2 model on the local CPU.</p>
+    <p class="question">Stage 3 already generated a watermark with MLX. Why check it against Transformers, and which exact details change?</p>
+    <nav class="stage-rail" aria-label="Stages 1 to 4">
+      <a class="stage-node" href="text-watermarking-stage-1-walkthrough.html"><span>Stage 1</span><strong>Measure the signal</strong><small>Count green hits and compare them with a 25 percent baseline.</small></a>
+      <a class="stage-node" href="text-watermarking-stage-2-lesson.html"><span>Stage 2</span><strong>Define a green hit</strong><small>Use a key and recent token IDs to select the green group.</small></a>
+      <a class="stage-node" href="text-watermarking-stage-3-lesson.html"><span>Stage 3</span><strong>Generate by hand</strong><small>Put the score change inside an explicit MLX model loop.</small></a>
+      <a class="stage-node current" href="#bridge"><span>Stage 4</span><strong>Check the implementation</strong><small>Compare the teaching loop with one exact Transformers path.</small></a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="bridge" aria-labelledby="bridge-title">
+      <div class="section-head"><div class="section-num">01</div><div><h2 id="bridge-title">Why Stage 3 used MLX, and why Stage 4 changes tools.</h2><p class="section-intro">The research goal is an understandable, reproducible generation-time watermark. MLX let us write the full loop ourselves and run the small LFM2 checkpoint on the Mac GPU. Transformers gives us maintained generation and checking code to compare against that explanation.</p></div></div>
+      <div class="passage">Early one morning Jack went up the hill. At the top he</div>
+      <div class="operation-row" aria-label="The five actions from Stage 3">
+        <div class="operation"><b>1. Model</b>Get one preference number for every next token.</div>
+        <div class="operation"><b>2. Green group</b>Use the previous token and public key to mark token IDs.</div>
+        <div class="operation"><b>3. Change and filter</b>Change numbers and remove choices in a declared order.</div>
+        <div class="operation"><b>4. Sample</b>Choose one token from the final chances.</div>
+        <div class="operation"><b>5. Check</b>Rebuild green hits from copied continuation IDs.</div>
+      </div>
+      <div class="bridge">
+        <article class="path-card stage3">
+          <p class="tag">Stage 3 / explicit teaching loop</p><h3>LFM2 through MLX</h3>
+          <p>Our code owned every operation. The saved first token was <span class="mono">Jack</span>.</p>
+          <dl><dt>Input</dt><dd>Instruction, chat formatting, and passage</dd><dt>Order</dt><dd>Add 2, divide by 0.8, top-p, top-k, sample</dd><dt>Device</dt><dd>Local Apple GPU</dd><dt>Purpose</dt><dd>Make the mechanism inspectable</dd></dl>
+        </article>
+        <div class="bridge-arrow">check the explanation against public library code</div>
+        <article class="path-card">
+          <p class="tag">Stage 4 / pinned implementation check</p><h3>GPT-2 through Transformers 5.14.1</h3>
+          <p>Transformers owns generation and checking. The saved first token was <span class="mono"> was</span>.</p>
+          <dl><dt>Input</dt><dd>Passage directly, without chat formatting</dd><dt>Order</dt><dd>Divide by 0.8, top-k, top-p, add 2, sample</dd><dt>Device</dt><dd>Local CPU</dd><dt>Purpose</dt><dd>Test the Stage 3 explanation and contracts</dd></dl>
+        </article>
+      </div>
+      <div class="same-change">
+        <div class="same"><h3>The ideas stay</h3><p>Mark a green group. Change model values. Sample from final chances. Rebuild the green count from copied text.</p></div>
+        <div class="changed"><h3>The full recipe changes</h3><p>The model, tokenizer, prompt formatting, green-set rule, device, and operation order all change. We should not expect the same words.</p></div>
+      </div>
+      <div class="band rust"><strong>This is not a model-quality comparison.</strong> GPT-2 is a small implementation fixture. Transformers does not replace the learning value of the MLX loop.</div>
+    </section>
+
+    <section id="formula-lab" aria-labelledby="formula-title">
+      <div class="section-head"><div class="section-num">02</div><div><h2 id="formula-title">Follow one GPT-2 token through every formula.</h2><p class="section-intro">GPT-2 returned 50,257 model preference numbers after the prompt token <span class="mono"> he</span>, ID 339. A preference number is not a probability. The program transforms the numbers, removes choices, then normalizes the remaining values.</p></div></div>
+      <div class="card">
+        <p class="tag">All definitions stay visible. The control animates the same saved values.</p>
+        <div class="formula-overview" aria-label="Five generation formulas">
+          <button class="formula-step active" data-formula-step="0" type="button"><span>Temperature</span>Enlarge score gaps<code>s / 0.8</code></button>
+          <button class="formula-step" data-formula-step="1" type="button"><span>Top-k</span>Keep the highest 40<code>rank(s) &lt;= 40</code></button>
+          <button class="formula-step" data-formula-step="2" type="button"><span>Top-p</span>Reach 95 percent<code>cumulative P &gt;= .95</code></button>
+          <button class="formula-step" data-formula-step="3" type="button"><span>Watermark</span>Add 2 to green survivors<code>s + 2 x I(green)</code></button>
+          <button class="formula-step" data-formula-step="4" type="button"><span>Softmax</span>Make chances sum to 100%<code>exp(s_i) / sum exp(s_j)</code></button>
+        </div>
+        <div class="controls"><button id="previousFormula" class="secondary" type="button">Previous operation</button><button id="nextFormula" type="button">Show the next operation</button><button id="replayFormula" class="secondary" type="button">Start again</button></div>
+        <div class="microscope">
+          <div class="formula-board">
+            <p class="tag" id="formulaTag">Operation 1 of 5</p>
+            <h3 id="formulaHeading">Divide every model value by 0.8.</h3>
+            <p class="plain" id="formulaPlain">Because 0.8 is below 1, every gap between candidates becomes 1.25 times larger. The program does not divide a probability.</p>
+            <code class="formula-large" id="formulaSymbol">s_i^(temp) = s_i / 0.8</code>
+            <div class="substitution"><span class="mono"> was</span><br><code id="formulaSubstitution">-125.5542 / 0.8 = -156.9427</code></div>
+            <p id="formulaResult">All 50,257 choices remain. The gap between saw and was grows from 1.7660 to 2.2076.</p>
+          </div>
+          <div>
+            <div class="funnel" aria-label="Complete candidate counts after filtering"><div class="funnel-stage"><span>GPT-2 vocabulary</span><strong>50,257</strong></div><div class="funnel-arrow">then</div><div class="funnel-stage"><span>highest values</span><strong id="funnelK">50,257</strong></div><div class="funnel-arrow">then</div><div class="funnel-stage"><span>95 percent group</span><strong id="funnelP">50,257</strong></div></div>
+            <p class="mono">Five recorded witnesses are shown below. The count above describes the complete vocabulary.</p>
+            <div class="candidate-head"><span>Token</span><span>ID</span><span>Value now</span><span>Final chance on one scale</span><span>Chance</span></div>
+            <div id="formulaCandidates"></div>
+          </div>
+        </div>
+        <p class="step-reading" id="formulaReading">Fixed: the saved GPT-2 values, previous token, key, and settings. Changed: temperature only. Watch the gaps between values grow.</p>
+      </div>
+      <div class="static-fallback"><h3>All five operations without animation</h3><p>Transformers divides the values by 0.8, keeps the highest 40, keeps the smallest leading group whose chances reach 95 percent, adds 2 to green choices that remain, and applies softmax. The selected token <span class="mono"> was</span> moves from -125.5542 to -154.9427 and finishes with an 8.642730 percent chance.</p></div>
+    </section>
+
+    <section id="order-comparison" aria-labelledby="order-title">
+      <div class="section-head"><div class="section-num">03</div><div><h2 id="order-title">The same settings produce a different calculation when the order changes.</h2><p class="section-intro">Both rails below use the same saved GPT-2 values, previous token, public key, temperature, filters, and added value. Only the order changes. The complete result stays visible. Replay adds motion but reveals no hidden definition.</p></div></div>
+      <div class="order-compare">
+        <article class="order-track reference" id="referenceTrack">
+          <p class="tag">Transformers 5.14.1 / generated the saved text</p><h3>Filter first, then add 2</h3>
+          <div class="order-list"><div class="order-item" data-order-index="0"><i>1</i>Divide all values by 0.8</div><div class="order-item" data-order-index="1"><i>2</i>Keep the highest 40</div><div class="order-item" data-order-index="2"><i>3</i>Keep the group reaching 95 percent</div><div class="order-item" data-order-index="3"><i>4</i>Add 2 to green choices that remain</div><div class="order-item" data-order-index="4"><i>5</i>Apply softmax and sample</div></div>
+          <div class="order-formula mono">(-125.5542 / 0.8) + 2 = -154.9427</div>
+          <p><strong>Effective green addition after temperature: 2.</strong><br>Relative odds multiplier: exp(2) = 7.3891.</p>
+          <p class="mono">50,257 to 40 to 19 choices</p>
+        </article>
+        <article class="order-track earlier" id="earlierTrack">
+          <p class="tag">Earlier Stage 3 order / calculation on saved GPT-2 values</p><h3>Add 2 first, then filter</h3>
+          <div class="order-list"><div class="order-item" data-order-index="0"><i>1</i>Add 2 to every green choice</div><div class="order-item" data-order-index="1"><i>2</i>Divide all values by 0.8</div><div class="order-item" data-order-index="2"><i>3</i>Keep the group reaching 95 percent</div><div class="order-item" data-order-index="3"><i>4</i>Keep at most 40 choices</div><div class="order-item" data-order-index="4"><i>5</i>Apply softmax</div></div>
+          <div class="order-formula mono">(-125.5542 + 2) / 0.8 = -154.4427</div>
+          <p><strong>Effective green addition after temperature: 2 / 0.8 = 2.5.</strong><br>Relative odds multiplier: exp(2.5) = 12.1825.</p>
+          <p class="mono">50,257 to 11 to 11 choices</p>
+        </article>
+      </div>
+      <div class="card chance-compare">
+        <h3>Final chance for the same token, <span class="mono"> was</span></h3>
+        <div class="chance-line"><span>Transformers order</span><div class="prob-track"><div class="fill" style="width:86.4273%"></div></div><strong>8.642730%</strong></div>
+        <div class="chance-line earlier"><span>Earlier order</span><div class="prob-track"><div class="fill" style="width:88.25517%"></div></div><strong>8.825517%</strong></div>
+        <p>Changing the operation order changed both the available choices and the final chance. The full difference also includes the swapped top-k and top-p filters, so we cannot assign it to the 2 versus 2.5 addition alone.</p>
+        <div class="controls"><button id="predictSame" class="secondary" type="button">I predict the same chance</button><button id="predictDifferent" class="secondary" type="button">I predict a different chance</button><button id="replayOrders" type="button" disabled>Replay both orders</button></div>
+        <p class="band" id="orderFeedback">Make a prediction, then replay the two completed rails.</p>
+      </div>
+    </section>
+
+    <section id="sample" aria-labelledby="sample-title">
+      <div class="section-head"><div class="section-num">04</div><div><h2 id="sample-title">A high chance does not force the sampled token.</h2><p class="section-intro">The program reset the PyTorch random generator to seed 568285428 and sampled from the final Transformers distribution. The artifact records that seed, the final chances, and the selected token. It does not record one separate random-number draw.</p></div></div>
+      <div class="card sample-scene">
+        <div>
+          <h3>Visible final chances at position 1</h3>
+          <div class="chance-stack"><div class="chance-line"><span class="mono"> saw</span><div class="prob-track"><div class="fill" style="width:78.591889%"></div></div><strong>78.591889%</strong></div><div class="chance-line"><span class="mono"> was</span><div class="prob-track"><div class="fill" style="width:8.642730%"></div></div><strong>8.642730%</strong></div><div class="chance-line"><span class="mono"> found</span><div class="prob-track"><div class="fill" style="width:1.311924%"></div></div><strong>1.311924%</strong></div></div>
+          <p>The other 16 surviving choices hold the remaining chance.</p>
+        </div>
+        <div class="band green"><p class="tag">Recorded sample</p><h3>Transformers selected <span class="sample-token">was</span>, ID 373.</h3><p><span class="mono"> saw</span> had the largest visible chance. Sampling still selected <span class="mono"> was</span>. A probability changes how often a token would be chosen across repeated samples. It does not force one outcome.</p><button id="animateSample" type="button">Move the sampled tokens into the passage</button></div>
+      </div>
+      <div class="continuation-box" id="samplePassage">Early one morning Jack went up the hill. At the top he <span id="movedWas" class="sample-token">was</span> <span id="movedGreeted" class="sample-token">greeted</span> with a familiar sound. The young man and his wife walked down a long, narrow staircase to a small house on the street. Jack looked out the window and saw a strange, bright light</div>
+      <p class="band">The same two token objects continue into checking. <span class="mono"> was</span>, ID 373, becomes context. <span class="mono"> greeted</span>, ID 21272, becomes the first token the checker can score.</p>
+    </section>
+
+    <section id="detector" aria-labelledby="detector-title">
+      <div class="section-head"><div class="section-num">05</div><div><h2 id="detector-title">Build the detector result from copied token pairs.</h2><p class="section-intro">The checker receives copied continuation IDs. It receives no prompt IDs, no padding IDs, and no hidden model values. The GPT-2 tokenizer reproduced all 40 generated IDs exactly.</p></div></div>
+      <div class="card">
+        <div class="boundary-scene">
+          <div class="boundary-box prompt"><p class="tag">Excluded prompt / 13 tokens</p><h3>Early one morning Jack went up the hill. At the top he</h3><p>The starting passage stays outside the checker.</p></div>
+          <div class="boundary-label">copy continuation only</div>
+          <div class="boundary-box detector"><p class="tag">Included continuation / 40 tokens</p><div class="token-strip" id="mainDetectorTokens"></div><div class="static-fallback"><p><span class="mono"> was</span>, ID 373, supplies context. The next 39 tokens are checked. Under key 15485863, 17 of those 39 positions are green.</p></div></div>
+        </div>
+        <div class="first-pair"><div class="token-chip context"><span class="index">token 1 / context only</span><span class="mono"> was</span><br>ID 373</div><div class="pair-link">previous ID chooses green set, then check current ID</div><div class="token-chip green"><span class="index">token 2 / first checked</span><span class="mono"> greeted</span><br>ID 21272 / green</div></div>
+        <div class="math-stack"><div class="math-card"><span>Checked positions T</span><strong>40 - 1 = 39</strong><p>The first token supplies context.</p></div><div class="math-card"><span>Green positions G</span><strong>17</strong><p>The generation key marks 17 current tokens green.</p></div><div class="math-card"><span>Average under 25%</span><strong>39 x 0.25 = 9.75</strong><p>This is an average across repeated baseline checks, not a promise.</p></div></div>
+        <div class="z-work mono">usual variation = sqrt(39 x 0.25 x 0.75) = 2.7042<br><br>z = (17 - 9.75) / 2.7042 = 2.6811</div>
+        <p class="band rust"><strong>Read the result as a sentence.</strong> The green count is 2.6811 usual amounts of variation above the 25 percent baseline. Transformers uses the strict rule z &gt; 3.0. This short continuation falls below that configured cutoff even though Transformers generated it with the watermark turned on. The result is insufficient evidence for this configured watermark and key. It does not prove human origin or absence of a watermark.</p>
+      </div>
+    </section>
+
+    <section id="records" aria-labelledby="records-title">
+      <div class="section-head"><div class="section-num">06</div><div><h2 id="records-title">Inspect all six recorded continuations, then change only the checker key.</h2><p class="section-intro">Choose one of the three fixed passages. Switch between its recorded control and watermark output. Then keep that copied text fixed and replay detection with a public teaching key.</p></div></div>
+      <div class="record-grid" id="recordButtons"></div>
+      <div class="static-fallback"><h3>Three saved passage pairs</h3><div class="grid-3"><p><strong>Continuity</strong><br>off: 13/39, z 1.2019<br>on: 17/39, z 2.6811</p><p><strong>Notebook</strong><br>off: 12/39, z 0.8321<br>on: 21/39, z 4.1603</p><p><strong>Library</strong><br>off: 16/39, z 2.3113<br>on: 22/39, z 4.5301</p></div><p>The interactive version keeps each 40-token continuation fixed and rechecks it with any bundled key from 15485856 through 15485872.</p></div>
+      <div class="card">
+        <div class="controls" style="justify-content:space-between;align-items:center"><div class="condition-switch" aria-label="Recorded generation condition"><button id="controlCondition" type="button" aria-pressed="false">Watermark off</button><button id="watermarkCondition" type="button" aria-pressed="true">Watermark on</button></div><span class="tag">Recorded output, not edited</span></div>
+        <div class="record-detail">
+          <div class="record-text"><p class="tag" id="recordPromptId">Continuity passage</p><h3 id="recordPrompt"></h3><p id="recordContinuation"></p><div class="token-strip" id="recordTokens"></div></div>
+          <div><div class="record-metrics"><div class="metric"><span>Green positions G</span><strong id="liveG">17</strong></div><div class="metric"><span>Checked positions T</span><strong id="liveT">39</strong></div><div class="metric"><span>Average at 25%</span><strong id="liveExpected">9.75</strong></div><div class="metric"><span>Evidence score z</span><strong id="liveZ">2.6811</strong></div></div><div class="z-chart" aria-label="z score on a shared scale"><div class="z-axis"></div><div class="z-cut"></div><div class="z-marker" id="zMarker"></div><div class="z-marker watermark" id="recordedPairMarker"></div></div><p class="mono"><span style="color:var(--blue)">blue: replay key</span> / <span style="color:var(--green)">green: generation key</span> / dashed line: z = 3</p><p id="recordVerdict" class="band rust"></p></div>
+        </div>
+        <div class="key-lab">
+          <h3>Live detector replay over saved token IDs</h3>
+          <p><strong>Instruction.</strong> Keep this copied continuation fixed. Change only the public teaching key. Watch the green positions, G, z, and cutoff result. T stays 39.</p>
+          <div class="key-input-row"><label for="keyInput">Teaching key from 15485856 to 15485872<input id="keyInput" type="number" min="15485856" max="15485872" step="1" value="15485863" inputmode="numeric"></label><div><div class="controls"><button id="generationKeyPreset" class="small" type="button">Generation key 15485863</button><button id="comparisonKeyPreset" class="small secondary" type="button">Comparison key 15485867</button><button id="nextTeachingKey" class="small secondary" type="button">Next bundled key</button></div><p id="keyHelp">This range contains 17 exact Transformers 5.14.1 detector replays bundled into the page.</p></div></div>
+          <p id="keySentence" class="band">GPT-2 is not running. The browser is replaying the detector over the same 40 copied token IDs.</p>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-top:16px">
+        <div class="band"><h3>Continuity</h3><p>Watermark off: 13/39, z 1.2019.<br>Watermark on: 17/39, z 2.6811.<br>The watermarked row stays below 3.</p></div>
+        <div class="band green"><h3>Notebook</h3><p>Watermark off: 12/39, z 0.8321.<br>Watermark on: 21/39, z 4.1603.<br>The watermarked row crosses 3.</p></div>
+        <div class="band green"><h3>Library</h3><p>Watermark off: 16/39, z 2.3113.<br>Watermark on: 22/39, z 4.5301.<br>The watermarked row crosses 3.</p></div>
+      </div>
+      <p class="band rust">These are six outputs from one pinned local run. They show that short samples vary. They do not measure detection accuracy, writing quality, or a false-alarm rate. Once two generations choose different tokens, their later histories differ, so later token probabilities are not matched comparisons.</p>
+    </section>
+
+    <section id="repetition" aria-labelledby="repetition-title">
+      <div class="section-head"><div class="section-num">07</div><div><h2 id="repetition-title">What should happen when the same adjacent transition appears again?</h2><p class="section-intro">With one-token context, each check uses two neighboring token IDs. The previous ID chooses the green group. The current ID is tested against that group. GPT-2 did not generate the constructed six-token sequence below.</p></div></div>
+      <div class="card">
+        <div class="token-strip" style="justify-content:space-between"><span class="token-chip"><span class="index">A</span>was / 373</span><span class="token-chip"><span class="index">B</span>greeted / 21272</span><span class="token-chip"><span class="index">A</span>was / 373</span><span class="token-chip"><span class="index">B</span>greeted / 21272</span><span class="token-chip"><span class="index">A</span>was / 373</span><span class="token-chip"><span class="index">B</span>greeted / 21272</span></div>
+        <h3>Six tokens create five adjacent check occurrences.</h3>
+        <div class="pair-occurrences"><div class="pair-occurrence ab"><span class="tag">1 / green</span><strong>A then B</strong></div><div class="pair-occurrence ba"><span class="tag">2 / red</span><strong>B then A</strong></div><div class="pair-occurrence ab"><span class="tag">3 / green again</span><strong>A then B</strong></div><div class="pair-occurrence ba"><span class="tag">4 / red again</span><strong>B then A</strong></div><div class="pair-occurrence ab"><span class="tag">5 / green again</span><strong>A then B</strong></div></div>
+        <div class="controls"><button id="predictTwoPatterns" class="secondary" type="button">I see two different transition values</button><button id="collapsePairs" type="button" disabled>Group equal transitions</button></div>
+        <div class="distinct-pairs" id="distinctPairs" hidden><div class="distinct-pair ab">A then B<br>373 then 21272<br>green / count once</div><div class="distinct-pair ba">B then A<br>21272 then 373<br>red / count once</div></div>
+        <div class="grid-3" style="margin-top:18px"><div class="mini"><h3>Count every occurrence</h3><p>Five checks. Three are green.</p><strong class="mono">3/5, z 1.8074</strong></div><div class="mini" style="border-color:var(--rust)"><h3>Transformers option named "ignore repeated n-grams"</h3><p>In version 5.14.1, the count did not change on this input.</p><strong class="mono">3/5, z 1.8074</strong></div><div class="mini" style="border-color:var(--green)"><h3>Count each pair value once</h3><p>Two different ordered pairs. One is green.</p><strong class="mono">1/2, z 0.8165</strong></div></div>
+        <p class="band rust">This fixed test found a mismatch between the option name and the observed result in Transformers 5.14.1. It does not establish how another version behaves. The lab stores the explicit pair-by-value count so the applied rule remains visible.</p>
+      </div>
+    </section>
+
+    <section id="evidence" aria-labelledby="evidence-title">
+      <div class="section-head"><div class="section-num">08</div><div><h2 id="evidence-title">What this saved run establishes.</h2><p class="section-intro">The claim boundary sits beside the evidence now. Technical metadata remains available below for reproduction.</p></div></div>
+      <div class="evidence-map">
+        <div class="evidence-column measured"><p class="tag">Measured locally</p><h3>Pinned behavior</h3><ul><li>Six 40-token continuations</li><li>Copied IDs match all generated IDs</li><li>The order probe matches <span class="mono">generate()</span></li><li>Prompt and padding stay outside detection</li></ul></div>
+        <div class="evidence-column derived"><p class="tag">Derived and checked</p><h3>Calculations</h3><ul><li>Stage 1 z formula matches library z</li><li>Earlier order runs on the same saved GPT-2 values</li><li>Seventeen bundled teaching keys replay exact memberships</li><li>Explicit pair values give 1/2</li></ul></div>
+        <div class="evidence-column external"><p class="tag">External implementation facts</p><h3>Pinned sources</h3><ul><li>Transformers 5.14.1 operation order</li><li>GPT-2 revision and MIT model-card license</li><li>Public watermark configuration fields</li></ul></div>
+        <div class="evidence-column untested"><p class="tag">Not measured here</p><h3>Still open</h3><ul><li>Writing quality</li><li>Detection accuracy or false-alarm rate</li><li>Another device or library version</li><li>Production key security</li><li>Stage 5 model scale or cloud work</li></ul></div>
+      </div>
+      <details><summary>Technical recipe, hashes, padding, and commands</summary><div><p>Model and tokenizer: <span class="mono">openai-community/gpt2</span>. Revision: <span class="mono">607a30d783dfa663caf39e06633721c8d4cfcd7e</span>. Model-card license: MIT. Selected safetensors file: 548,105,171 bytes. Runtime: Python 3.12.7, PyTorch 2.13.0, Transformers 5.14.1, local CPU.</p><p>Evidence source commit: <span class="mono">20b4860e0d64ca116b173bc42f971d50eb0fef95</span>. Config SHA-256: <span class="mono">d9367ca271399011703d3e7c150b6646b6612b034fa485026b33d14e49e48ded</span>.</p><p>The three prompts contain 13, 11, and 9 tokens. Left padding makes each batch row width 13 with 0, 2, and 4 pad tokens. The primary checker received 0 prompt tokens and 0 padding tokens.</p><p>Run <span class="mono">just verify-lab-04</span> to regenerate the selected trace from the local model cache.</p></div></details>
+      <details><summary>Official implementation sources</summary><div><p><a href="https://huggingface.co/docs/transformers/main/en/internal/generation_utils">Transformers generation documentation</a></p><p><a href="https://huggingface.co/openai-community/gpt2">Pinned GPT-2 model page</a></p><p>This lab uses a public KGW-style path. It does not reproduce Anthropic's private Claude implementation.</p></div></details>
+      <p class="band rust">No result on this page proves AI origin or authorship. A score above the configured cutoff means only "consistent with this configured watermark and key." Stage 5 remains separately gated.</p>
+    </section>
+  </main>
+
+  <footer><div class="wrap">Stage 4 checks one pinned implementation. It preserves the Stage 3 teaching loop as the explanation and uses Transformers as the reference being tested.</div></footer>
+
+  <script id="lessonData" type="application/json">{"key_min":15485856,"key_max":15485872,"records":[{"id":"stage-02-continuity:control","prompt_id":"stage-02-continuity","condition":"control","prompt_text":"Early one morning Jack went up the hill. At the top he","text":" was sitting in a chair in front of a fire and watching the fire smoke. He was still alive and breathing, but now he was very sick.\n\nIt was very cold and the only thing","ids":[373,5586,287,257,5118,287,2166,286,257,2046,290,4964,262,2046,7523,13,679,373,991,6776,290,12704,11,475,783,339,373,845,6639,13,198,198,1026,373,845,4692,290,262,691,1517],"pieces":[" was"," sitting"," in"," a"," chair"," in"," front"," of"," a"," fire"," and"," watching"," the"," fire"," smoke","."," He"," was"," still"," alive"," and"," breathing",","," but"," now"," he"," was"," very"," sick",".","\n","\n","It"," was"," very"," cold"," and"," the"," only"," thing"]},{"id":"stage-02-continuity:reference_watermark","prompt_id":"stage-02-continuity","condition":"reference_watermark","prompt_text":"Early one morning Jack went up the hill. At the top he","text":" was greeted with a familiar sound. The young man and his wife walked down a long, narrow staircase to a small house on the street. Jack looked out the window and saw a strange, bright light","ids":[373,21272,351,257,5385,2128,13,383,1862,582,290,465,3656,6807,866,257,890,11,7135,27656,284,257,1402,2156,319,262,4675,13,3619,3114,503,262,4324,290,2497,257,6283,11,6016,1657],"pieces":[" was"," greeted"," with"," a"," familiar"," sound","."," The"," young"," man"," and"," his"," wife"," walked"," down"," a"," long",","," narrow"," staircase"," to"," a"," small"," house"," on"," the"," street","."," Jack"," looked"," out"," the"," window"," and"," saw"," a"," strange",","," bright"," light"]},{"id":"notebook:control","prompt_id":"notebook","condition":"control","prompt_text":"The student opened the notebook and wrote down each result because","text":" they all suggested a common goal and a particular method.\n\n\"A lot of the students came to me with questions that didn't always take place, and I thought it would be interesting to try","ids":[484,477,5220,257,2219,3061,290,257,1948,2446,13,198,198,1,32,1256,286,262,2444,1625,284,502,351,2683,326,1422,470,1464,1011,1295,11,290,314,1807,340,561,307,3499,284,1949],"pieces":[" they"," all"," suggested"," a"," common"," goal"," and"," a"," particular"," method",".","\n","\n","\"","A"," lot"," of"," the"," students"," came"," to"," me"," with"," questions"," that"," didn","'t"," always"," take"," place",","," and"," I"," thought"," it"," would"," be"," interesting"," to"," try"]},{"id":"notebook:reference_watermark","prompt_id":"notebook","condition":"reference_watermark","prompt_text":"The student opened the notebook and wrote down each result because","text":" the student's grades are not yet complete. The teacher gave the student a grade for his or her last year of college, and the student's grades were then converted to his or her current grade.","ids":[262,3710,338,19051,389,407,1865,1844,13,383,4701,2921,262,3710,257,9559,329,465,393,607,938,614,286,4152,11,290,262,3710,338,19051,547,788,11513,284,465,393,607,1459,9559,13],"pieces":[" the"," student","'s"," grades"," are"," not"," yet"," complete","."," The"," teacher"," gave"," the"," student"," a"," grade"," for"," his"," or"," her"," last"," year"," of"," college",","," and"," the"," student","'s"," grades"," were"," then"," converted"," to"," his"," or"," her"," current"," grade","."]},{"id":"library:control","prompt_id":"library","condition":"control","prompt_text":"When the neighborhood library lost power, the staff","text":" at the library asked for additional power, but it didn't come. The water was leaking out of the building. It was like something out of a movie, and the staff were asking for water,\"","ids":[379,262,5888,1965,329,3224,1176,11,475,340,1422,470,1282,13,383,1660,373,25243,503,286,262,2615,13,632,373,588,1223,503,286,257,3807,11,290,262,3085,547,4737,329,1660,553],"pieces":[" at"," the"," library"," asked"," for"," additional"," power",","," but"," it"," didn","'t"," come","."," The"," water"," was"," leaking"," out"," of"," the"," building","."," It"," was"," like"," something"," out"," of"," a"," movie",","," and"," the"," staff"," were"," asking"," for"," water",",\""]},{"id":"library:reference_watermark","prompt_id":"library","condition":"reference_watermark","prompt_text":"When the neighborhood library lost power, the staff","text":" at the library asked for additional backup power.\n\n\"We don't know the answer to that,\" he said.\n\nLibraries are also trying to find a way to shut off power to","ids":[379,262,5888,1965,329,3224,11559,1176,13,198,198,1,1135,836,470,760,262,3280,284,326,553,339,531,13,198,198,43,11127,389,635,2111,284,1064,257,835,284,4423,572,1176,284],"pieces":[" at"," the"," library"," asked"," for"," additional"," backup"," power",".","\n","\n","\"","We"," don","'t"," know"," the"," answer"," to"," that",",\""," he"," said",".","\n","\n","L","ibraries"," are"," also"," trying"," to"," find"," a"," way"," to"," shut"," off"," power"," to"]}],"keys":{"15485856":{"stage-02-continuity:control":{"marks":"100001000010100001001001000001000000000","g":8,"t":39,"z":-0.647150228929,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000010100000001100101011000000000110001","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:control":{"marks":"101100000110010000100001000110000001010","g":12,"t":39,"z":0.832050294338,"above":false},"notebook:reference_watermark":{"marks":"100101001010100000000000001000000000011","g":9,"t":39,"z":-0.277350098113,"above":false},"library:control":{"marks":"100010000000110010001000010000000000101","g":9,"t":39,"z":-0.277350098113,"above":false},"library:reference_watermark":{"marks":"100011111000000000101001010000000100000","g":11,"t":39,"z":0.462250163521,"above":false}},"15485857":{"stage-02-continuity:control":{"marks":"001000001000000100100010001101000101000","g":10,"t":39,"z":0.092450032704,"above":false},"stage-02-continuity:reference_watermark":{"marks":"010100010000101011001000000000011000001","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:control":{"marks":"000011000010000000011000011100101100000","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:reference_watermark":{"marks":"010110100000001000010010100100011000010","g":12,"t":39,"z":0.832050294338,"above":false},"library:control":{"marks":"000000111110000011100011100100010000111","g":16,"t":39,"z":2.311250817605,"above":false},"library:reference_watermark":{"marks":"000000011001010110111001010100011000010","g":15,"t":39,"z":1.941450686788,"above":false}},"15485858":{"stage-02-continuity:control":{"marks":"010000100000011001100111100000010000010","g":12,"t":39,"z":0.832050294338,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000100000111000001000010001010100000010","g":10,"t":39,"z":0.092450032704,"above":false},"notebook:control":{"marks":"101000001000001110100001010001000000000","g":10,"t":39,"z":0.092450032704,"above":false},"notebook:reference_watermark":{"marks":"000010110101000010000100000000000100000","g":8,"t":39,"z":-0.647150228929,"above":false},"library:control":{"marks":"101000111010100000110100010101000001001","g":15,"t":39,"z":1.941450686788,"above":false},"library:reference_watermark":{"marks":"101001000001000000100000010111000000100","g":10,"t":39,"z":0.092450032704,"above":false}},"15485859":{"stage-02-continuity:control":{"marks":"000101000010000000000000100000000010000","g":5,"t":39,"z":-1.75655062138,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000010000010001100101000000000000000001","g":7,"t":39,"z":-1.016950359746,"above":false},"notebook:control":{"marks":"000001110000000000010010000001110100000","g":9,"t":39,"z":-0.277350098113,"above":false},"notebook:reference_watermark":{"marks":"000000010100000000101000100000011101000","g":9,"t":39,"z":-0.277350098113,"above":false},"library:control":{"marks":"000011100100100000100010110100010010010","g":13,"t":39,"z":1.201850425155,"above":false},"library:reference_watermark":{"marks":"000010000000000001000000000000000000000","g":2,"t":39,"z":-2.86595101383,"above":false}},"15485860":{"stage-02-continuity:control":{"marks":"100100101000100000101000100000000000000","g":8,"t":39,"z":-0.647150228929,"above":false},"stage-02-continuity:reference_watermark":{"marks":"100010000110001011000101100000000000000","g":10,"t":39,"z":0.092450032704,"above":false},"notebook:control":{"marks":"000001001100000001000000000110110010101","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:reference_watermark":{"marks":"000101000011011001111001100000000011010","g":15,"t":39,"z":1.941450686788,"above":false},"library:control":{"marks":"000100001000001000001010100000010100000","g":8,"t":39,"z":-0.647150228929,"above":false},"library:reference_watermark":{"marks":"000100000001000100000100000000000010011","g":7,"t":39,"z":-1.016950359746,"above":false}},"15485861":{"stage-02-continuity:control":{"marks":"001000110001101011001001011100010100000","g":15,"t":39,"z":1.941450686788,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000000000100110000100000000100001000110","g":8,"t":39,"z":-0.647150228929,"above":false},"notebook:control":{"marks":"000010000000001001010010100001100100000","g":9,"t":39,"z":-0.277350098113,"above":false},"notebook:reference_watermark":{"marks":"001101010001011010100010100010010001100","g":15,"t":39,"z":1.941450686788,"above":false},"library:control":{"marks":"000100000000101010000000100011010000000","g":8,"t":39,"z":-0.647150228929,"above":false},"library:reference_watermark":{"marks":"000100010000000001001000000000000110101","g":8,"t":39,"z":-0.647150228929,"above":false}},"15485862":{"stage-02-continuity:control":{"marks":"000000100100000001110010001000001100110","g":11,"t":39,"z":0.462250163521,"above":false},"stage-02-continuity:reference_watermark":{"marks":"101001010000001010000000000011100100100","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:control":{"marks":"001001000000000010000010001010010110001","g":10,"t":39,"z":0.092450032704,"above":false},"notebook:reference_watermark":{"marks":"000101010001010011000010010000110010000","g":12,"t":39,"z":0.832050294338,"above":false},"library:control":{"marks":"010000010001001010110100000100001100000","g":11,"t":39,"z":0.462250163521,"above":false},"library:reference_watermark":{"marks":"010000000000000101000000010100000010000","g":6,"t":39,"z":-1.386750490563,"above":false}},"15485863":{"stage-02-continuity:control":{"marks":"001100000010011111001000010000110001000","g":13,"t":39,"z":1.201850425155,"above":false},"stage-02-continuity:reference_watermark":{"marks":"101111110000010001110010011010011000000","g":17,"t":39,"z":2.681050948422,"above":false},"notebook:control":{"marks":"010000000001000010011100110001100100010","g":12,"t":39,"z":0.832050294338,"above":false},"notebook:reference_watermark":{"marks":"110011101100101011010001101100011010101","g":21,"t":39,"z":4.160251471689,"above":true},"library:control":{"marks":"011110000111011000011000000000110101001","g":16,"t":39,"z":2.311250817605,"above":false},"library:reference_watermark":{"marks":"011111000100100111100100111011001011101","g":22,"t":39,"z":4.530051602506,"above":true}},"15485864":{"stage-02-continuity:control":{"marks":"000100001000000010010100110000000000000","g":7,"t":39,"z":-1.016950359746,"above":false},"stage-02-continuity:reference_watermark":{"marks":"010000000000000010110000001101001101000","g":10,"t":39,"z":0.092450032704,"above":false},"notebook:control":{"marks":"000000000100000100010000000000010011000","g":6,"t":39,"z":-1.386750490563,"above":false},"notebook:reference_watermark":{"marks":"000000000000000010010001000000000000001","g":4,"t":39,"z":-2.126350752197,"above":false},"library:control":{"marks":"000001000000001101001101101000100000010","g":11,"t":39,"z":0.462250163521,"above":false},"library:reference_watermark":{"marks":"000000010000000000111100000001000000000","g":6,"t":39,"z":-1.386750490563,"above":false}},"15485865":{"stage-02-continuity:control":{"marks":"001100101000000000100000110000010001011","g":11,"t":39,"z":0.462250163521,"above":false},"stage-02-continuity:reference_watermark":{"marks":"001100001100010100010001100000100110000","g":12,"t":39,"z":0.832050294338,"above":false},"notebook:control":{"marks":"010001000100000000011001000100000010000","g":8,"t":39,"z":-0.647150228929,"above":false},"notebook:reference_watermark":{"marks":"000000000100000010010010000000001000001","g":6,"t":39,"z":-1.386750490563,"above":false},"library:control":{"marks":"000010100000001101000000000000000000000","g":5,"t":39,"z":-1.75655062138,"above":false},"library:reference_watermark":{"marks":"000011000000000010001000000000000001000","g":5,"t":39,"z":-1.75655062138,"above":false}},"15485866":{"stage-02-continuity:control":{"marks":"100100000000000000001000010000010010000","g":6,"t":39,"z":-1.386750490563,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000000000100000100000000010000001000000","g":4,"t":39,"z":-2.126350752197,"above":false},"notebook:control":{"marks":"000001000000001011110000000000000100010","g":8,"t":39,"z":-0.647150228929,"above":false},"notebook:reference_watermark":{"marks":"010001000100000000000110000100110100000","g":9,"t":39,"z":-0.277350098113,"above":false},"library:control":{"marks":"100000000001000000010100001001100001010","g":9,"t":39,"z":-0.277350098113,"above":false},"library:reference_watermark":{"marks":"100000010000001010100000000011001101100","g":11,"t":39,"z":0.462250163521,"above":false}},"15485867":{"stage-02-continuity:control":{"marks":"001011101000000000011000010011001000001","g":12,"t":39,"z":0.832050294338,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000000010001001001010110010000000110101","g":12,"t":39,"z":0.832050294338,"above":false},"notebook:control":{"marks":"000100000010000100001000000010000010010","g":7,"t":39,"z":-1.016950359746,"above":false},"notebook:reference_watermark":{"marks":"011000100111001010000010000110001100100","g":14,"t":39,"z":1.571650555971,"above":false},"library:control":{"marks":"000100001000100100000101000001100001100","g":10,"t":39,"z":0.092450032704,"above":false},"library:reference_watermark":{"marks":"000101101000000000011001000010000100010","g":10,"t":39,"z":0.092450032704,"above":false}},"15485868":{"stage-02-continuity:control":{"marks":"000000000000000100000101011001000110001","g":9,"t":39,"z":-0.277350098113,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000100100010010001001111001011000110001","g":15,"t":39,"z":1.941450686788,"above":false},"notebook:control":{"marks":"000000100110001100000110010000100000011","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:reference_watermark":{"marks":"000101101101001000001000100000000100000","g":10,"t":39,"z":0.092450032704,"above":false},"library:control":{"marks":"000000001010010000100000000100010000001","g":7,"t":39,"z":-1.016950359746,"above":false},"library:reference_watermark":{"marks":"000000001000100010100001000000000101010","g":8,"t":39,"z":-0.647150228929,"above":false}},"15485869":{"stage-02-continuity:control":{"marks":"001100010010100100001000011010010101100","g":14,"t":39,"z":1.571650555971,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000001000001001000000100000000010000011","g":7,"t":39,"z":-1.016950359746,"above":false},"notebook:control":{"marks":"010000000000010001001000010010010100000","g":8,"t":39,"z":-0.647150228929,"above":false},"notebook:reference_watermark":{"marks":"110010000001110100010000011100010000010","g":13,"t":39,"z":1.201850425155,"above":false},"library:control":{"marks":"110001001110000100000001001010001000010","g":12,"t":39,"z":0.832050294338,"above":false},"library:reference_watermark":{"marks":"110000010000000110000000000001000000100","g":7,"t":39,"z":-1.016950359746,"above":false}},"15485870":{"stage-02-continuity:control":{"marks":"100000100010011110001010001010001100000","g":13,"t":39,"z":1.201850425155,"above":false},"stage-02-continuity:reference_watermark":{"marks":"000000100000000000000100001000001000001","g":5,"t":39,"z":-1.75655062138,"above":false},"notebook:control":{"marks":"000010000100000000000100000000110001000","g":6,"t":39,"z":-1.386750490563,"above":false},"notebook:reference_watermark":{"marks":"100010001110100100101001101000010101110","g":17,"t":39,"z":2.681050948422,"above":false},"library:control":{"marks":"100001011000110010000010000000010000000","g":9,"t":39,"z":-0.277350098113,"above":false},"library:reference_watermark":{"marks":"100000000000000000001110010110000000010","g":8,"t":39,"z":-0.647150228929,"above":false}},"15485871":{"stage-02-continuity:control":{"marks":"001000010001100000100100000000000000000","g":6,"t":39,"z":-1.386750490563,"above":false},"stage-02-continuity:reference_watermark":{"marks":"101001100010000000001000000000000000000","g":6,"t":39,"z":-1.386750490563,"above":false},"notebook:control":{"marks":"101100000100111010100000000011000000000","g":11,"t":39,"z":0.462250163521,"above":false},"notebook:reference_watermark":{"marks":"000000101100000000000110000001100000000","g":7,"t":39,"z":-1.016950359746,"above":false},"library:control":{"marks":"010000000100010110010001001010000100000","g":10,"t":39,"z":0.092450032704,"above":false},"library:reference_watermark":{"marks":"010000010010001000001010000001100001001","g":10,"t":39,"z":0.092450032704,"above":false}},"15485872":{"stage-02-continuity:control":{"marks":"101000100010000010110001100101000000000","g":11,"t":39,"z":0.462250163521,"above":false},"stage-02-continuity:reference_watermark":{"marks":"001000001001000000000011000010110100100","g":10,"t":39,"z":0.092450032704,"above":false},"notebook:control":{"marks":"000000000010100011000110000000010001010","g":9,"t":39,"z":-0.277350098113,"above":false},"notebook:reference_watermark":{"marks":"000000010011000000001011000000000100001","g":8,"t":39,"z":-0.647150228929,"above":false},"library:control":{"marks":"000111000000000001010001000000000000100","g":7,"t":39,"z":-1.016950359746,"above":false},"library:reference_watermark":{"marks":"000110111011100000000001001100000000010","g":12,"t":39,"z":0.832050294338,"above":false}}}}</script>
+  <script>
+  (() => {
+    'use strict';
+    const data = JSON.parse(document.querySelector('#lessonData').textContent);
+    const candidates = [
+      {text:' was',id:373,role:'recorded sample',green:true,raw:-125.554153,temp:-156.942688,topK:true,topP:true,final:-154.942688,p:8.642730,early:-154.442688,earlyP:8.825517},
+      {text:' saw',id:2497,role:'largest green survivor',green:true,raw:-123.788116,temp:-154.735138,topK:true,topP:true,final:-152.735138,p:78.591889,early:-152.235138,earlyP:80.254054},
+      {text:' found',id:1043,role:'largest red survivor',green:false,raw:-125.462326,temp:-156.827911,topK:true,topP:true,final:-156.827911,p:1.311924,early:-156.827911,earlyP:.812551},
+      {text:' fell',id:3214,role:'green removed by top-p',green:true,raw:-127.748337,temp:-159.685425,topK:true,topP:false,final:null,p:0,early:-157.185425,earlyP:.568309},
+      {text:' took',id:1718,role:'red removed by top-p',green:false,raw:-127.842186,temp:-159.802734,topK:true,topP:false,final:null,p:0,early:null,earlyP:0}
+    ];
+    const formulaSteps = [
+      {heading:'Divide every model value by 0.8.',plain:'Because 0.8 is below 1, every gap between candidates becomes 1.25 times larger. The program does not divide a probability.',symbol:'s_i^(temp) = s_i / 0.8',sub:'-125.5542 / 0.8 = -156.9427',result:'All 50,257 choices remain. The gap between saw and was grows from 1.7660 to 2.2076.',k:50257,p:50257,reading:'Fixed: the saved GPT-2 values, previous token, key, and settings. Changed: temperature only. Watch the gaps between values grow.'},
+      {heading:'Keep the 40 largest adjusted values.',plain:'This ranking filter is called top-k. Every other token becomes unavailable for this sample.',symbol:'keep i when rank(s_i) <= 40',sub:'was ranks inside the highest 40, so it stays available',result:'The complete choice count falls from 50,257 to 40.',k:40,p:40,reading:'Fixed: adjusted values and all settings. Changed: the highest-value filter. Watch the complete count fall to 40 while witness rows keep their identity.'},
+      {heading:'Keep the smallest leading group that reaches 95 percent.',plain:'The program converts the current 40 values to temporary chances, sorts them, and keeps enough leading choices to reach at least 95 percent. This is top-p.',symbol:'keep the shortest prefix with cumulative P >= 0.95',sub:'was lies inside the 19-choice prefix, so it stays available',result:'The complete choice count falls from 40 to 19.',k:40,p:19,reading:'Fixed: the same 40 choices. Changed: the cumulative 95 percent filter. Watch fell and took fade while was remains.'},
+      {heading:'Add 2 to green choices that survived.',plain:'The previous token ID and public key mark 12,564 of 50,257 vocabulary IDs green. Only choices still available can change.',symbol:'s_i^(wm) = s_i + 2 x I[i is green]',sub:'-156.9427 + 2 = -154.9427 for green token was',result:'A green choice removed by a filter stays removed. Green is only a temporary key-selected label.',k:40,p:19,reading:'Fixed: the 19 surviving choices. Changed: add 2 to green survivors. Watch green values move while red values stay still.'},
+      {heading:'Turn the remaining values into chances that sum to 100 percent.',plain:'Softmax exponentiates each final value and divides by the total across all 19 survivors. Only differences among the values matter.',symbol:'P(i) = exp(s_i) / sum_j exp(s_j)',sub:'exp(-154.9427 - max) / 1.272396 = 0.0864273',result:'The final chance for was is 8.642730 percent.',k:40,p:19,reading:'Fixed: the final 19 values. Changed: normalization only. Watch probabilities appear on one shared scale.'}
+    ];
+    let formulaIndex = 0;
+    const candidateHost = document.querySelector('#formulaCandidates');
+    candidateHost.innerHTML = candidates.map((c,i) => `<div class="candidate-row ${c.green?'green':''}" data-candidate="${i}"><span class="candidate-name mono">${c.text}<small>${c.role}</small></span><span class="mono">${c.id}</span><span class="score-now mono"></span><span class="prob-track"><span class="prob-fill"></span></span><span class="prob-label mono"></span></div>`).join('');
+    function renderFormula(index) {
+      formulaIndex = index;
+      const step = formulaSteps[index];
+      document.querySelectorAll('[data-formula-step]').forEach((b,i) => b.classList.toggle('active',i===index));
+      document.querySelector('#formulaTag').textContent = `Operation ${index+1} of 5`;
+      document.querySelector('#formulaHeading').textContent = step.heading;
+      document.querySelector('#formulaPlain').textContent = step.plain;
+      document.querySelector('#formulaSymbol').textContent = step.symbol;
+      document.querySelector('#formulaSubstitution').textContent = step.sub;
+      document.querySelector('#formulaResult').textContent = step.result;
+      document.querySelector('#formulaReading').textContent = step.reading;
+      document.querySelector('#funnelK').textContent = step.k.toLocaleString();
+      document.querySelector('#funnelP').textContent = step.p.toLocaleString();
+      document.querySelectorAll('.candidate-row').forEach((row,i) => {
+        const c=candidates[i];
+        const removed=index>=2 && !c.topP;
+        row.classList.toggle('removed',removed);
+        const value=index===0?c.temp:index<3?c.temp:index===3?c.final:c.final;
+        row.querySelector('.score-now').textContent=value===null?'removed':value.toFixed(4);
+        row.querySelector('.prob-fill').style.width=index===4?`${Math.min(100,c.p)}%`:'0%';
+        row.querySelector('.prob-label').textContent=index===4?`${c.p.toFixed(6)}%`:'not final';
+      });
+      document.querySelector('#previousFormula').disabled=index===0;
+      document.querySelector('#nextFormula').disabled=index===4;
+      document.querySelector('#nextFormula').textContent=index===4?'All operations shown':'Show the next operation';
+    }
+    document.querySelectorAll('[data-formula-step]').forEach((b,i)=>b.addEventListener('click',()=>renderFormula(i)));
+    document.querySelector('#previousFormula').addEventListener('click',()=>renderFormula(Math.max(0,formulaIndex-1)));
+    document.querySelector('#nextFormula').addEventListener('click',()=>renderFormula(Math.min(4,formulaIndex+1)));
+    document.querySelector('#replayFormula').addEventListener('click',()=>renderFormula(0));
+    renderFormula(0);
+
+    let orderTimer = null;
+    function recordPrediction(kind) {
+      document.querySelector('#replayOrders').disabled=false;
+      document.querySelector('#orderFeedback').textContent=kind==='different'?'Prediction saved: different. Replay the completed rails and watch the effective addition and filter counts.':'Prediction saved: same. Replay the completed rails and compare that idea with the measured results.';
+    }
+    document.querySelector('#predictSame').addEventListener('click',()=>recordPrediction('same'));
+    document.querySelector('#predictDifferent').addEventListener('click',()=>recordPrediction('different'));
+    document.querySelector('#replayOrders').addEventListener('click',()=>{
+      clearInterval(orderTimer);
+      const tracks=[document.querySelector('#referenceTrack'),document.querySelector('#earlierTrack')];
+      tracks.forEach(t=>{t.classList.add('playing');t.querySelectorAll('.order-item').forEach(x=>x.classList.remove('active'));});
+      let i=0;
+      const tick=()=>{tracks.forEach(t=>{t.querySelectorAll('.order-item').forEach(x=>x.classList.remove('active'));t.querySelector(`[data-order-index="${i}"]`).classList.add('active');});i++;if(i===5){clearInterval(orderTimer);setTimeout(()=>tracks.forEach(t=>t.classList.remove('playing')),500);}};
+      tick(); orderTimer=setInterval(tick,650);
+    });
+    document.querySelector('#animateSample').addEventListener('click',()=>{
+      const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:650;
+      document.querySelector('#movedWas').animate([{transform:'translateY(-18px)',opacity:.2},{transform:'translateY(0)',opacity:1}],{duration,easing:'ease-out'});
+      document.querySelector('#movedGreeted').animate([{transform:'translateY(-18px)',opacity:.2},{transform:'translateY(0)',opacity:1}],{duration,delay:duration?250:0,easing:'ease-out'});
+    });
+
+    const recordLabels={'stage-02-continuity':'Continuity','notebook':'Notebook','library':'Library'};
+    let selectedPrompt='stage-02-continuity';
+    let selectedCondition='reference_watermark';
+    let selectedKey=15485863;
+    const findRecord=()=>data.records.find(r=>r.prompt_id===selectedPrompt&&r.condition===selectedCondition);
+    function marksFor(record,key){return data.keys[String(key)][record.id];}
+    function tokenMarkup(record, marks, limit=40) {
+      return record.pieces.slice(0,limit).map((piece,i)=>{
+        const green=i>0&&marks.marks[i-1]==='1';
+        return `<span class="token-chip ${i===0?'context':''} ${green?'green':''}"><span class="index">${i+1}${i===0?' / context':''}</span>${escapeHtml(piece)||'[empty]'}</span>`;
+      }).join('');
+    }
+    function escapeHtml(text){return text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
+    const continuity=data.records.find(r=>r.id==='stage-02-continuity:reference_watermark');
+    document.querySelector('#mainDetectorTokens').innerHTML=tokenMarkup(continuity,marksFor(continuity,15485863));
+    const promptOrder=['stage-02-continuity','notebook','library'];
+    document.querySelector('#recordButtons').innerHTML=promptOrder.map(id=>{
+      const control=data.keys['15485863'][`${id}:control`];const wm=data.keys['15485863'][`${id}:reference_watermark`];
+      return `<button class="record-button" data-prompt="${id}" type="button" aria-pressed="${id===selectedPrompt}"><span class="tag">${recordLabels[id]} passage</span><strong>${data.records.find(r=>r.prompt_id===id).prompt_text}</strong><span class="pair-score"><span>off z ${control.z.toFixed(4)}</span><span>on z ${wm.z.toFixed(4)}</span></span></button>`;
+    }).join('');
+    function zLeft(z){return Math.max(3,Math.min(97,((z+1.5)/6.5)*94+3));}
+    function renderRecord(){
+      const record=findRecord(); const replay=marksFor(record,selectedKey); const generation=marksFor(record,15485863);
+      document.querySelectorAll('[data-prompt]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.prompt===selectedPrompt)));
+      document.querySelector('#controlCondition').setAttribute('aria-pressed',String(selectedCondition==='control'));
+      document.querySelector('#watermarkCondition').setAttribute('aria-pressed',String(selectedCondition==='reference_watermark'));
+      document.querySelector('#recordPromptId').textContent=`${recordLabels[selectedPrompt]} passage / ${selectedCondition==='control'?'watermark off':'watermark on'}`;
+      document.querySelector('#recordPrompt').textContent=record.prompt_text;
+      document.querySelector('#recordContinuation').textContent=record.text;
+      document.querySelector('#recordTokens').innerHTML=tokenMarkup(record,replay);
+      document.querySelector('#liveG').textContent=replay.g;
+      document.querySelector('#liveT').textContent=replay.t;
+      document.querySelector('#liveExpected').textContent=(replay.t*.25).toFixed(2);
+      document.querySelector('#liveZ').textContent=replay.z.toFixed(4);
+      document.querySelector('#zMarker').style.left=`${zLeft(replay.z)}%`;
+      document.querySelector('#recordedPairMarker').style.left=`${zLeft(generation.z)}%`;
+      const verdict=replay.above?`z = ${replay.z.toFixed(4)} is above the strict configured cutoff of 3.0. For this exact saved text and key, the result is consistent with this lab watermark.`:`z = ${replay.z.toFixed(4)} is below the strict configured cutoff of 3.0. This is insufficient evidence for this exact saved text and key.`;
+      document.querySelector('#recordVerdict').textContent=verdict+' This does not establish AI origin or authorship.';
+      document.querySelector('#keyInput').value=selectedKey;
+      document.querySelector('#keySentence').textContent=`GPT-2 is not running. The same 40 copied token IDs contain ${replay.g} green decisions out of ${replay.t} under key ${selectedKey}, so z = ${replay.z.toFixed(4)}. Changing the key changes only detector replay.`;
+    }
+    document.querySelectorAll('[data-prompt]').forEach(b=>b.addEventListener('click',()=>{selectedPrompt=b.dataset.prompt;renderRecord();}));
+    document.querySelector('#controlCondition').addEventListener('click',()=>{selectedCondition='control';renderRecord();});
+    document.querySelector('#watermarkCondition').addEventListener('click',()=>{selectedCondition='reference_watermark';renderRecord();});
+    function setKey(value){
+      const parsed=Number(value);
+      if(!Number.isInteger(parsed)||parsed<data.key_min||parsed>data.key_max){document.querySelector('#keyInput').setAttribute('aria-invalid','true');document.querySelector('#keyHelp').textContent=`Enter a whole number from ${data.key_min} to ${data.key_max}. No result was changed.`;return;}
+      document.querySelector('#keyInput').setAttribute('aria-invalid','false');document.querySelector('#keyHelp').textContent='This range contains 17 exact Transformers 5.14.1 detector replays bundled into the page.';selectedKey=parsed;renderRecord();
+    }
+    document.querySelector('#keyInput').addEventListener('input',e=>setKey(e.target.value));
+    document.querySelector('#generationKeyPreset').addEventListener('click',()=>setKey(15485863));
+    document.querySelector('#comparisonKeyPreset').addEventListener('click',()=>setKey(15485867));
+    document.querySelector('#nextTeachingKey').addEventListener('click',()=>setKey(selectedKey===data.key_max?data.key_min:selectedKey+1));
+    renderRecord();
+    document.querySelector('#predictTwoPatterns').addEventListener('click',()=>{document.querySelector('#collapsePairs').disabled=false;});
+    document.querySelector('#collapsePairs').addEventListener('click',()=>{document.querySelector('#distinctPairs').hidden=false;document.querySelector('#collapsePairs').textContent='Two different transition values shown';document.querySelector('#collapsePairs').disabled=true;});
+  })();
+  </script>
+</body>
+</html>

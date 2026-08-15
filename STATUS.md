@@ -2,7 +2,7 @@
 
 ## Current stage
 
-Stages 0–3 complete locally on `jay/lab-03-manual-generation`; awaiting user review.
+Stages 0 through 4 complete locally on `jay/lab-04-transformers-reference`; awaiting user review.
 
 ## Implemented
 
@@ -35,6 +35,14 @@ Stages 0–3 complete locally on `jay/lab-03-manual-generation`; awaiting user r
 - Evidence-grounded Stage 3 blog handoff and interactive lesson that continues the Stage 2 sentence,
   reveals the complete chat-framed model input, follows one token through the loop, and returns to
   the Stage 1 count.
+- Pinned `openai-community/gpt2` reference fixture at revision
+  `607a30d783dfa663caf39e06633721c8d4cfcd7e`, loaded through Transformers 5.14.1 on the local CPU.
+- Thin adapter around `WatermarkingConfig`, `model.generate()`, and `WatermarkDetector`, with a
+  separate fixed-vector probe for the maintained processor order.
+- Six paired 40-token GPT-2 continuations, copied-text replay, generation-key and comparison-key
+  counts, prompt and padding exclusion, and an explicit repeated-pair compatibility fixture.
+- Evidence-grounded Stage 4 blog handoff and continuous interactive lesson that keeps the same
+  passage and token objects visible through order comparison, saved draw, and detector replay.
 
 ## Verified
 
@@ -80,19 +88,38 @@ Stages 0–3 complete locally on `jay/lab-03-manual-generation`; awaiting user r
 - The self-contained `file://` Stage 3 lesson passed desktop light, mobile light, desktop dark,
   reduced-motion, keyboard, and scripts-off fallback checks. Every control and disclosure worked;
   no console errors or horizontal overflow were found.
+- `just lab-04` generated six local CPU continuations from source commit
+  `20b4860e0d64ca116b173bc42f971d50eb0fef95` using config SHA-256
+  `d9367ca271399011703d3e7c150b6646b6612b034fa485026b33d14e49e48ded`.
+- `just verify-lab-04` reloads the pinned GPT-2 revision from the local cache, regenerates both
+  selected files, and compares them byte for byte.
+- The reference order leaves 19 first-step choices and gives token ID 373 an `8.642730%` chance.
+  The earlier order calculated on the same GPT-2 values leaves 11 choices and gives it an
+  `8.825517%` chance. Only the reference order generated the saved continuation.
+- Generation-key counts for the reference-watermarked rows were `17/39`, `21/39`, and `22/39`.
+  Their z scores were `2.6811`, `4.1603`, and `4.5301`.
+- The pinned repeated-pair option returned `3/5` in both library modes. Explicit value-based
+  distinct pairs returned `1/2`, so the selected evidence records the mismatch.
+- All six decoded continuations re-tokenized to the generated token IDs exactly. Primary detection
+  received no prompt tokens and no padding tokens.
+- `just check` passes with 364 tests, and `just test-cov` passes with 97.42% branch-aware package
+  coverage.
+- The self-contained `file://` Stage 4 lesson passed desktop light, mobile light, desktop dark,
+  reduced-motion, keyboard, control, disclosure, and static-fallback checks. No console errors or
+  horizontal overflow were found.
 
 ## Not implemented
 
 - Dataset access or manifests.
 - Modal or other hosted compute setup.
 - Hosted detector or public playground.
-- Stage 4 library-adapter equivalence.
+- Stage 5 model-scale or cloud work.
 
-No dataset-backed calibration or tested detector cutoff exists.
+No dataset-backed calibration or generally useful detector cutoff exists.
 
 ## Approval required next
 
-Stage 4 planning or implementation. Any new model, tokenizer, dataset, cloud resource, GPU scope,
+Stage 5 planning or implementation. Any new model, tokenizer, dataset, cloud resource, GPU scope,
 GitHub remote, publishing, or public deployment requires separate explicit approval.
 
 ## Known limitations
@@ -113,3 +140,9 @@ GitHub remote, publishing, or public deployment requires separate explicit appro
   false-positive rates, language quality, device portability, or a useful cutoff.
 - The selected run uses one pinned 4-bit LFM2 checkpoint and local Apple GPU. Results do not
   automatically transfer to another model, tokenizer, checkpoint, device, or MLX version.
+- The Stage 4 fixture uses one pinned GPT-2 revision, one local CPU, and three passages. Results do
+  not automatically transfer to another Transformers version, device, tokenizer, or watermark
+  recipe.
+- The Transformers 5.14.1 repeated-pair option did not collapse value-equal pairs in the fixed
+  fixture. The explicit distinct-pair result is a compatibility check, not a general claim about
+  other library versions.
