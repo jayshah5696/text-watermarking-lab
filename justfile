@@ -67,3 +67,12 @@ lab-04:
 # Recompute and validate Stage 4 evidence from the local model cache.
 verify-lab-04:
     uv run python scripts/verify_lab_04.py
+
+# COSTS MONEY: run the single approved Stage 5 Modal L4 smoke test.
+lab-05:
+    @echo "COST WARNING: one Modal L4 smoke invocation; hard ceiling USD 5.00"
+    uv run modal run -m watermark_lab.modal_app::run_smoke --config-json "$(cat configs/lab_05.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05.toml | cut -d' ' -f1)" --write-result runs/lab-05/modal-result.json
+
+# Validate Stage 5 selected evidence locally without cloud or model access.
+verify-lab-05:
+    uv run python scripts/verify_lab_05.py
