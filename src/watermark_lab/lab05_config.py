@@ -96,7 +96,6 @@ class Lab05Config:
             "context_width": 1,
             "z_threshold": 3.0,
             "max_remote_invocations": 1,
-            "max_generation_calls": 6,
             "minimum_tokens_per_second": 2.0,
             "minimum_vram_headroom_fraction": 0.20,
             "max_cost_usd": 5.0,
@@ -117,8 +116,14 @@ class Lab05Config:
                 raise ValueError(f"Stage 5 locks {name} to {expected!r}")
         if not self.instruction_prefix.endswith("\n\n"):
             raise ValueError("instruction_prefix must end with one blank line")
-        if len(self.prompts) != 3 or len({prompt.id for prompt in self.prompts}) != 3:
-            raise ValueError("Stage 5 requires exactly three unique prompts")
+        expected_prompts = self.max_generation_calls // 2
+        if self.max_generation_calls not in (6, 20):
+            raise ValueError("Stage 5 allows only six-call smoke or twenty-call examples mode")
+        if (
+            len(self.prompts) != expected_prompts
+            or len({prompt.id for prompt in self.prompts}) != expected_prompts
+        ):
+            raise ValueError(f"Stage 5 requires exactly {expected_prompts} unique prompts")
         if any(
             not prompt.id.isascii() or not prompt.id or not prompt.text for prompt in self.prompts
         ):
@@ -149,7 +154,7 @@ def _text(name: str, value: object) -> str:
     return value
 
 
-def config_from_toml_bytes(payload: bytes) -> Lab05Config:
+def config_from_toml_bytes(payload: bytes, *, expected_generation_calls: int = 6) -> Lab05Config:
     raw: Any = tomllib.loads(payload.decode("utf-8"))
     if not isinstance(raw, dict):
         raise TypeError("config must be a TOML table")
@@ -187,4 +192,9 @@ def config_from_toml_bytes(payload: bytes) -> Lab05Config:
             kwargs[name] = value
         else:
             kwargs[name] = _text(name, values[name])
-    return Lab05Config(**cast(Any, kwargs))
+    config = Lab05Config(**cast(Any, kwargs))
+    if config.max_generation_calls != expected_generation_calls:
+        raise ValueError(
+            f"Stage 5 config must declare exactly {expected_generation_calls} generation calls"
+        )
+    return config

@@ -21,6 +21,20 @@ def test_loads_locked_stage_05_config_and_continuity_seeds() -> None:
     assert config.use_volume is False
 
 
+def test_loads_locked_ten_pair_examples_config() -> None:
+    examples = Path("configs/lab_05_examples.toml").read_bytes()
+    config = config_from_toml_bytes(examples, expected_generation_calls=20)
+    assert len(config.prompts) == 10
+    assert config.max_generation_calls == 20
+    assert [prompt.id for prompt in config.prompts[:3]] == [
+        "stage-02-continuity",
+        "notebook",
+        "library",
+    ]
+    with pytest.raises(ValueError, match="exactly 6 generation calls"):
+        config_from_toml_bytes(examples)
+
+
 def test_rejects_model_or_gpu_drift() -> None:
     with pytest.raises(ValueError, match="model_id"):
         config_from_toml_bytes(payload().replace(b"google/gemma-4-E2B-it", b"other/model"))

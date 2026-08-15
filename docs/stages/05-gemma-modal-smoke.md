@@ -232,6 +232,28 @@ JSON. Selected artifacts must be generated from the returned result, never edite
 
 There is no hidden remote replay command. Another GPU invocation requires a new explicit approval.
 
+## Ten-pair implementation demonstration
+
+A separately approved Stage 5 extension runs ten fixed prompts through paired control and
+watermarked generation, for exactly twenty generation calls in one additional Modal L4 invocation.
+It keeps the pinned model revision, BF16 precision, generation settings, watermark profile, keys,
+prompt-derived paired seed rule, copied-text boundary, and generation-key all-occurrence detector.
+
+The ten prompts are frozen in `configs/lab_05_examples.toml` before the invocation. The first three
+preserve the Stage 4/5 fixtures. Seven short continuation prompts add distinct everyday domains and
+sentence structures. They are not drawn from a dataset and must not be changed after seeing output.
+
+Selected evidence lives in `artifacts/lab-05/examples.json` and
+`artifacts/lab-05/examples.md`. Each paired row records exact output text, generated and copied token
+counts, generation-key `G/T`, z score, p-value, and strict `z > 3` decision. The p-value is the
+configured no-watermark probability of evidence at least this extreme. It is not the probability
+that the text is watermarked, and the lesson must never label it "detection probability."
+
+The extension remains a demonstration, not calibration. Ten paired prompts do not estimate a
+false-positive rate, false-negative rate, detector accuracy, quality preservation, or a production
+threshold. It creates no endpoint, Secret, Volume, dataset manifest, or Stage 6 artifact. The hard
+cost ceiling remains USD 5.00.
+
 ## Go/no-go and stop rule
 
 Recommend later Stage 6/full-run planning only if:

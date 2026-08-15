@@ -28,9 +28,13 @@ image = (
 app = modal.App(APP_NAME, image=image)
 
 
-@app.function(gpu="L4", timeout=3600, max_containers=1, single_use_containers=True)
-def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
-    """Run exactly three paired Gemma generations and return selected raw evidence."""
+def _run_paired(
+    config_json: str,
+    source_commit: str,
+    config_sha256: str,
+    expected_generation_calls: int,
+) -> str:
+    """Run one exact bounded paired Gemma fixture and return raw evidence."""
 
     import math
     import platform
@@ -55,8 +59,10 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
         generation_kwargs,
     )
 
-    config = config_from_toml_bytes(config_json.encode())
-    if config.modal_gpu != "L4" or config.max_generation_calls != 6:
+    config = config_from_toml_bytes(
+        config_json.encode(), expected_generation_calls=expected_generation_calls
+    )
+    if config.modal_gpu != "L4" or config.max_generation_calls != expected_generation_calls:
         raise RuntimeError("Stage 5 resource guard rejected the configuration")
     if not torch.cuda.is_available():
         raise RuntimeError("Stage 5 requires CUDA")
@@ -251,8 +257,10 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
                     "detector_results": detector_results,
                 }
             )
-    if len(records) != 6:
-        raise RuntimeError("Stage 5 must return exactly six generation records")
+    if len(records) != expected_generation_calls:
+        raise RuntimeError(
+            f"Stage 5 must return exactly {expected_generation_calls} generation records"
+        )
     total_vram = torch.cuda.get_device_properties(0).total_memory
     result = {
         "schema_version": 1,
@@ -285,3 +293,17 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
     }
     result["remote_total_ns"] = time.perf_counter_ns() - remote_start
     return json.dumps(result, allow_nan=False, sort_keys=True)
+
+
+@app.function(gpu="L4", timeout=3600, max_containers=1, single_use_containers=True)
+def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
+    """Run exactly three paired Gemma generations."""
+
+    return _run_paired(config_json, source_commit, config_sha256, 6)
+
+
+@app.function(gpu="L4", timeout=3600, max_containers=1, single_use_containers=True)
+def run_examples(config_json: str, source_commit: str, config_sha256: str) -> str:
+    """Run exactly ten paired Gemma examples in one approved invocation."""
+
+    return _run_paired(config_json, source_commit, config_sha256, 20)

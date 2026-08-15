@@ -88,6 +88,7 @@ After the page, the learner should be able to explain:
 | Public demo key and server-held private key have different trust properties | opinion and limitation | `src/watermark_lab/key_policy.py`; hosting blueprint | contract and tests |
 | Modal is one replaceable host | implementation fact | `src/watermark_lab/modal_app.py`; hosting blueprint | import-free architecture tests |
 | Continuity watermarked result is `11/26`, z `2.0381` | measured | `artifacts/lab-05/trace.json` | `just verify-lab-05` |
+| Ten paired control/watermarked outputs and generation-key z, p-value, and decision | measured | `artifacts/lab-05/examples.json` | `just verify-lab-05-examples` |
 | Cost and memory show that the pinned example fits one L4 | measured and derived | selected Stage 5 trace | local verifier |
 
 ## Boundaries
@@ -101,8 +102,11 @@ After the page, the learner should be able to explain:
   knows it can try to spoof or remove the signal.
 - A production service must inject a private key server-side, restrict detector access, avoid logs
   that reveal the key, and define rotation and versioning outside the model response.
-- This work does not deploy an endpoint, create a secret, run another GPU job, access a dataset, or
-  start Stage 6.
+- The separately approved ten-pair extension permits exactly one additional bounded L4 invocation
+  and twenty generation calls. It does not deploy an endpoint, create a secret, access a dataset,
+  or start Stage 6.
+- Ten pairs show the implementation on more fixtures but do not calibrate a detection probability,
+  false-alarm rate, accuracy estimate, or production threshold.
 - A positive result means only "consistent with this configured watermark and key."
 
 ## Interaction contract
@@ -116,7 +120,11 @@ After the page, the learner should be able to explain:
    server-held key and inspect what may cross the HTTP boundary.
 5. Repair the structured-response parsing bug by selecting `content` instead of `str(parsed)`.
 6. Replay the saved continuation through the matching detector.
-7. End with the measured Gemma smoke as proof that the implementation ran, with cost in a compact
+7. Compare ten fixed paired prompts from the separately approved implementation demonstration.
+   Show control and watermarked text, generation-key `G/T`, z, p-value, and strict decision. Define
+   the p-value as evidence under the configured no-watermark baseline, never as a watermark
+   probability.
+8. End with the measured Gemma smoke as proof that the implementation ran, with cost in a compact
    feasibility appendix.
 
 ## Output and QA

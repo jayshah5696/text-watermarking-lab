@@ -1,0 +1,85 @@
+schema_version = 1
+model_id = "google/gemma-4-E2B-it"
+model_revision = "3e22461f65e89153144f8adb70e3b8c2cc9845a7"
+model_license = "apache-2.0"
+model_safetensors_bytes = 10246621918
+model_class = "Gemma4ForConditionalGeneration"
+modal_app_name = "text-watermarking-lab-05"
+modal_gpu = "L4"
+modal_sdk_version = "1.5.3"
+python_version = "3.12"
+torch_version = "2.13.0"
+torchvision_version = "0.28.0"
+transformers_version = "5.14.1"
+huggingface_hub_version = "1.26.0"
+librosa_version = "0.11.0"
+dtype = "bfloat16"
+base_seed = 20260812
+max_new_tokens = 200
+temperature = 0.8
+top_k = 40
+top_p = 0.95
+green_fraction = 0.25
+watermark_bias = 2.0
+generation_key = 15485863
+comparison_key = 15485867
+seeding_scheme = "lefthash"
+context_width = 1
+z_threshold = 3.0
+instruction_prefix = "Continue the passage with one short paragraph. Return only the continuation.\n\n"
+max_remote_invocations = 1
+max_generation_calls = 20
+minimum_tokens_per_second = 2.0
+minimum_vram_headroom_fraction = 0.20
+max_cost_usd = 5.0
+projected_rows = 24
+short_projection_tokens_per_output = 200
+long_projection_tokens_per_output = 400
+l4_usd_per_second = 0.000222
+cpu_usd_per_core_second = 0.0000131
+memory_usd_per_gib_second = 0.00000222
+volume_usd_per_gib_month = 0.09
+price_source = "https://modal.com/pricing"
+price_retrieved = "2026-08-15"
+use_huggingface_secret = false
+use_volume = false
+
+[[prompts]]
+id = "stage-02-continuity"
+text = "Early one morning Jack went up the hill. At the top he"
+
+[[prompts]]
+id = "notebook"
+text = "The student opened the notebook and wrote down each result because"
+
+[[prompts]]
+id = "library"
+text = "When the neighborhood library lost power, the staff"
+
+[[prompts]]
+id = "garden"
+text = "After three weeks without rain, the community garden finally"
+
+[[prompts]]
+id = "train"
+text = "As the last train pulled into the station, the conductor noticed"
+
+[[prompts]]
+id = "kitchen"
+text = "The cook tasted the soup, reached for the small jar, and"
+
+[[prompts]]
+id = "workshop"
+text = "When the wooden clock stopped at noon, the apprentice"
+
+[[prompts]]
+id = "storm"
+text = "The forecast warned of a storm, so the neighbors gathered"
+
+[[prompts]]
+id = "museum"
+text = "Behind the newly restored painting, the curator discovered"
+
+[[prompts]]
+id = "observatory"
+text = "Just before dawn, the observatory computer recorded a signal that"

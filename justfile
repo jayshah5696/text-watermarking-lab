@@ -76,3 +76,12 @@ lab-05:
 # Validate Stage 5 selected evidence locally without cloud or model access.
 verify-lab-05:
     uv run python scripts/verify_lab_05.py
+
+# COSTS MONEY: run one approved ten-pair Gemma implementation demonstration.
+lab-05-examples:
+    @echo "COST WARNING: one Modal L4 invocation, exactly 20 generation calls; ceiling USD 5.00"
+    uv run modal run -m watermark_lab.modal_app::run_examples --config-json "$(cat configs/lab_05_examples.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05_examples.toml | cut -d' ' -f1)" --write-result runs/lab-05/examples-modal-result.json
+
+# Validate the selected ten-pair comparison locally without cloud or model access.
+verify-lab-05-examples:
+    uv run python scripts/verify_lab_05_examples.py
