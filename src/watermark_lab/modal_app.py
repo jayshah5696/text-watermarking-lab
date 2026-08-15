@@ -85,13 +85,38 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
     if model.__class__.__name__ != config.model_class:
         raise RuntimeError("loaded Gemma class differs from the contract")
 
-    profile = dict(
-        greenlist_ratio=config.green_fraction,
-        bias=config.watermark_bias,
-        hashing_key=config.generation_key,
-        seeding_scheme=config.seeding_scheme,
-        context_width=config.context_width,
-    )
+    profile: dict[str, Any] = {
+        "greenlist_ratio": config.green_fraction,
+        "bias": config.watermark_bias,
+        "hashing_key": config.generation_key,
+        "seeding_scheme": config.seeding_scheme,
+        "context_width": config.context_width,
+    }
+
+    def time_watermark_processor(
+        prompt_ids: tuple[int, ...], generated_ids: tuple[int, ...]
+    ) -> tuple[int, int]:
+        watermark_config = WatermarkingConfig(**profile)
+        watermark_processor = watermark_config.construct_processor(
+            int(model_config.vocab_size), "cuda"
+        )
+        scores = torch.zeros((1, int(model_config.vocab_size)), device="cuda", dtype=torch.float32)
+        total_ns = 0
+        calls = 0
+        for index in range(len(generated_ids)):
+            context = torch.tensor(
+                [prompt_ids + generated_ids[:index]], device="cuda", dtype=torch.long
+            )
+            scores.zero_()
+            start = torch.cuda.Event(enable_timing=True)
+            end = torch.cuda.Event(enable_timing=True)
+            start.record()
+            watermark_processor(context, scores)
+            end.record()
+            torch.cuda.synchronize()
+            total_ns += int(start.elapsed_time(end) * 1_000_000)
+            calls += 1
+        return calls, total_ns
 
     def evidence(token_ids: tuple[int, ...], key: int, role: str, unique: bool) -> dict[str, Any]:
         watermark_config = WatermarkingConfig(**{**profile, "hashing_key": key})
@@ -171,8 +196,17 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
             generated = tuple(int(value) for value in output[0, input_ids.shape[1] :].tolist())
             raw_text = processor.decode(generated, skip_special_tokens=False)
             try:
-                copied_text = str(processor.parse_response(raw_text, prefix=input_ids[0]))
-            except Exception:
+                parsed = processor.parse_response(raw_text, prefix=input_ids[0])
+                if isinstance(parsed, dict):
+                    content = parsed.get("content")
+                    if not isinstance(content, str):
+                        raise TypeError("parsed response content is not text")
+                    copied_text = content
+                elif isinstance(parsed, str):
+                    copied_text = parsed
+                else:
+                    raise TypeError("parsed response has an unsupported shape")
+            except (KeyError, TypeError, ValueError):
                 copied_text = processor.decode(generated, skip_special_tokens=True)
             copied_ids = tuple(
                 int(value)
@@ -188,6 +222,11 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
                 )
                 for unique in (False, True)
             ]
+            processor_calls, processor_gpu_ns = (
+                time_watermark_processor(prompt_ids, generated)
+                if condition == "reference_watermark"
+                else (0, 0)
+            )
             seconds = wall_ns / 1_000_000_000
             records.append(
                 {
@@ -210,6 +249,8 @@ def run_smoke(config_json: str, source_commit: str, config_sha256: str) -> str:
                     "generated_tokens_per_second": len(generated) / seconds,
                     "peak_allocated_bytes": torch.cuda.max_memory_allocated(),
                     "peak_reserved_bytes": torch.cuda.max_memory_reserved(),
+                    "watermark_processor_calls": processor_calls,
+                    "watermark_processor_gpu_ns": processor_gpu_ns,
                     "detector_results": detector_results,
                 }
             )
