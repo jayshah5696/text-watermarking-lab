@@ -9,7 +9,9 @@ Turn one project stage into a lesson that a curious newcomer can follow without 
 
 ## Use companion skills
 
-Use `visual-explainer` to build the self-contained HTML and follow its visual and browser-QA rules. Use `humanizer` in its plain register for all learner-facing prose. Read both selected skill files completely before acting.
+Use `visual-explainer` for the standalone HTML shell, black technical-document visual system, responsive behavior, SVG/diagram patterns, Mermaid reference, and browser-QA rules. Use `humanizer` in its plain register for all learner-facing prose. Read both selected skill files completely before acting.
+
+This skill overrides `visual-explainer` where they differ on teaching sequence, evidence claims, novice comprehension, repository paths, and project authorization boundaries. A lesson may be less dense than a general technical document when explanation needs more room.
 
 If either skill is unavailable, continue with the equivalent rules in this skill and state the fallback briefly.
 
@@ -108,15 +110,23 @@ Use interaction to reveal causality, randomness, tradeoffs, or failure cases. Do
 
 ## Build the page
 
-Create a responsive, self-contained HTML page with code-native visuals such as HTML/CSS, SVG, or canvas. Reuse existing project visual conventions only when they support comprehension.
+Create one responsive standalone HTML page with code-native visuals such as HTML/CSS, inline SVG, or canvas. Reuse existing project visual conventions only when they support comprehension.
 
-Avoid required external assets. If remote fonts or optional libraries improve the page, preserve a readable offline fallback and report the dependency.
+Use the `visual-explainer` dark technical-document system by default: true black background, near-white primary text, dark-gray secondary surfaces, and a controlled blue/cyan/green/yellow/coral/violet palette. Keep colors semantically stable across the lesson and never rely on color alone. Use quiet tracks and dividers so labels, values, and the teaching sequence remain primary.
+
+Avoid generic dashboard cards, oversized hero sections, gradients, glassmorphism, decorative backgrounds, and other visual ornament that does not teach. Preserve generous enough type size, spacing, and explanatory prose for novice comprehension.
+
+Inline CSS and SVG by default. Avoid required external assets. If a remote font, image, or optional library materially improves the lesson, preserve a readable offline fallback, keep the page useful without JavaScript, and report the dependency. A single HTML file with remote dependencies is not offline self-contained.
+
+For Mermaid, follow the installed `visual-explainer` Mermaid reference for theme alignment and accessible zoom/pan/reset controls. Use Mermaid only when automatic graph layout improves the lesson; prefer inline SVG for bespoke pedagogical diagrams.
+
+When the user requests alternatives, render real styled variants in the same page, label them `A`, `B`, `C`, and so on, and arrange them for direct comparison. Do not substitute prose descriptions for unrendered alternatives.
 
 Give explanatory prose enough visual weight. A beautiful chart cannot replace the paragraph that tells a newcomer what the marks mean.
 
 Keep main-path developer details collapsed. Include repository commands, artifact schemas, seeds, and source hashes only when the learner asks for reproducibility or opens a technical appendix.
 
-Write the page to the user's requested path. In this repository, store stage lessons under `.agent/diagrams/` so the teaching artifact can be reviewed and committed with the stage. Use `.agent/diagrams/<project>-<stage>-lesson.html` when the user does not name a file.
+Write the page to the user's requested path. In this repository, `.agent/diagrams/` is the committed lesson-artifact directory and intentionally overrides `visual-explainer`'s global `~/.agents/diagrams/` default. Use `.agent/diagrams/<project>-<stage>-lesson.html` when the user does not name a file.
 
 ## Validate the lesson
 
@@ -125,7 +135,7 @@ Read [validation-rubric.md](references/validation-rubric.md) and complete every 
 At minimum:
 
 1. verify all displayed measurements against project artifacts;
-2. open the page in a browser;
+2. open the page in a browser when a GUI browser is available; otherwise run the available rendering/browser-QA equivalent and state that live visual inspection was not performed;
 3. test every control and progressive reveal;
 4. capture and inspect desktop, mobile, and dark-mode views;
 5. check for console errors and horizontal overflow;
@@ -136,4 +146,4 @@ Iterate until the screenshots are understandable without the author explaining t
 
 ## Deliver
 
-Open the final page and link it with an absolute path. Summarize the teaching spine, interactions, evidence checked, and browser coverage. State any unverified boundary. Do not commit or publish unless the user requested it.
+Open the final page when a GUI browser is available and link it with an absolute path. In a headless environment, report the rendered/browser-QA equivalent and any missing live inspection. Summarize the teaching spine, interactions, evidence checked, dependencies, and browser coverage. State any unverified boundary. Do not commit or publish unless the user requested it.
