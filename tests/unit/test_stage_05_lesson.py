@@ -39,11 +39,14 @@ def test_lesson_and_runtime_core_do_not_import_modal() -> None:
         "src/watermark_lab/modal_app.py",
         "src/watermark_lab/modal_app_06.py",
         "src/watermark_lab/modal_app_07.py",
+        "src/watermark_lab/modal_app_08.py",
     ]
     report = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["coverage"]["report"]
     assert report["omit"] == [
         "src/watermark_lab/lab07_config.py",
         "src/watermark_lab/lab07_records.py",
+        "src/watermark_lab/lab08_config.py",
+        "src/watermark_lab/lab08_records.py",
     ]
 
 

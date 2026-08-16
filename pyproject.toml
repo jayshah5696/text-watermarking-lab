@@ -56,6 +56,7 @@ omit = [
   "src/watermark_lab/modal_app.py",
   "src/watermark_lab/modal_app_06.py",
   "src/watermark_lab/modal_app_07.py",
+  "src/watermark_lab/modal_app_08.py",
 ]
 
 [tool.coverage.report]
@@ -65,4 +66,6 @@ fail_under = 95
 omit = [
   "src/watermark_lab/lab07_config.py",
   "src/watermark_lab/lab07_records.py",
+  "src/watermark_lab/lab08_config.py",
+  "src/watermark_lab/lab08_records.py",
 ]

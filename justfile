@@ -114,3 +114,15 @@ lab-07:
 # Validate Stage 7 selected evidence and regenerated figures without remote access.
 verify-lab-07:
     uv run python scripts/verify_lab_07.py
+
+# COSTS MONEY: run the one approved Stage 8 paraphrase and bias trade-off fixture.
+lab-08:
+    @echo "COST WARNING: one Modal L4 invocation, exactly 28 generation calls; ceiling USD 5.00"
+    @test "$(shasum -a 256 artifacts/lab-07/results.json | cut -d' ' -f1)" = "34ea4a807fb20273dc035fcbf3131f512e506fa576889a391fcdf31a8351a57f"
+    @mkdir -p runs/lab-08
+    @uv run python scripts/build_stage_08_input.py --output runs/lab-08/input.json
+    uv run modal run -m --write-result runs/lab-08/modal-result.json watermark_lab.modal_app_08::run_stage08 --config-json "$(cat configs/lab_08.toml)" --stage7-rows-json "$(cat runs/lab-08/input.json)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_08.toml | cut -d' ' -f1)"
+
+# Validate Stage 8 selected evidence and regenerated figures without remote access.
+verify-lab-08:
+    uv run python scripts/verify_lab_08.py
