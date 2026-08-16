@@ -44,6 +44,15 @@ Record the source path for every measured number, fixed parameter, algorithm rul
 
 Cross-check every chart value and worked calculation against this ledger before delivery.
 
+When a configured limit differs from an observed value, display both. Typical examples are a token
+cap versus achieved length, requested rows versus completed rows, and a cutoff versus the measured
+score. Never draw a configured maximum as if it were measured output.
+
+For evidence-bearing token colors, use selected artifact fields. Record and preserve token position,
+ID, decoded piece, eligibility, and checker result. Reconcile displayed token states with the
+published aggregate count. In this project, green means keyed membership only. It does not mean
+truth, quality, authorship, or model origin.
+
 ## Run three independent reviews
 
 For a new substantial lesson or a confusing existing lesson, spawn three read-only reviewer subagents in parallel when subagents are available. Read [reviewer-prompts.md](references/reviewer-prompts.md) and assign:
@@ -108,6 +117,20 @@ Start with presets or a prescribed experiment. Hide free-form sliders and advanc
 
 Use interaction to reveal causality, randomness, tradeoffs, or failure cases. Do not add controls merely to make the page feel interactive.
 
+Use animation for a deterministic process that would otherwise make the learner click through a
+fixed sequence. Autoplay at a readable pace, include Pause and Replay, retain manual Previous and
+Next controls for inspection, and pause after direct learner interaction. Disable autoplay when the
+browser requests reduced motion.
+
+Keep interaction when the learner predicts an outcome, changes one input, compares alternatives, or
+inspects recorded cases. Do not require repeated clicks merely to advance a fixed explanation.
+
+Keep one recorded example as the teaching spine. After the learner understands it, show the full
+preregistered cohort through an overview chart and selectable rows. Do not replace the cohort with
+only the strongest or cleanest example. A lesson does not require a positive result. Preserve null,
+identical, adverse, and below-cutoff rows. If the cohort contains a positive result, show it beside
+the full cohort and a relevant counterexample.
+
 ## Build the page
 
 Create one responsive standalone HTML page with code-native visuals such as HTML/CSS, inline SVG, or canvas. Reuse existing project visual conventions only when they support comprehension.
@@ -117,6 +140,10 @@ Use the `visual-explainer` dark technical-document system by default: true black
 Avoid generic dashboard cards, oversized hero sections, gradients, glassmorphism, decorative backgrounds, and other visual ornament that does not teach. Preserve generous enough type size, spacing, and explanatory prose for novice comprehension.
 
 Inline CSS and SVG by default. Avoid required external assets. If a remote font, image, or optional library materially improves the lesson, preserve a readable offline fallback, keep the page useful without JavaScript, and report the dependency. A single HTML file with remote dependencies is not offline self-contained.
+
+Generate evidence-bearing browser payloads from the selected artifact when practical. If a
+standalone page embeds measured values manually, add structural tests that compare every displayed
+measurement with the canonical artifact. Checking only headline values is insufficient.
 
 For Mermaid, follow the installed `visual-explainer` Mermaid reference for theme alignment and accessible zoom/pan/reset controls. Use Mermaid only when automatic graph layout improves the lesson; prefer inline SVG for bespoke pedagogical diagrams.
 
@@ -140,7 +167,9 @@ At minimum:
 4. capture and inspect desktop, mobile, and dark-mode views;
 5. check for console errors and horizontal overflow;
 6. inspect at least three mid-page screenshots without relying on prior sections;
-7. confirm a novice can answer the rubric's comprehension questions from the page alone.
+7. for autoplaying visuals, test Pause, Replay, manual stepping, loop restart, learner takeover,
+   reduced-motion behavior, and static fallback;
+8. confirm a novice can answer the rubric's comprehension questions from the page alone.
 
 Iterate until the screenshots are understandable without the author explaining them aloud.
 

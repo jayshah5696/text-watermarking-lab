@@ -42,6 +42,12 @@ reasoning step to a tooltip, closed disclosure, source code, or future section.
 - Record why a fixed fixture was selected before observing the final result.
 - Do not search seeds, prompts, keys, or examples for an impressive outcome unless the search is a
   declared experiment with its own method and evidence.
+- When a visual needs variation in output length or detector strength, freeze a fixture likely to
+  expose natural variation. Keep normal stopping behavior unless fixed length is the declared
+  variable. Report every frozen row and distinguish safety caps from achieved lengths. Do not
+  search after observation for a cleaner distribution.
+- A failed or canceled model-backed invocation produces no replacement authorization. Preserve its
+  operational record, fix the cause, and request approval before another paid or gated run.
 - Keep surprising, inconvenient, or null outcomes when they are valid. They often provide the
   strongest limitation or failure panel.
 - If a familiar hand-authored illustration is needed to establish purpose, label it inside the
@@ -84,7 +90,9 @@ At minimum, record:
   `opinion`.
 
 Published visuals must be generated from or checked against these artifacts. Never copy numbers
-into a figure from memory.
+into a figure from memory. If a visual colors tokens by checker state, record each token's stable
+position, ID, decoded piece, eligibility, and keyed result. Require the displayed token states to
+reconcile with the aggregate checker count.
 
 ### Blog handoff
 

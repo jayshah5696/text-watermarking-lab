@@ -29,8 +29,8 @@ Do not treat a planning document as permission to execute it. If the user's curr
 
 ## Authorization gates
 
-Stages 0–3 are implemented and published to the repository. Do not implement Stage 4 or later work
-without a new explicit approval.
+Stages 0–5 are implemented locally. Do not implement Stage 6 or later work without a new explicit
+approval.
 
 Separate approval is always required before any of the following:
 
@@ -50,6 +50,15 @@ Stages 0–1 must not import Transformers, Torch, Datasets, Modal, MLX, or any m
 - Before locking a later stage's vocabulary, prompts, seeds, trace schema, or figure inputs, write
   its teaching and publication brief using `docs/TEACHING_AND_PUBLICATION_WORKFLOW.md`. Design the
   final explanation, failure case, visual panels, and required evidence before implementation.
+- Before a model-backed teaching run, freeze its prompt set, seed rule, generation limits, stopping
+  behavior, invocation and generation-call ceilings, resource type, cost ceiling, artifact paths,
+  and stop rule. A failed or canceled invocation does not authorize a retry; ask again.
+- Distinguish configured limits from measured outcomes. In particular, never present
+  `max_new_tokens` as achieved length. Keep normal end-token behavior unless the approved contract
+  makes fixed-length generation the experimental variable.
+- Do not rerun, replace prompts, search seeds, or change stopping behavior to obtain a positive
+  detector result or a cleaner visual. If search is the declared experiment, preregister its search
+  space, selection rule, reporting contract, and budget.
 - Use `apply_patch` for focused file edits.
 - Inspect the worktree before editing and preserve unrelated user changes.
 - Run the proportionate checks required by the handoff and report what remains unverified.
@@ -66,7 +75,10 @@ For interactive lessons, visual explainers, and article figures:
 4. Stop matched comparisons when their inputs or histories stop matching.
 5. Do not invent values that the recorded artifact does not contain. Ask before regenerating a
    model-backed artifact.
-6. Follow the skill's reviewer, evidence, browser-QA, and delivery gates before calling the lesson
+6. If a lesson colors individual tokens by checker state, require selected evidence for each token's
+   position, ID, decoded piece, eligibility, and keyed result. Reconcile the token states exactly
+   with the published aggregate count.
+7. Follow the skill's reviewer, evidence, browser-QA, and delivery gates before calling the lesson
    complete.
 
 Use 3Blue1Brown's object continuity and Andrej Karpathy's inspectable, first-principles teaching as
