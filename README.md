@@ -11,24 +11,27 @@ fixture on the local CPU. Stage 5 extracts a reusable implementation boundary fo
 Transformers generation models and works through Gemma 4 E2B in BF16. It shows where the key enters
 `generate()`, how model adapters isolate prompt and response details, how copied text reaches the
 matching detector, and how a host keeps a private key inside the process. Modal supplied the L4 for
-the saved smoke; it is not part of the watermark algorithm. The detector recognizes only
-this project's deliberately embedded watermark profile and key, not arbitrary
-AI-written text.
+the saved smoke; it is not part of the watermark algorithm. Stage 6 freezes 1,000 C4 natural-web
+continuations plus 24 later-test rows, then checks the 1,000-row background distribution without
+loading model weights or generating text. The detector recognizes only this project's deliberately
+embedded watermark profile and key, not arbitrary AI-written text.
 
 ## Current status
 
-Stages 0 through 5 provide the reproducible Python 3.12 foundation, the biased-coin detector, a
+Stages 0 through 6 provide the reproducible Python 3.12 foundation, the biased-coin detector, a
 deterministic toy-vocabulary trace, paired local MLX continuations, a pinned Transformers reference
-adapter, and a provider-neutral generation, detection, adapter, and key boundary. Gemma 4 is the
+adapter, a provider-neutral generation and key boundary, and a frozen natural-web calibration. Gemma 4 is the
 checked Stage 5 example. Its evidence was generated from clean source commit `09831ba` on one NVIDIA
 L4. A separately approved demonstration then ran ten fixed paired prompts, for twenty outputs, on
 the same pinned path. None crossed the strict `z > 3` cutoff. The lesson preserves control and
 watermarked text, `G/T`, z, p-value, and decision for every pair. The p-value is evidence under the
 configured no-watermark baseline, not the probability that text is watermarked. A frozen
 natural-length ladder then produced 24 more outputs under 200, 400, and 800-token safety caps. Eight
-of twelve watermarked rows and no controls crossed `z > 3`. The selected artifact stores every
-copied Gemma token piece with its generation-key green/red decision. See
-[`docs/stages/05-hosting-blueprint.md`](docs/stages/05-hosting-blueprint.md).
+of twelve watermarked rows and no controls crossed `z > 3`. Stage 6 then scored 1,000 frozen C4
+natural-web continuations with the same public key and CUDA profile. Four crossed the all-pair
+cutoff; one crossed when each repeated value-pair counted once. These are observed counts for one
+sample, not production false-alarm rates. See
+[`docs/stages/06-natural-web-calibration.md`](docs/stages/06-natural-web-calibration.md).
 
 ```console
 just --list
@@ -39,6 +42,7 @@ just verify-lab-02
 just verify-lab-03
 just verify-lab-04
 just verify-lab-05
+just verify-lab-06
 ```
 
 `just lab-01` is the intentional, clean-commit evidence command. It refuses a dirty worktree,
@@ -52,7 +56,9 @@ local CPU continuations, and records the reference order and copied-text detecto
 `just verify-lab-05` validates the original smoke evidence locally without a model, GPU, network,
 or cloud call. `just verify-lab-05-examples` independently validates the selected ten-pair
 comparison. `just verify-lab-05-lengths` validates the natural-length and token-color artifact.
-The corresponding `lab-05-*` commands incur cloud cost and require approval.
+`just verify-lab-06` reconstructs the selected manifest and all 1,000 scores without accessing C4,
+a model, GPU, network, or cloud. The corresponding `lab-05-*` and `lab-06` commands incur cloud cost
+and require approval.
 
 ```console
 just lab-01
@@ -64,13 +70,16 @@ just verify-lab-03
 just lab-04
 just verify-lab-04
 just verify-lab-05
+just verify-lab-06
 ```
 
 ## Scope boundary
 
-The current slice has no dataset, hosted endpoint, production secret, or public deployment. Stage 3
-uses one approved local Apple GPU fixture. Stage 4 uses one approved local CPU fixture. Stage 5 used
-one disposable Modal L4 invocation with no Secret and no persistent Volume. The committed demo key
+The current slice includes one pinned C4 validation shard and compact identifiers, hashes, scores,
+and excerpts. It does not republish full articles. There is no hosted endpoint, production secret,
+or public deployment. Stage 3 uses one approved local Apple GPU fixture. Stage 4 uses one approved
+local CPU fixture. Stage 5 used disposable Modal L4 invocations with no Secret and no persistent
+Volume. Stage 6 used detector-only L4 invocations with no model weights or generation calls. The committed demo key
 is public for reproducibility and provides no secrecy. The private-key path defines how a host would
 inject process-local key material; it does not claim production key management. Three passages do
 not establish accuracy, prose quality, or a generally useful cutoff. A result above a configured

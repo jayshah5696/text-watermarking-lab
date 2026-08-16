@@ -2,9 +2,9 @@
 
 ## Current stage
 
-Stages 0 through 5 complete locally on `main`. Stage 5 now centers the reusable Transformers
-implementation and hosted key boundary, with the saved Gemma smoke as checked proof. No endpoint,
-production secret, or Stage 6 work has started.
+Stages 0 through 6 complete locally on `main`. Stage 6 freezes the natural-web calibration and
+later paired-test manifest, then records the unchanged checker's background distribution. No
+endpoint, production secret, or Stage 7 generation has started.
 
 ## Implemented
 
@@ -64,8 +64,15 @@ production secret, or Stage 6 work has started.
   800-token safety caps; paired control/watermarked outputs retain normal end-token behavior.
 - Token-level copied-text evidence for all 24 ladder outputs: exact Gemma token IDs and pieces,
   unscored context, generation-key green/red membership, detector totals, z, p-value, and decision.
-- Stage 5 used two bounded disposable cloud invocations in total, with no dataset, Hugging Face
-  Secret, persistent Volume, or deployed endpoint.
+- Stage 5 used bounded disposable cloud invocations with no dataset, Hugging Face Secret,
+  persistent Volume, or deployed endpoint.
+- Pinned C4 `realnewslike` validation selection with 1,000 calibration rows and the next 24 passing
+  rows frozen for later paired generation. The manifest stores identifiers, URLs, timestamps,
+  hashes, token counts, and split assignments without republishing complete articles.
+- Detector-only Stage 6 scoring on one Modal NVIDIA L4 with the Stage 5 Gemma tokenizer, public key,
+  CUDA pseudorandom profile, every-pair primary count, and distinct-value-pair diagnostic.
+- Selected Stage 6 JSON, Markdown, manifest, worked token trace, blog handoff, and interactive lesson
+  that continue the Stage 5 `G/T`, z, and cutoff story into an outside-text failure case.
 
 ## Verified
 
@@ -161,19 +168,32 @@ production secret, or Stage 6 work has started.
   Prompt and length vary together, so this does not isolate a causal length effect.
 - `just verify-lab-05-lengths` reconstructs selected length JSON and Markdown, token identities,
   green/red totals, paired seeds, z scores, p-value bounds, and strict decisions locally.
+- `just verify-lab-06` reconstructs the 1,024-row manifest, all 1,000 score rows, exact binomial
+  tails, strict decisions, quantiles, summaries, and the 400-token spine trace without dataset,
+  model, GPU, network, or cloud access.
+- `just check` passes with 431 tests, and `just test-cov` passes at 95.23 percent branch-aware
+  package coverage.
+- The Stage 6 selector scanned 2,479 C4 rows, rejected 1,451 as too short and four as obvious lists,
+  selected 1,000 calibration rows, and froze the next 24 passing rows.
+- Four all-pair rows crossed strict `z > 3`; median z was `0.0289`, the 99th percentile was `2.4568`,
+  and maximum z was `3.7286`. One distinct-pair row crossed.
+- The maximum natural-web row changed from `132/399`, z `3.7286`, to `114/358`, z `2.9904`, when
+  each repeated value-pair counted once.
+- The exact `file://` Stage 6 lesson passed 1440 by 1000 desktop, 390 by 844 mobile, 1200 by 900
+  reduced-motion, scripts-off, control, console, and horizontal-overflow checks. Mid-page row,
+  cohort, and failure screenshots were inspected.
 
 ## Not implemented
 
-- Dataset access or manifests.
 - Authenticated hosted generator, hosted detector, or public playground.
 - Production secret creation, key rotation, access control, rate limiting, and abuse policy.
-- Stage 6 natural-web calibration or any 24-row generation run.
+- Stage 7 paired generation on the 24 frozen C4 prompts.
 
-No dataset-backed calibration or generally useful detector cutoff exists.
+No generally useful or production-calibrated detector cutoff exists.
 
 ## Approval required next
 
-Stage 6 planning or implementation. Any dataset, additional model/GPU/cloud invocation, persistent
+Stage 7 planning or implementation. Any additional dataset, model/GPU/cloud invocation, persistent
 cloud resource, GitHub remote, publishing, or public deployment requires separate explicit approval.
 
 ## Known limitations
@@ -204,6 +224,14 @@ cloud resource, GitHub remote, publishing, or public deployment requires separat
   language quality, a useful cutoff, cross-device portability, or a total cloud bill.
 - All three Stage 5 watermarked continuations ended before 30 generated token IDs and remained
   below z `3`. The project did not tune prompts, seeds, keys, or settings after observing them.
+- C4 `realnewslike` is natural-web text, not verified human authorship. One thousand selected rows
+  cannot validate one-in-100,000 behavior or a production false-alarm rate.
+- Stage 6 used one public key, one tokenizer revision, one CUDA pseudorandom profile, one 400-token
+  window, and deterministic filters. Results do not transfer automatically to another corpus,
+  key, device, tokenizer, length, or repetition policy.
+- The first approved Stage 6 remote function completed but its returned JSON was lost because the
+  local output directory did not exist. The user approved one exact replacement invocation from the
+  same clean source commit and config. Neither invocation loaded model weights or generated text.
 - The first control generation includes one-time CUDA warm-up behavior. It is not evidence that
   watermarking speeds generation.
 - Synchronized watermark processor timing perturbs execution and is reported as component timing,

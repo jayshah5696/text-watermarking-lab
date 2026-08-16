@@ -35,7 +35,10 @@ def test_lesson_and_runtime_core_do_not_import_modal() -> None:
     )
     assert all("import modal" not in path.read_text() for path in runtime_files)
     coverage = tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["coverage"]["run"]
-    assert coverage["omit"] == ["src/watermark_lab/modal_app.py"]
+    assert coverage["omit"] == [
+        "src/watermark_lab/modal_app.py",
+        "src/watermark_lab/modal_app_06.py",
+    ]
 
 
 def test_lesson_teaches_the_actual_stage_05_implementation_question() -> None:

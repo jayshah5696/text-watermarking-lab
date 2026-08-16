@@ -9,6 +9,7 @@ from watermark_lab.dataset import (
     rejection_reason,
     select_rows,
     selection_manifest,
+    short_excerpt,
     text_sha256,
 )
 from watermark_lab.lab06_config import lab06_config_from_toml_bytes
@@ -92,3 +93,10 @@ def test_selection_rejects_schema_drift_and_short_stream(config) -> None:
         select_rows(({"text": "one two three four five", "url": "u"},), WordsTokenizer(), config)
     with pytest.raises(ValueError, match="ended before"):
         select_rows((), WordsTokenizer(), config)
+
+
+def test_short_excerpt_preserves_short_text_and_marks_truncation() -> None:
+    tokenizer = WordsTokenizer()
+    assert short_excerpt((1, 2), tokenizer, limit=20) == "1 2"
+    assert short_excerpt(tuple(range(20)), tokenizer, limit=12).endswith("…")
+    assert len(short_excerpt(tuple(range(20)), tokenizer, limit=12)) == 12
