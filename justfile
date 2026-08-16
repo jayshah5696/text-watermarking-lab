@@ -94,3 +94,12 @@ lab-05-lengths:
 # Validate natural-length and token-level evidence without cloud or model access.
 verify-lab-05-lengths:
     uv run python scripts/verify_lab_05_lengths.py
+
+# COSTS MONEY: run the one approved detector-only C4 calibration on one Modal L4.
+lab-06:
+    @echo "COST WARNING: one Modal L4 invocation; dataset and tokenizer only; ceiling USD 5.00"
+    uv run modal run -m --write-result runs/lab-06/modal-result.json watermark_lab.modal_app_06::run_calibration --config-json "$(cat configs/lab_06.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_06.toml | cut -d' ' -f1)"
+
+# Validate Stage 6 selected manifest and evidence without dataset, model, GPU, or cloud access.
+verify-lab-06:
+    uv run python scripts/verify_lab_06.py
