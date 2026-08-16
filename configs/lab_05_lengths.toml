@@ -1,0 +1,96 @@
+schema_version = 1
+model_id = "google/gemma-4-E2B-it"
+model_revision = "3e22461f65e89153144f8adb70e3b8c2cc9845a7"
+model_license = "apache-2.0"
+model_safetensors_bytes = 10246621918
+model_class = "Gemma4ForConditionalGeneration"
+modal_app_name = "text-watermarking-lab-05"
+modal_gpu = "L4"
+modal_sdk_version = "1.5.3"
+python_version = "3.12"
+torch_version = "2.13.0"
+torchvision_version = "0.28.0"
+transformers_version = "5.14.1"
+huggingface_hub_version = "1.26.0"
+librosa_version = "0.11.0"
+dtype = "bfloat16"
+base_seed = 20260812
+temperature = 0.8
+top_k = 40
+top_p = 0.95
+green_fraction = 0.25
+watermark_bias = 2.0
+generation_key = 15485863
+comparison_key = 15485867
+seeding_scheme = "lefthash"
+context_width = 1
+z_threshold = 3.0
+instruction_prefix = "Continue the passage naturally with a detailed, coherent response. Do not summarize early. Return only the continuation.\n\n"
+max_remote_invocations = 1
+max_generation_calls = 24
+minimum_tokens_per_second = 2.0
+minimum_vram_headroom_fraction = 0.20
+max_cost_usd = 5.0
+l4_usd_per_second = 0.000222
+use_huggingface_secret = false
+use_volume = false
+
+[[prompts]]
+id = "story-map"
+max_new_tokens = 200
+text = "Mara unfolded the hand-drawn map on the kitchen table and began telling her brother why the abandoned road beyond the orchard still mattered. She started with the summer when"
+
+[[prompts]]
+id = "field-journal"
+max_new_tokens = 200
+text = "The biologist opened a fresh page in the field journal and described the wetland at first light, including the weather, the bird calls, the water level, and the unexpected tracks near the reeds. Her entry continued:"
+
+[[prompts]]
+id = "repair-guide"
+max_new_tokens = 200
+text = "The repair manual explained how to diagnose a mechanical clock that loses several minutes each day. After checking the case, winding mechanism, and balance wheel, the technician should"
+
+[[prompts]]
+id = "festival-history"
+max_new_tokens = 200
+text = "Every autumn the town held a lantern festival, but few visitors knew how the custom began. The archivist addressed the crowd and reconstructed the story from letters, council records, and family memories:"
+
+[[prompts]]
+id = "coastal-expedition"
+max_new_tokens = 400
+text = "During a month-long coastal expedition, a small research crew surveyed eroding cliffs, tidal pools, fishing villages, and offshore bird colonies. Write the next section of their expedition narrative, beginning when their boat reaches a sheltered inlet after a night storm:"
+
+[[prompts]]
+id = "city-water-system"
+max_new_tokens = 400
+text = "A civil engineer is explaining to new apprentices how drinking water moves from a mountain reservoir to homes across a large city. Continue the explanation through treatment, storage, pressure zones, monitoring, maintenance, and emergency planning:"
+
+[[prompts]]
+id = "archive-mystery"
+max_new_tokens = 400
+text = "In the basement of an old university archive, Leena found a box whose catalog number belonged to a collection destroyed decades earlier. Continue the mystery as she documents the contents, checks the records, and decides whom to trust:"
+
+[[prompts]]
+id = "community-radio"
+max_new_tokens = 400
+text = "The final broadcast of a community radio station began with the host remembering its first improvised studio. Continue the broadcast with stories from callers, technical mishaps, local emergencies, music, and the station's uncertain future:"
+
+[[prompts]]
+id = "generation-ship"
+max_new_tokens = 800
+text = "On the two-hundredth year of a generation ship's voyage, the navigation council discovered that the destination star differed from the one described in the founding records. Continue the chapter with a full council debate, evidence from the observatory, competing interpretations of the archive, and the consequences for families who have planned their lives around arrival:"
+
+[[prompts]]
+id = "river-restoration"
+max_new_tokens = 800
+text = "Write a detailed narrative account of a ten-year river restoration project from the viewpoint of a local reporter. Continue from the first public meeting through scientific surveys, conflicts over land and water, construction setbacks, seasonal floods, community monitoring, and the first signs of ecological recovery:"
+
+[[prompts]]
+id = "mountain-clinic"
+max_new_tokens = 800
+text = "A physician arriving at a remote mountain clinic begins a letter describing the clinic's daily work. Continue the letter through several patient visits, supply problems, a difficult weather emergency, collaboration with village health workers, and the physician's changing understanding of care:"
+
+[[prompts]]
+id = "lost-language"
+max_new_tokens = 800
+text = "A linguist and a group of elders are rebuilding lessons for a language that has not been taught in schools for generations. Continue the documentary narrative through recording sessions, disagreements over spelling, children's classes, archival discoveries, and a public performance that tests what the project has achieved:"

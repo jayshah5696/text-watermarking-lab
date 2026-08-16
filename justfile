@@ -85,3 +85,12 @@ lab-05-examples:
 # Validate the selected ten-pair comparison locally without cloud or model access.
 verify-lab-05-examples:
     uv run python scripts/verify_lab_05_examples.py
+
+# COSTS MONEY: run one approved natural-length and token-color Gemma ladder.
+lab-05-lengths:
+    @echo "COST WARNING: one Modal L4 invocation, exactly 24 generation calls; ceiling USD 5.00"
+    uv run modal run -m --write-result runs/lab-05/lengths-modal-result.json watermark_lab.modal_app::run_lengths --config-json "$(cat configs/lab_05_lengths.toml)" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_05_lengths.toml | cut -d' ' -f1)"
+
+# Validate natural-length and token-level evidence without cloud or model access.
+verify-lab-05-lengths:
+    uv run python scripts/verify_lab_05_lengths.py
