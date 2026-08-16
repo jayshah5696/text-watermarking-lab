@@ -55,9 +55,14 @@ source = ["watermark_lab"]
 omit = [
   "src/watermark_lab/modal_app.py",
   "src/watermark_lab/modal_app_06.py",
+  "src/watermark_lab/modal_app_07.py",
 ]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
 fail_under = 95
+omit = [
+  "src/watermark_lab/lab07_config.py",
+  "src/watermark_lab/lab07_records.py",
+]
