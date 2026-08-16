@@ -24,7 +24,10 @@ checked Stage 5 example. Its evidence was generated from clean source commit `09
 L4. A separately approved demonstration then ran ten fixed paired prompts, for twenty outputs, on
 the same pinned path. None crossed the strict `z > 3` cutoff. The lesson preserves control and
 watermarked text, `G/T`, z, p-value, and decision for every pair. The p-value is evidence under the
-configured no-watermark baseline, not the probability that text is watermarked. See
+configured no-watermark baseline, not the probability that text is watermarked. A frozen
+natural-length ladder then produced 24 more outputs under 200, 400, and 800-token safety caps. Eight
+of twelve watermarked rows and no controls crossed `z > 3`. The selected artifact stores every
+copied Gemma token piece with its generation-key green/red decision. See
 [`docs/stages/05-hosting-blueprint.md`](docs/stages/05-hosting-blueprint.md).
 
 ```console
@@ -48,8 +51,8 @@ local CPU continuations, and records the reference order and copied-text detecto
 `just lab-05` is the explicit cost-incurring Modal command. It is not part of ordinary verification.
 `just verify-lab-05` validates the original smoke evidence locally without a model, GPU, network,
 or cloud call. `just verify-lab-05-examples` independently validates the selected ten-pair
-comparison. `just lab-05-examples` is a separate cost-incurring command and must not be run without
-approval.
+comparison. `just verify-lab-05-lengths` validates the natural-length and token-color artifact.
+The corresponding `lab-05-*` commands incur cloud cost and require approval.
 
 ```console
 just lab-01

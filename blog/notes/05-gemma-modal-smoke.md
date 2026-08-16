@@ -126,6 +126,21 @@ implementation acting on more fixtures; they do not estimate detector accuracy o
 The p-value is the configured no-watermark probability of evidence at least this extreme. It is not
 a detection probability and not the probability that a continuation is watermarked.
 
+## Natural-length evidence and token colors
+
+A frozen follow-up used twelve varied long-form prompts, four each under 200, 400, and 800-token
+safety caps. Normal end-token behavior remained active. The run produced 24 paired outputs and
+stored the generation key's green/red decision for every eligible copied Gemma token piece.
+
+Eight of twelve watermarked rows crossed `z > 3`; no control row did. Achieved copied lengths ranged
+from 200 to 800 tokens. The strongest watermarked row reached z `8.0271`. Results above the cutoff
+appeared in every cap group. Prompt content and achieved length vary together, so the ladder does
+not estimate a causal length effect or detector accuracy.
+
+The first copied token supplies context and is unscored. Green means only that the public generation
+key and prior copied token place the current token ID in the configured green set. It is not a label
+for quality, truth, or AI origin.
+
 ## Review gate
 
 The exact pinned revision loaded in BF16 on the required L4. All six generation and copied-text

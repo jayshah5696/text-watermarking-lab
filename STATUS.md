@@ -60,6 +60,10 @@ production secret, or Stage 6 work has started.
 - Hosting blueprint for a long-lived keyed model process. Modal is one replaceable compute adapter.
 - Separately approved ten-pair implementation demonstration: ten frozen prompts, twenty generated
   outputs, paired seeds, copied text, generation-key `G/T`, z, p-value, and strict decisions.
+- Natural-length evidence ladder with twelve frozen long-form prompts, four each under 200, 400, and
+  800-token safety caps; paired control/watermarked outputs retain normal end-token behavior.
+- Token-level copied-text evidence for all 24 ladder outputs: exact Gemma token IDs and pieces,
+  unscored context, generation-key green/red membership, detector totals, z, p-value, and decision.
 - Stage 5 used two bounded disposable cloud invocations in total, with no dataset, Hugging Face
   Secret, persistent Volume, or deployed endpoint.
 
@@ -152,6 +156,11 @@ production secret, or Stage 6 work has started.
 - Across the ten paired prompts, no control or watermarked row crossed `z > 3`. Watermarked z was
   higher in seven pairs, lower in two, and equal in one. These twenty outputs demonstrate the
   implementation and do not estimate accuracy or a false-alarm rate.
+- In the natural-length ladder, 8 of 12 watermarked rows and 0 of 12 controls crossed `z > 3`.
+  Achieved copied lengths ranged from 200 to 800 tokens, and maximum watermarked z was `8.0271`.
+  Prompt and length vary together, so this does not isolate a causal length effect.
+- `just verify-lab-05-lengths` reconstructs selected length JSON and Markdown, token identities,
+  green/red totals, paired seeds, z scores, p-value bounds, and strict decisions locally.
 
 ## Not implemented
 

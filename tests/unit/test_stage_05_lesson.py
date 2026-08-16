@@ -145,6 +145,14 @@ def test_lesson_is_self_contained_accessible_and_has_static_fallback() -> None:
         'id="hostSvg"',
         'id="sendRequest"',
         'id="exampleList"',
+        'id="lengthChart"',
+        'id="lengthPause"',
+        'id="lengthReplay"',
+        'id="lengthControlTokens"',
+        'id="lengthWatermarkedTokens"',
+        "8 of 12 watermarked rows crossed",
+        "Color is mechanical, not semantic",
+        "setInterval",
         'id="controlText"',
         'id="watermarkedText"',
         'id="controlZ"',
@@ -185,6 +193,21 @@ def test_embedded_ten_pair_results_match_selected_examples() -> None:
         "none crossed z &gt; 3",
     ):
         assert required.lower() in lesson.lower()
+
+
+def test_embedded_length_ladder_matches_selected_summary() -> None:
+    lesson = LESSON.read_text()
+    selected = json.loads((ROOT / "artifacts/lab-05/lengths.json").read_text())
+    assert selected["summary"] == {
+        "max_control_z": 1.842197661499656,
+        "max_watermarked_z": 8.027097412270678,
+        "maximum_achieved_copied_tokens": 800,
+        "minimum_achieved_copied_tokens": 200,
+        "positive_control_rows": 0,
+        "positive_watermarked_rows": 8,
+    }
+    for required in ("3.4788", "5.6144", "6.7346", "8.0271", "z = 3"):
+        assert required in lesson
 
 
 def test_claims_remain_narrow() -> None:
