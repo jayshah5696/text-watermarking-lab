@@ -293,66 +293,70 @@ def run_stage08(
             }
         attack_records["paraphrase"] = paraphrase
 
-        baseline_prompt = adapter.encode_prompt(row["generation_prompt"])
-        if baseline_prompt.rendered_text != row["expected_rendered_input"]:
-            raise RuntimeError("Stage 8 rendered generation input differs from Stage 7")
-        baseline_prompt_ids = tuple(int(value) for value in baseline_prompt.input_ids[0].tolist())
-        source_vector = final_mean(source_ids)
-        bias_records: dict[str, Any] = {
-            "2": {
-                "bias": 2.0,
-                "seed": int(row["stage7_seed"]),
-                "copied_text": row["watermarked_text"],
-                "copied_token_ids": source_ids,
-                "copied_token_count": len(source_ids),
-                "generated_token_count": int(row["stage7_generated_token_count"]),
-                "generation_wall_ns": int(row["stage7_generation_wall_ns"]),
-                "stop_reason": row["stage7_stop_reason"],
-                "conditional_nll": continuation_nll(baseline_prompt_ids, source_ids),
-                "repeated_pair_fraction": repeated_adjacent_pair_fraction(source_ids),
-                "distinct_2_fraction": distinct_ngram_fraction(source_ids, width=2),
-                "distinct_3_fraction": distinct_ngram_fraction(source_ids, width=3),
-                "source_embedding_cosine": 1.0,
-                "token_evidence": token_trace(source_ids),
-                "reused_stage7": True,
-            }
-        }
-        for bias in (1.0, 3.0):
-            profile = WatermarkProfile(
-                green_fraction=config.green_fraction,
-                bias=bias,
-                hashing_key=config.generation_key,
-                seeding_scheme=config.seeding_scheme,
-                context_width=config.context_width,
+        bias_records: dict[str, Any] | None = None
+        if rank in config.bias_selection_ranks:
+            baseline_prompt = adapter.encode_prompt(row["generation_prompt"])
+            if baseline_prompt.rendered_text != row["expected_rendered_input"]:
+                raise RuntimeError("Stage 8 rendered generation input differs from Stage 7")
+            baseline_prompt_ids = tuple(
+                int(value) for value in baseline_prompt.input_ids[0].tolist()
             )
-            record = generate(row["generation_prompt"], int(row["stage7_seed"]), profile)
-            call_count += 1
-            generated_count += record["generated_token_count"]
-            copied_ids = tuple(record["copied_token_ids"])
-            record["bias"] = bias
-            record["seed"] = int(row["stage7_seed"])
-            if len(copied_ids) >= 3:
-                record["conditional_nll"] = continuation_nll(
-                    tuple(record["prompt_token_ids"]), copied_ids
+            source_vector = final_mean(source_ids)
+            bias_records = {
+                "2": {
+                    "bias": 2.0,
+                    "seed": int(row["stage7_seed"]),
+                    "copied_text": row["watermarked_text"],
+                    "copied_token_ids": source_ids,
+                    "copied_token_count": len(source_ids),
+                    "generated_token_count": int(row["stage7_generated_token_count"]),
+                    "generation_wall_ns": int(row["stage7_generation_wall_ns"]),
+                    "stop_reason": row["stage7_stop_reason"],
+                    "conditional_nll": continuation_nll(baseline_prompt_ids, source_ids),
+                    "repeated_pair_fraction": repeated_adjacent_pair_fraction(source_ids),
+                    "distinct_2_fraction": distinct_ngram_fraction(source_ids, width=2),
+                    "distinct_3_fraction": distinct_ngram_fraction(source_ids, width=3),
+                    "source_embedding_cosine": 1.0,
+                    "token_evidence": token_trace(source_ids),
+                    "reused_stage7": True,
+                }
+            }
+            for bias in (1.0, 3.0):
+                profile = WatermarkProfile(
+                    green_fraction=config.green_fraction,
+                    bias=bias,
+                    hashing_key=config.generation_key,
+                    seeding_scheme=config.seeding_scheme,
+                    context_width=config.context_width,
                 )
-                record["repeated_pair_fraction"] = repeated_adjacent_pair_fraction(copied_ids)
-                record["distinct_2_fraction"] = distinct_ngram_fraction(copied_ids, width=2)
-                record["distinct_3_fraction"] = distinct_ngram_fraction(copied_ids, width=3)
-                record["source_embedding_cosine"] = float(
-                    functional.cosine_similarity(
-                        source_vector, final_mean(copied_ids), dim=0
-                    ).item()
-                )
-                record["token_evidence"] = token_trace(copied_ids)
-            else:
-                record["conditional_nll"] = None
-                record["repeated_pair_fraction"] = None
-                record["distinct_2_fraction"] = None
-                record["distinct_3_fraction"] = None
-                record["source_embedding_cosine"] = None
-                record["token_evidence"] = []
-            record["reused_stage7"] = False
-            bias_records[str(int(bias))] = record
+                record = generate(row["generation_prompt"], int(row["stage7_seed"]), profile)
+                call_count += 1
+                generated_count += record["generated_token_count"]
+                copied_ids = tuple(record["copied_token_ids"])
+                record["bias"] = bias
+                record["seed"] = int(row["stage7_seed"])
+                if len(copied_ids) >= 3:
+                    record["conditional_nll"] = continuation_nll(
+                        tuple(record["prompt_token_ids"]), copied_ids
+                    )
+                    record["repeated_pair_fraction"] = repeated_adjacent_pair_fraction(copied_ids)
+                    record["distinct_2_fraction"] = distinct_ngram_fraction(copied_ids, width=2)
+                    record["distinct_3_fraction"] = distinct_ngram_fraction(copied_ids, width=3)
+                    record["source_embedding_cosine"] = float(
+                        functional.cosine_similarity(
+                            source_vector, final_mean(copied_ids), dim=0
+                        ).item()
+                    )
+                    record["token_evidence"] = token_trace(copied_ids)
+                else:
+                    record["conditional_nll"] = None
+                    record["repeated_pair_fraction"] = None
+                    record["distinct_2_fraction"] = None
+                    record["distinct_3_fraction"] = None
+                    record["source_embedding_cosine"] = None
+                    record["token_evidence"] = []
+                record["reused_stage7"] = False
+                bias_records[str(int(bias))] = record
 
         if (
             call_count > config.max_generation_calls
