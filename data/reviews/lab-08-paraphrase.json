@@ -1,0 +1,20 @@
+{
+  "reviewer": "implementation assistant",
+  "review_instructions": "Compare each Stage 7 marked source with its Stage 8 paraphrase without viewing detector scores. Mark pass only when factual claims, named entities, numbers, and qualifications are preserved. Use uncertain when the wording changes a material claim but the direction is debatable.",
+  "independent": false,
+  "status": "complete",
+  "rows": [
+    {"selection_rank": 1000, "decision": "pass", "notes": "Named place, office, examples, qualifications, and causal claims remain present."},
+    {"selection_rank": 1001, "decision": "pass", "notes": "Bob Verdi, Tribune, Blackhawks Convention, and the description of his reporting remain present."},
+    {"selection_rank": 1002, "decision": "uncertain", "notes": "The rewrite changes 'irreverent' to 'disrespectful', which may strengthen the characterization."},
+    {"selection_rank": 1003, "decision": "pass", "notes": "PowerEdge 1950, hardware description, deployment uses, and scaling limitation remain present."},
+    {"selection_rank": 1004, "decision": "pass", "notes": "Garcetti, Los Angeles, Arizona, the quoted position, mediation request, and precedent claim remain present."},
+    {"selection_rank": 1005, "decision": "pass", "notes": "Teams, match sequence, equalizer, errors, and final comparison remain present."},
+    {"selection_rank": 1006, "decision": "pass", "notes": "Texas BBQ Foods, New Zealand, product, placement, packaging, and market claims remain present."},
+    {"selection_rank": 1007, "decision": "uncertain", "notes": "The rewrite changes 'native ally' to 'local companion', weakening a specific identity claim."},
+    {"selection_rank": 1008, "decision": "pass", "notes": "Lightning damage, TiVo, Time Warner Cable DVR, setup failures, and conclusion remain present."},
+    {"selection_rank": 1009, "decision": "pass", "notes": "London dining examples, cost and queue constraints, and research burden remain present."},
+    {"selection_rank": 1010, "decision": "pass", "notes": "Victor Rogus, Jadwin, Quadrantids, photographic process, and audience remain present."},
+    {"selection_rank": 1011, "decision": "pass", "notes": "Somali security, Horn of Africa, capacity building, reforms, displacement, mediation, and stability claim remain present."}
+  ]
+}

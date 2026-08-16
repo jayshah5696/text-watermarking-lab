@@ -2,10 +2,10 @@
 
 ## Current stage
 
-Stages 0 through 7 complete locally on `main`. Stage 7 uses all 24 prompts frozen during Stage 6,
-runs one paired control and watermarked Gemma generation for each, and compares correct-key marked
-evidence with three controls across matched copied-token prefixes. No endpoint, production secret,
-editing attack, or Stage 8 work has started.
+Stages 0 through 8 complete locally on `main`. Stage 8 carries the first twelve frozen Stage 7
+marked outputs through deterministic normalization, homoglyph, deletion, mixing, and paraphrase
+conditions, then compares delta 1, 2, and 3 on the first eight prompts. No endpoint, production
+secret, adaptive attack, or Stage 9 publication work has started.
 
 ## Implemented
 
@@ -82,6 +82,12 @@ editing attack, or Stage 8 work has started.
 - Complete-prefix cohort rules, row-level paired z differences, deterministic 10,000-resample paired
   bootstrap intervals, all-pair primary counts, distinct-pair diagnostics, a fixed spine row, and a
   predeclared inconvenient-row selector.
+- Deterministic Stage 8 normalization, 1/5 percent homoglyph substitution, 10/30 percent deletion,
+  and 25/50 percent aligned control-text mixing on twelve frozen marked outputs.
+- Twelve unwatermarked Gemma paraphrases with copied-text scoring, length and decimal-number checks,
+  final-layer mean-state cosine, and a recorded non-independent assistant preservation review.
+- Eight-row delta 1/2/3 comparison with delta 2 reused from Stage 7, correct-key 80-token evidence,
+  conditional NLL, repeated adjacent pairs, distinct bigrams/trigrams, achieved length, and runtime.
 
 ## Verified
 
@@ -213,19 +219,36 @@ editing attack, or Stage 8 work has started.
 - The Stage 7 `file://` lesson passed Chrome 151 desktop 1440 by 1000, mobile 390 by 844, reduced
   motion 1200 by 900, scripts-off structure, all controls, JavaScript syntax, console, horizontal
   overflow, and three mid-page screenshot checks.
+- The successful Stage 8 replacement invocation made exactly 28 generation calls, returned 6,965
+  generated token IDs, and completed in 599.9 seconds on one Modal NVIDIA L4.
+- A first Stage 8 invocation failed after model load because the bias sweep was applied beyond its
+  frozen eight-row subset. It returned no result. The boundary was fixed, tested, committed, and a
+  replacement invocation received separate approval.
+- `just verify-lab-08` rebuilds deterministic edits, every selected token score, metric summaries,
+  manual-review joins, JSON, Markdown, and four figure files without model, GPU, network, or cloud.
+- At 80 copied tokens, mean paired z change was `0.0000` for normalization, `-0.3248` and `-0.9960`
+  for 10/30 percent deletion, `-0.6712` and `-1.3424` for 25/50 percent mixing, and `-1.7105` for
+  paraphrase.
+- All twelve paraphrases passed automatic preservation screens. The non-independent assistant review
+  marked ten pass and two uncertain; all ten passed rewrites reduced z and no paraphrase crossed
+  strict `z > 3`.
+- Mean 80-token z across the eight bias rows was `0.2923`, `2.1761`, and `2.4684` at delta 1, 2,
+  and 3. Mean conditional NLL was `0.5004`, `0.5415`, and `0.5783`; two row-level z paths were not
+  monotonic from delta 2 to 3.
 
 ## Not implemented
 
 - Authenticated hosted generator, hosted detector, or public playground.
 - Production secret creation, key rotation, access control, rate limiting, and abuse policy.
-- Stage 8 editing and bias trade-off experiments.
+- Stage 9 article assembly, review, and publication.
 
 No generally useful or production-calibrated detector cutoff exists.
 
 ## Approval required next
 
-Stage 8 planning or implementation. Any additional dataset, model/GPU/cloud invocation, persistent
-cloud resource, GitHub remote, publishing, or public deployment requires separate explicit approval.
+Stage 9 article assembly or publication. Any additional dataset, model/GPU/cloud invocation,
+persistent cloud resource, GitHub remote change, publishing, or public deployment requires separate
+explicit approval.
 
 ## Known limitations
 
@@ -274,3 +297,14 @@ cloud resource, GitHub remote, publishing, or public deployment requires separat
   robustness, arbitrary AI origin, human authorship, or Claude's private implementation.
 - Synchronized watermark processor timing perturbs execution and is reported as component timing,
   not as an end-to-end speed penalty.
+- Stage 8 uses twelve edit rows and eight bias rows under one public key, Gemma revision, tokenizer,
+  CUDA profile, sampler, and 80-token scoring prefix. Results do not transfer automatically.
+- Deterministic deletion and mixing can damage grammar or meaning. Their detector reductions are not
+  called meaning-preserving removals.
+- Homoglyph substitution changes Unicode code points and tokenization while trying to look similar.
+  It is not a semantic paraphrase attack.
+- Embedding cosine and conditional NLL are model-based proxies, not human quality judgments. The
+  assistant paraphrase review was non-independent and left two rows uncertain.
+- The first failed Stage 8 invocation incurred unmeasured provider work but returned no usable
+  artifact. The derived GPU-only amount from the successful invocation excludes that failed run and
+  all CPU, memory, image, transfer, rounding, and provider overhead.

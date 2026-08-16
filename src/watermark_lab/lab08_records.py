@@ -96,7 +96,10 @@ def _mean(values: Sequence[float]) -> float | None:
 
 
 def build_stage08_artifact(
-    raw: Mapping[str, Any], stage7: Mapping[str, Any], config: Lab08Config
+    raw: Mapping[str, Any],
+    stage7: Mapping[str, Any],
+    manual_review: Mapping[str, Any],
+    config: Lab08Config,
 ) -> dict[str, Any]:
     """Cross-check Stage 7 continuity and build compact measured summaries."""
 
@@ -123,6 +126,16 @@ def build_stage08_artifact(
         or stage7.get("config_sha256") != config.stage7_config_sha256
     ):
         raise ValueError("Stage 7 continuity identity differs")
+
+    review_rows = cast(list[dict[str, Any]], manual_review.get("rows"))
+    reviews = {row["selection_rank"]: row for row in review_rows}
+    if (
+        manual_review.get("status") != "complete"
+        or manual_review.get("independent") is not False
+        or set(reviews) != set(config.attack_selection_ranks)
+        or any(row.get("decision") not in {"pass", "fail", "uncertain"} for row in review_rows)
+    ):
+        raise ValueError("Stage 8 manual review is incomplete or differs")
 
     stage7_rows = {row["selection_rank"]: row for row in stage7["selected_rows"]}
     raw_rows = cast(list[dict[str, Any]], raw["rows"])
@@ -164,6 +177,11 @@ def build_stage08_artifact(
                         "embedding_cosine": attack["embedding_cosine"],
                         "numbers_preserved": attack["numbers_preserved"],
                         "automatic_preservation_pass": attack["automatic_preservation_pass"],
+                        "manual_review": reviews[rank],
+                        "meaning_preservation_pass": bool(
+                            attack["automatic_preservation_pass"]
+                            and reviews[rank]["decision"] == "pass"
+                        ),
                         "stop_reason": attack["stop_reason"],
                         "generation_wall_ns": attack["generation_wall_ns"],
                         "prompt": attack["prompt"],
@@ -173,36 +191,39 @@ def build_stage08_artifact(
                 record["operations"] = attack["operations"]
             attack_records[label] = record
 
-        bias_records: dict[str, Any] = {}
-        for bias in config.bias_values:
-            label = str(int(bias))
-            generation = cast(dict[str, Any], raw_row["bias_generations"][label])
-            trace = cast(list[dict[str, Any]], generation["token_evidence"])
-            score = (
-                score_trace(trace, config)
-                if trace
-                else {
-                    "status": "insufficient_copied_tokens",
-                    "copied_prefix": generation["copied_token_count"],
-                    "num_green_tokens": 0,
-                    "num_tokens_scored": max(0, generation["copied_token_count"] - 1),
+        bias_records: dict[str, Any] | None = None
+        if rank in config.bias_selection_ranks:
+            bias_records = {}
+            raw_biases = cast(dict[str, dict[str, Any]], raw_row["bias_generations"])
+            for bias in config.bias_values:
+                label = str(int(bias))
+                generation = raw_biases[label]
+                trace = cast(list[dict[str, Any]], generation["token_evidence"])
+                score = (
+                    score_trace(trace, config)
+                    if trace
+                    else {
+                        "status": "insufficient_copied_tokens",
+                        "copied_prefix": generation["copied_token_count"],
+                        "num_green_tokens": 0,
+                        "num_tokens_scored": max(0, generation["copied_token_count"] - 1),
+                    }
+                )
+                bias_records[label] = {
+                    "bias": bias,
+                    "copied_text": generation["copied_text"],
+                    "copied_token_count": generation["copied_token_count"],
+                    "generated_token_count": generation["generated_token_count"],
+                    "stop_reason": generation["stop_reason"],
+                    "generation_wall_ns": generation["generation_wall_ns"],
+                    "conditional_nll": generation["conditional_nll"],
+                    "repeated_pair_fraction": generation["repeated_pair_fraction"],
+                    "distinct_2_fraction": generation["distinct_2_fraction"],
+                    "distinct_3_fraction": generation["distinct_3_fraction"],
+                    "source_embedding_cosine": generation["source_embedding_cosine"],
+                    "reused_stage7": generation["reused_stage7"],
+                    "score": score,
                 }
-            )
-            bias_records[label] = {
-                "bias": bias,
-                "copied_text": generation["copied_text"],
-                "copied_token_count": generation["copied_token_count"],
-                "generated_token_count": generation["generated_token_count"],
-                "stop_reason": generation["stop_reason"],
-                "generation_wall_ns": generation["generation_wall_ns"],
-                "conditional_nll": generation["conditional_nll"],
-                "repeated_pair_fraction": generation["repeated_pair_fraction"],
-                "distinct_2_fraction": generation["distinct_2_fraction"],
-                "distinct_3_fraction": generation["distinct_3_fraction"],
-                "source_embedding_cosine": generation["source_embedding_cosine"],
-                "reused_stage7": generation["reused_stage7"],
-                "score": score,
-            }
         selected_rows.append(
             {
                 "selection_rank": rank,
@@ -213,7 +234,7 @@ def build_stage08_artifact(
                 "original_copied_token_count": inherited_marked["copied_token_count"],
                 "baseline_score": baseline,
                 "attacks": attack_records,
-                "bias_generations": bias_records if rank in config.bias_selection_ranks else None,
+                "bias_generations": bias_records,
                 "spine_token_evidence": {
                     label: attacks[label]["token_evidence"]
                     for label in ("deletion_10", "paraphrase")
@@ -235,6 +256,16 @@ def build_stage08_artifact(
             "mean_length_ratio": _mean([record["length_ratio"] for record in records]),
             "automatic_preservation_passes": (
                 sum(record["automatic_preservation_pass"] for record in records)
+                if label == "paraphrase"
+                else None
+            ),
+            "manual_passes": (
+                sum(record["manual_review"]["decision"] == "pass" for record in records)
+                if label == "paraphrase"
+                else None
+            ),
+            "meaning_preservation_passes": (
+                sum(record["meaning_preservation_pass"] for record in records)
                 if label == "paraphrase"
                 else None
             ),
