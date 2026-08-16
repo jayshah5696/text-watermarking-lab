@@ -2,9 +2,10 @@
 
 ## Current stage
 
-Stages 0 through 6 complete locally on `main`. Stage 6 freezes the natural-web calibration and
-later paired-test manifest, then records the unchanged checker's background distribution. No
-endpoint, production secret, or Stage 7 generation has started.
+Stages 0 through 7 complete locally on `main`. Stage 7 uses all 24 prompts frozen during Stage 6,
+runs one paired control and watermarked Gemma generation for each, and compares correct-key marked
+evidence with three controls across matched copied-token prefixes. No endpoint, production secret,
+editing attack, or Stage 8 work has started.
 
 ## Implemented
 
@@ -73,6 +74,14 @@ endpoint, production secret, or Stage 7 generation has started.
   CUDA pseudorandom profile, every-pair primary count, and distinct-value-pair diagnostic.
 - Selected Stage 6 JSON, Markdown, manifest, worked token trace, blog handoff, and interactive lesson
   that continue the Stage 5 `G/T`, z, and cutoff story into an outside-text failure case.
+- One approved Stage 7 Modal L4 invocation with exactly 48 generation calls across all 24 frozen
+  paired-test prompts, using paired seeds, normal end-token behavior, and a 400 generated-token cap.
+- Four Stage 7 score families at copied-token prefixes 40, 80, 160, 200, and where jointly available
+  400: marked/correct-key, model-control/correct-key, natural-web/correct-key, and
+  marked/comparison-key.
+- Complete-prefix cohort rules, row-level paired z differences, deterministic 10,000-resample paired
+  bootstrap intervals, all-pair primary counts, distinct-pair diagnostics, a fixed spine row, and a
+  predeclared inconvenient-row selector.
 
 ## Verified
 
@@ -182,18 +191,40 @@ endpoint, production secret, or Stage 7 generation has started.
 - The exact `file://` Stage 6 lesson passed 1440 by 1000 desktop, 390 by 844 mobile, 1200 by 900
   reduced-motion, scripts-off, control, console, and horizontal-overflow checks. Mid-page row,
   cohort, and failure screenshots were inspected.
+- `just verify-lab-07` reconstructs every selected Stage 7 row, prefix score, exact binomial tail,
+  strict decision, complete-prefix denominator, paired difference, bootstrap interval, and teaching
+  selection locally without dataset, model, GPU, network, or cloud access.
+- `just check` passes with 443 tests, and `just test-cov` passes at 95.23 percent branch-aware
+  package coverage.
+- The Stage 7 invocation completed in 743.1 seconds and returned 12,933 generated token IDs. A direct
+  projection at the configured L4 rate is `$0.1650` of GPU time, excluding other provider charges.
+- Complete matched cohorts were 24 rows at 40 and 80 copied tokens, 21 at 160, 17 at 200, and zero at
+  400. The 400 generated-token cap was not an achieved 400 copied-token paired result.
+- At 80 copied tokens, mean marked correct-key z exceeded model control by `1.8296` with 95 percent
+  paired bootstrap interval `[1.3424, 2.3276]`, natural web by `1.7538` `[1.3100, 2.1977]`, and the
+  comparison-key replay by `2.0461` `[1.6131, 2.4792]` across all 24 frozen rows.
+- Strict marked cutoff counts were `1/24`, `3/24`, `5/21`, and `4/17` at prefixes 40, 80, 160, and
+  200. No paired model control or comparison-key row crossed; one natural-web row crossed at 200.
+- The predeclared inconvenient row was rank 1001. Its control and marked paths shared their first 80
+  copied token IDs and both scored `26/79`, z `1.6239`, with the generation key.
+- The self-contained Stage 7 lesson continues the first frozen Stage 6 test row through paired calls,
+  history divergence, copied-text scoring, four controls, prefix growth, the inconvenient equal row,
+  and every document-level paired difference before the mean and interval.
+- The Stage 7 `file://` lesson passed Chrome 151 desktop 1440 by 1000, mobile 390 by 844, reduced
+  motion 1200 by 900, scripts-off structure, all controls, JavaScript syntax, console, horizontal
+  overflow, and three mid-page screenshot checks.
 
 ## Not implemented
 
 - Authenticated hosted generator, hosted detector, or public playground.
 - Production secret creation, key rotation, access control, rate limiting, and abuse policy.
-- Stage 7 paired generation on the 24 frozen C4 prompts.
+- Stage 8 editing and bias trade-off experiments.
 
 No generally useful or production-calibrated detector cutoff exists.
 
 ## Approval required next
 
-Stage 7 planning or implementation. Any additional dataset, model/GPU/cloud invocation, persistent
+Stage 8 planning or implementation. Any additional dataset, model/GPU/cloud invocation, persistent
 cloud resource, GitHub remote, publishing, or public deployment requires separate explicit approval.
 
 ## Known limitations
@@ -234,5 +265,12 @@ cloud resource, GitHub remote, publishing, or public deployment requires separat
   same clean source commit and config. Neither invocation loaded model weights or generated text.
 - The first control generation includes one-time CUDA warm-up behavior. It is not evidence that
   watermarking speeds generation.
+- Stage 7 uses one Gemma revision, tokenizer, CUDA pseudorandom profile, public key pair, sampler,
+  and 24 C4 prompts. Its paired intervals summarize this frozen cohort rather than a target
+  population or production error rate.
+- Generated and copied lengths varied under normal end-token behavior. The complete-prefix cohort
+  shrank with length, so comparisons across prefixes do not isolate a causal length effect.
+- Stage 7 measured keyed separation but did not measure prose quality, semantic fidelity, editing
+  robustness, arbitrary AI origin, human authorship, or Claude's private implementation.
 - Synchronized watermark processor timing perturbs execution and is reported as component timing,
   not as an end-to-end speed penalty.
