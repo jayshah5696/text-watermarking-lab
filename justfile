@@ -111,6 +111,6 @@ lab-07:
     @mkdir -p runs/lab-07
     uv run modal run -m --write-result runs/lab-07/modal-result.json watermark_lab.modal_app_07::run_core --config-json "$(cat configs/lab_07.toml)" --paired-manifest-json "$(uv run python -c 'import json; p="data/manifests/lab-06-c4.jsonl"; print(json.dumps([json.loads(x) for x in open(p) if "paired_test" in x], separators=(",", ":")))')" --source-commit "$(git rev-parse HEAD)" --config-sha256 "$(shasum -a 256 configs/lab_07.toml | cut -d' ' -f1)"
 
-# Validate Stage 7 selected evidence without dataset, model, GPU, or cloud access.
+# Validate Stage 7 selected evidence and regenerated figures without remote access.
 verify-lab-07:
     uv run python scripts/verify_lab_07.py

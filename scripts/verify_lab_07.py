@@ -6,7 +6,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, cast
 
@@ -53,6 +55,37 @@ def main() -> int:
             raise ValueError("selected Stage 7 JSON differs from local reconstruction")
         if stage07_markdown_bytes(rebuilt) != markdown_path.read_bytes():
             raise ValueError("Stage 7 Markdown differs from selected JSON")
+        required_figures = (
+            "separation.png",
+            "separation.svg",
+            "prefix_effects.png",
+            "prefix_effects.svg",
+        )
+        for name in required_figures:
+            figure = args.artifacts / name
+            if not figure.is_file() or figure.stat().st_size == 0:
+                raise ValueError(f"Stage 7 figure is missing or empty: {name}")
+        for name in ("separation.svg", "prefix_effects.svg"):
+            if "dc:date" in (args.artifacts / name).read_text():
+                raise ValueError(f"Stage 7 SVG contains creation metadata: {name}")
+        with tempfile.TemporaryDirectory() as temporary:
+            generated = Path(temporary)
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).with_name("build_stage_07_figures.py")),
+                    "--artifact",
+                    str(json_path),
+                    "--output",
+                    str(generated),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            for name in required_figures:
+                if (generated / name).read_bytes() != (args.artifacts / name).read_bytes():
+                    raise ValueError(f"Stage 7 figure differs from local reconstruction: {name}")
         artifact_text = json_path.read_text().lower()
         for forbidden in ("hf_token", "modal_secret", ".cache/huggingface"):
             if forbidden in artifact_text:
