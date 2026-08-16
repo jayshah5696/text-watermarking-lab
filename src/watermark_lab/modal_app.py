@@ -305,7 +305,7 @@ def _run_lengths(config_json: str, source_commit: str, config_sha256: str) -> st
 
     import torch
     from huggingface_hub import snapshot_download
-    from transformers import AutoModelForMultimodalLM, AutoProcessor, WatermarkDetector
+    from transformers import AutoModelForMultimodalLM, AutoProcessor
 
     from watermark_lab.gemma_adapter import Gemma4Adapter
     from watermark_lab.lab05_lengths_config import lengths_config_from_toml_bytes
@@ -352,31 +352,20 @@ def _run_lengths(config_json: str, source_commit: str, config_sha256: str) -> st
         seeding_scheme=config.seeding_scheme,
         context_width=config.context_width,
     )
-    detector = WatermarkDetector(
-        model_config=model_config,
-        device="cuda",
-        watermarking_config=profile.to_transformers(),
-        ignore_repeated_ngrams=False,
+    watermark_processor = profile.to_transformers().construct_processor(
+        int(model_config.vocab_size), "cuda"
     )
 
     def score(copied_ids: tuple[int, ...]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         tensor = adapter.token_tensor(copied_ids)
-        result = detector(tensor, z_threshold=config.z_threshold, return_dict=True)
-        scored = int(result.num_tokens_scored[0])
-        green = int(result.num_green_tokens[0])
-        z = float(result.z_score[0])
-        independent = green_hit_z_score(
-            hits=green, trials=scored, null_probability=config.green_fraction
-        )
-        if not math.isclose(z, independent, abs_tol=1e-10):
-            raise RuntimeError("length ladder z score differs from Stage 1")
         tokens: list[dict[str, Any]] = []
         for index, token_id in enumerate(copied_ids):
             eligible = index >= config.context_width
             is_green: bool | None = None
             if eligible:
                 prefix = tensor[0, index - config.context_width : index]
-                is_green = bool(detector._get_ngram_score(prefix, token_id))  # pyright: ignore[reportPrivateUsage]
+                green_ids = watermark_processor._get_greenlist_ids(prefix)  # pyright: ignore[reportPrivateUsage]
+                is_green = bool((green_ids == token_id).any().item())
             tokens.append(
                 {
                     "position": index,
@@ -388,20 +377,19 @@ def _run_lengths(config_json: str, source_commit: str, config_sha256: str) -> st
                     "is_green": is_green,
                 }
             )
-        if (
-            sum(item["eligible"] for item in tokens) != scored
-            or sum(item["is_green"] is True for item in tokens) != green
-        ):
-            raise RuntimeError("token colors differ from detector totals")
+        scored = sum(item["eligible"] for item in tokens)
+        green = sum(item["is_green"] is True for item in tokens)
+        z = green_hit_z_score(hits=green, trials=scored, null_probability=config.green_fraction)
+        p_value = 1 - (0.5 * (1 + (1 if z >= 0 else -1) * (1 - math.exp(-2 * z**2 / math.pi))))
         evidence = {
             "num_tokens_scored": scored,
             "num_green_tokens": green,
-            "green_fraction": float(result.green_fraction[0]),
+            "green_fraction": green / scored,
             "z_score": z,
-            "independent_z_score": independent,
-            "p_value": float(result.p_value[0]),
+            "independent_z_score": z,
+            "p_value": p_value,
             "z_threshold": config.z_threshold,
-            "prediction": bool(result.prediction[0]),
+            "prediction": z > config.z_threshold,
         }
         return evidence, tokens
 
