@@ -126,3 +126,11 @@ lab-08:
 # Validate Stage 8 selected evidence and regenerated figures without remote access.
 verify-lab-08:
     uv run python scripts/verify_lab_08.py
+
+# Assemble the local Stage 9 article lesson from committed evidence only.
+build-stage-09:
+    uv run python scripts/build_stage_09_lesson.py
+
+# Rebuild and verify the local Stage 9 article lesson without model or remote access.
+verify-stage-09:
+    uv run python scripts/verify_stage_09.py

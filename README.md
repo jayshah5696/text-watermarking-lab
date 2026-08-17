@@ -7,31 +7,24 @@ Anthropic's private Claude implementation.
 Stage 1 starts with a biased coin. Stage 2 uses 20 visible token IDs and a toy keyed selector.
 Stage 3 puts a separate MLX selector inside an explicit LFM2 350M generation loop. Stage 4 checks
 that mental model against the maintained Transformers 5.14.1 watermark path with a pinned GPT-2
-fixture on the local CPU. Stage 5 extracts a reusable implementation boundary for compatible
-Transformers generation models and works through Gemma 4 E2B in BF16. It shows where the key enters
-`generate()`, how model adapters isolate prompt and response details, how copied text reaches the
-matching detector, and how a host keeps a private key inside the process. Modal supplied the L4 for
-the saved smoke; it is not part of the watermark algorithm. Stage 6 freezes 1,000 C4 natural-web
-continuations plus 24 later-test rows, then checks the 1,000-row background distribution without
-loading model weights or generating text. The detector recognizes only this project's deliberately
-embedded watermark profile and key, not arbitrary AI-written text.
+fixture on the local CPU. Stage 5 carries the adapter to Gemma 4 E2B in BF16. Stage 6 freezes and
+scores a 1,000-row natural-web background. Stage 7 runs 24 frozen paired prompts against three
+controls. Stage 8 measures named edits and a delta 1/2/3 bias sweep. Stage 9 assembles the final
+article source and continuous lesson from those committed results. The detector recognizes only
+this project's deliberately embedded watermark profile and key, not arbitrary AI-written text.
 
 ## Current status
 
-Stages 0 through 6 provide the reproducible Python 3.12 foundation, the biased-coin detector, a
-deterministic toy-vocabulary trace, paired local MLX continuations, a pinned Transformers reference
-adapter, a provider-neutral generation and key boundary, and a frozen natural-web calibration. Gemma 4 is the
-checked Stage 5 example. Its evidence was generated from clean source commit `09831ba` on one NVIDIA
-L4. A separately approved demonstration then ran ten fixed paired prompts, for twenty outputs, on
-the same pinned path. None crossed the strict `z > 3` cutoff. The lesson preserves control and
-watermarked text, `G/T`, z, p-value, and decision for every pair. The p-value is evidence under the
-configured no-watermark baseline, not the probability that text is watermarked. A frozen
-natural-length ladder then produced 24 more outputs under 200, 400, and 800-token safety caps. Eight
-of twelve watermarked rows and no controls crossed `z > 3`. Stage 6 then scored 1,000 frozen C4
-natural-web continuations with the same public key and CUDA profile. Four crossed the all-pair
-cutoff; one crossed when each repeated value-pair counted once. These are observed counts for one
-sample, not production false-alarm rates. See
-[`docs/stages/06-natural-web-calibration.md`](docs/stages/06-natural-web-calibration.md).
+Stages 0 through 9 are complete locally. Stage 7 measured 24 frozen paired Gemma prompts. At 80
+copied tokens, correct-key marked z exceeded paired model-control z by mean `1.8296`, natural-web z
+by `1.7538`, and comparison-key z by `2.0461`; individual rows still overlapped. Stage 8 found mean
+z changes of `-0.9960` after 30 percent deletion, `-1.3424` after 50 percent mixing, and `-1.7105`
+after paraphrase in its 12-row fixture. Its eight-row bias sweep raised mean z from `0.2923` at
+delta 1 to `2.4684` at delta 3 while model-based NLL and repetition proxies also rose. Stage 9 adds
+no experiment. It assembles the checked story in [`blog/article.md`](blog/article.md) and the
+standalone lesson at
+[`.agent/diagrams/text-watermarking-stage-9-final-lesson.html`](.agent/diagrams/text-watermarking-stage-9-final-lesson.html).
+Nothing has been published.
 
 ```console
 just --list
@@ -43,6 +36,9 @@ just verify-lab-03
 just verify-lab-04
 just verify-lab-05
 just verify-lab-06
+just verify-lab-07
+just verify-lab-08
+just verify-stage-09
 ```
 
 `just lab-01` is the intentional, clean-commit evidence command. It refuses a dirty worktree,
@@ -57,8 +53,10 @@ local CPU continuations, and records the reference order and copied-text detecto
 or cloud call. `just verify-lab-05-examples` independently validates the selected ten-pair
 comparison. `just verify-lab-05-lengths` validates the natural-length and token-color artifact.
 `just verify-lab-06` reconstructs the selected manifest and all 1,000 scores without accessing C4,
-a model, GPU, network, or cloud. The corresponding `lab-05-*` and `lab-06` commands incur cloud cost
-and require approval.
+a model, GPU, network, or cloud. `just verify-lab-07` and `just verify-lab-08` rebuild their selected
+evidence locally. `just verify-stage-09` rebuilds the final HTML lesson and checks its embedded
+measurements against committed artifacts. The corresponding model-backed `lab-*` commands incur
+cloud cost and require approval.
 
 ```console
 just lab-01
@@ -71,6 +69,9 @@ just lab-04
 just verify-lab-04
 just verify-lab-05
 just verify-lab-06
+just verify-lab-07
+just verify-lab-08
+just verify-stage-09
 ```
 
 ## Scope boundary
@@ -79,8 +80,10 @@ The current slice includes one pinned C4 validation shard and compact identifier
 and excerpts. It does not republish full articles. There is no hosted endpoint, production secret,
 or public deployment. Stage 3 uses one approved local Apple GPU fixture. Stage 4 uses one approved
 local CPU fixture. Stage 5 used disposable Modal L4 invocations with no Secret and no persistent
-Volume. Stage 6 used detector-only L4 invocations with no model weights or generation calls. The committed demo key
-is public for reproducibility and provides no secrecy. The private-key path defines how a host would
+Volume. Stage 6 used detector-only L4 invocations with no model weights or generation calls. Stages 7 and
+8 used bounded, approved L4 generation invocations. Stage 9 used no model, dataset, GPU, cloud, or
+network operation for experimental evidence. The committed demo key is public for reproducibility
+and provides no secrecy. The private-key path defines how a host would
 inject process-local key material; it does not claim production key management. Three passages do
 not establish accuracy, prose quality, or a generally useful cutoff. A result above a configured
 cutoff means only "consistent with this configured watermark and key," never "AI-written."

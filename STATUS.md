@@ -2,10 +2,11 @@
 
 ## Current stage
 
-Stages 0 through 8 complete locally on `main`. Stage 8 carries the first twelve frozen Stage 7
+Stages 0 through 9 are assembled locally on `main`. Stage 8 carries the first twelve frozen Stage 7
 marked outputs through deterministic normalization, homoglyph, deletion, mixing, and paraphrase
-conditions, then compares delta 1, 2, and 3 on the first eight prompts. No endpoint, production
-secret, adaptive attack, or Stage 9 publication work has started.
+conditions, then compares delta 1, 2, and 3 on the first eight prompts. Stage 9 assembles the final
+article source and continuous interactive lesson from committed evidence only. Nothing has been
+published. No endpoint, production secret, adaptive attack, or hosted playground has started.
 
 ## Implemented
 
@@ -88,6 +89,13 @@ secret, adaptive attack, or Stage 9 publication work has started.
   final-layer mean-state cosine, and a recorded non-independent assistant preservation review.
 - Eight-row delta 1/2/3 comparison with delta 2 reused from Stage 7, correct-key 80-token evidence,
   conditional NLL, repeated adjacent pairs, distinct bigrams/trigrams, achieved length, and runtime.
+- Final Stage 9 article source assembled from the eight evidence-backed stage notes, with primary
+  links for the KGW mechanism, SynthID-Text comparison, and Anthropic's stated marking plan.
+- Self-contained Stage 9 interactive lesson that opens on the exact Stage 8 rank 1000 string, rewinds
+  to one saved token draw, rebuilds `G/T` and z, reveals all 24 paired differences, and returns to
+  every editing and bias row without generating or selecting new evidence.
+- Local Stage 9 builder, structural evidence tests, and `just verify-stage-09` command. Publication
+  remains a separate authorization gate.
 
 ## Verified
 
@@ -235,20 +243,28 @@ secret, adaptive attack, or Stage 9 publication work has started.
 - Mean 80-token z across the eight bias rows was `0.2923`, `2.1761`, and `2.4684` at delta 1, 2,
   and 3. Mean conditional NLL was `0.5004`, `0.5415`, and `0.5783`; two row-level z paths were not
   monotonic from delta 2 to 3.
+- `just verify-stage-09` rebuilds the standalone lesson and checks its Stage 1, 3, 6, 7, and 8
+  evidence payloads against the canonical selected artifacts without a model, GPU, network, or cloud.
+- The Stage 9 lesson passed Chrome desktop light at 1440 by 1000, mobile light at 390 by 844, desktop
+  dark at 1200 by 900, reduced motion, scripts-off fallback, keyboard focus, every control, console,
+  JavaScript syntax, and horizontal-overflow checks. Four mid-page screenshots were inspected.
+- Three independent lesson reviewers were requested through the workflow runner, but the background
+  run did not return a retrievable report. Three separate local review passes were completed and
+  recorded; independent reviewer sign-off remains unverified.
 
 ## Not implemented
 
 - Authenticated hosted generator, hosted detector, or public playground.
 - Production secret creation, key rotation, access control, rate limiting, and abuse policy.
-- Stage 9 article assembly, review, and publication.
+- Publication of the Stage 9 article or lesson.
 
 No generally useful or production-calibrated detector cutoff exists.
 
 ## Approval required next
 
-Stage 9 article assembly or publication. Any additional dataset, model/GPU/cloud invocation,
-persistent cloud resource, GitHub remote change, publishing, or public deployment requires separate
-explicit approval.
+Publication or release of the assembled Stage 9 article and lesson. Any additional dataset,
+model/GPU/cloud invocation, persistent cloud resource, GitHub remote change, publishing, or public
+deployment requires separate explicit approval.
 
 ## Known limitations
 
