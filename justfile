@@ -127,10 +127,10 @@ lab-08:
 verify-lab-08:
     uv run python scripts/verify_lab_08.py
 
-# Assemble the local Stage 9 article lesson from committed evidence only.
-build-stage-09:
-    uv run python scripts/build_stage_09_lesson.py
+# Assemble the continuous final article from committed Stage 1-8 evidence.
+build-final-article:
+    uv run python scripts/build_final_article.py
 
-# Rebuild and verify the local Stage 9 article lesson without model or remote access.
-verify-stage-09:
-    uv run python scripts/verify_stage_09.py
+# Rebuild and verify every embedded final-article evidence payload locally.
+verify-final-article:
+    uv run python scripts/verify_final_article.py

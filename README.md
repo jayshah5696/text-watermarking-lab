@@ -10,8 +10,9 @@ that mental model against the maintained Transformers 5.14.1 watermark path with
 fixture on the local CPU. Stage 5 carries the adapter to Gemma 4 E2B in BF16. Stage 6 freezes and
 scores a 1,000-row natural-web background. Stage 7 runs 24 frozen paired prompts against three
 controls. Stage 8 measures named edits and a delta 1/2/3 bias sweep. Stage 9 assembles the final
-article source and continuous lesson from those committed results. The detector recognizes only
-this project's deliberately embedded watermark profile and key, not arbitrary AI-written text.
+article source and one continuous interactive article from those committed results. The detector
+recognizes only this project's deliberately embedded watermark profile and key, not arbitrary
+AI-written text.
 
 ## Current status
 
@@ -21,9 +22,9 @@ by `1.7538`, and comparison-key z by `2.0461`; individual rows still overlapped.
 z changes of `-0.9960` after 30 percent deletion, `-1.3424` after 50 percent mixing, and `-1.7105`
 after paraphrase in its 12-row fixture. Its eight-row bias sweep raised mean z from `0.2923` at
 delta 1 to `2.4684` at delta 3 while model-based NLL and repetition proxies also rose. Stage 9 adds
-no experiment. It assembles the checked story in [`blog/article.md`](blog/article.md) and the
-standalone lesson at
-[`.agent/diagrams/text-watermarking-stage-9-final-lesson.html`](.agent/diagrams/text-watermarking-stage-9-final-lesson.html).
+no experiment. It assembles the checked manuscript in [`blog/article.md`](blog/article.md) and the
+canonical interactive article in
+[`blog/how-text-watermarks-hide-in-plain-sight.html`](blog/how-text-watermarks-hide-in-plain-sight.html).
 Nothing has been published.
 
 ```console
@@ -38,7 +39,7 @@ just verify-lab-05
 just verify-lab-06
 just verify-lab-07
 just verify-lab-08
-just verify-stage-09
+just verify-final-article
 ```
 
 `just lab-01` is the intentional, clean-commit evidence command. It refuses a dirty worktree,
@@ -54,8 +55,9 @@ or cloud call. `just verify-lab-05-examples` independently validates the selecte
 comparison. `just verify-lab-05-lengths` validates the natural-length and token-color artifact.
 `just verify-lab-06` reconstructs the selected manifest and all 1,000 scores without accessing C4,
 a model, GPU, network, or cloud. `just verify-lab-07` and `just verify-lab-08` rebuild their selected
-evidence locally. `just verify-stage-09` rebuilds the final HTML lesson and checks its embedded
-measurements against committed artifacts. The corresponding model-backed `lab-*` commands incur
+evidence locally. `just verify-final-article` rebuilds the continuous HTML article and checks every
+embedded evidence payload against committed artifacts. The corresponding model-backed `lab-*`
+commands incur
 cloud cost and require approval.
 
 ```console
@@ -71,7 +73,7 @@ just verify-lab-05
 just verify-lab-06
 just verify-lab-07
 just verify-lab-08
-just verify-stage-09
+just verify-final-article
 ```
 
 ## Scope boundary

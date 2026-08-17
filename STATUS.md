@@ -4,8 +4,8 @@
 
 Stages 0 through 9 are assembled locally on `main`. Stage 8 carries the first twelve frozen Stage 7
 marked outputs through deterministic normalization, homoglyph, deletion, mixing, and paraphrase
-conditions, then compares delta 1, 2, and 3 on the first eight prompts. Stage 9 assembles the final
-article source and continuous interactive lesson from committed evidence only. Nothing has been
+conditions, then compares delta 1, 2, and 3 on the first eight prompts. Stage 9 assembles one final
+continuous interactive article from committed evidence and updated primary sources. Nothing has been
 published. No endpoint, production secret, adaptive attack, or hosted playground has started.
 
 ## Implemented
@@ -89,13 +89,19 @@ published. No endpoint, production secret, adaptive attack, or hosted playground
   final-layer mean-state cosine, and a recorded non-independent assistant preservation review.
 - Eight-row delta 1/2/3 comparison with delta 2 reused from Stage 7, correct-key 80-token evidence,
   conditional NLL, repeated adjacent pairs, distinct bigrams/trigrams, achieved length, and runtime.
-- Final Stage 9 article source assembled from the eight evidence-backed stage notes, with primary
-  links for the KGW mechanism, SynthID-Text comparison, and Anthropic's stated marking plan.
-- Self-contained Stage 9 interactive lesson that opens on the exact Stage 8 rank 1000 string, rewinds
-  to one saved token draw, rebuilds `G/T` and z, reveals all 24 paired differences, and returns to
-  every editing and bias row without generating or selecting new evidence.
-- Local Stage 9 builder, structural evidence tests, and `just verify-stage-09` command. Publication
-  remains a separate authorization gate.
+- Final Stage 9 manuscript assembled from the eight evidence-backed stage notes, with primary links
+  for the KGW mechanism, SynthID-Text, passive-detector context, Article 50, and Anthropic's newer
+  2026-08-14 disclosure that Claude uses a version of SynthID-Text.
+- Self-contained continuous HTML article. Its rebuilt opening follows the full Stage 1 teaching
+  sequence through a media-to-text comparison, weighted coins, one 32/80 calculation, ordinary
+  variation, cutoff behavior, length, distributions, a coin-to-token map, and the real Python path.
+- The later article now uses the same visual standard: the Jack sentence carries keyed selection,
+  sampling, context movement, and checking; token 30604 carries the real-model score change; token
+  373 carries processor order; and rank 1000 carries controls and editing. Calibration shows all
+  1,000 scores, the cohort labels every rank, editing labels all 12 rows, and the delta panel keeps
+  all eight paths beside the proxy trends. No reader-facing stage-number chapters remain.
+- Local final-article builder, eight structural and full-payload evidence tests, and
+  `just verify-final-article`. Publication remains a separate authorization gate.
 
 ## Verified
 
@@ -243,26 +249,26 @@ published. No endpoint, production secret, adaptive attack, or hosted playground
 - Mean 80-token z across the eight bias rows was `0.2923`, `2.1761`, and `2.4684` at delta 1, 2,
   and 3. Mean conditional NLL was `0.5004`, `0.5415`, and `0.5783`; two row-level z paths were not
   monotonic from delta 2 to 3.
-- `just verify-stage-09` rebuilds the standalone lesson and checks its Stage 1, 3, 6, 7, and 8
-  evidence payloads against the canonical selected artifacts without a model, GPU, network, or cloud.
-- The Stage 9 lesson passed Chrome desktop light at 1440 by 1000, mobile light at 390 by 844, desktop
-  dark at 1200 by 900, reduced motion, scripts-off fallback, keyboard focus, every control, console,
-  JavaScript syntax, and horizontal-overflow checks. Four mid-page screenshots were inspected.
-- Three independent lesson reviewers were requested through the workflow runner, but the background
-  run did not return a retrievable report. Three separate local review passes were completed and
-  recorded; independent reviewer sign-off remains unverified.
+- `just verify-final-article` rebuilds the canonical HTML and checks exact Stage 1 through Stage 8
+  source commits plus complete Stage 1/2 rows, Stage 3 candidate tables, Stage 4 order and repetition
+  evidence, Stage 5 smoke rows, all 1,000 Stage 6 scores, every Stage 7 prefix summary, and every
+  Stage 8 editing and bias row without a model, GPU, network, or cloud.
+- The complete rebuilt article passed Chrome desktop dark at 1440 by 1000, desktop light at 1200
+  by 900, and mobile dark at 390 by 844. All 67 rendered controls were exercised across those
+  views; JavaScript syntax, scripts-off fallback, console, solid-background, and horizontal-overflow
+  checks passed. Desktop and mobile screenshots were inspected for every Phase 2 and later figure.
 
 ## Not implemented
 
 - Authenticated hosted generator, hosted detector, or public playground.
 - Production secret creation, key rotation, access control, rate limiting, and abuse policy.
-- Publication of the Stage 9 article or lesson.
+- Publication of the final Stage 9 article.
 
 No generally useful or production-calibrated detector cutoff exists.
 
 ## Approval required next
 
-Publication or release of the assembled Stage 9 article and lesson. Any additional dataset,
+Publication or release of the assembled Stage 9 article. Any additional dataset,
 model/GPU/cloud invocation, persistent cloud resource, GitHub remote change, publishing, or public
 deployment requires separate explicit approval.
 
